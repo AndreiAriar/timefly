@@ -1,0 +1,57 @@
+/* global-theme.css */
+
+/* Light mode (default) */
+body {
+  background-color: #f4f4f4;
+  color: #222;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode */
+body.dark-mode {
+  background-color: #121212;
+  color: #f5f5f5;
+}
+
+/* Links and buttons */
+body.dark-mode a,
+body.dark-mode button {
+  color: #f5f5f5;
+}
+
+body.dark-mode .btn-primary {
+  background-color: #1f2937;
+  color: #f5f5f5;
+  border-color: #3b82f6;
+}
+
+body.dark-mode .btn-secondary {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+  border: 1px solid #444;
+}
+
+/* Section backgrounds */
+body.dark-mode .section-header,
+body.dark-mode .appointments-section,
+body.dark-mode .queue-section,
+body.dark-mode .dashboard-container {
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+/* Cards and modals */
+body.dark-mode .appointment-card,
+body.dark-mode .queue-card,
+body.dark-mode .modal-content {
+  background-color: #242424;
+  color: #fff;
+  border-color: #333;
+}

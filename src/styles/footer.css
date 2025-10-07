@@ -1,0 +1,31 @@
+.app-footer.simple {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 2rem 1rem;
+  font-family: "Inter", sans-serif;
+}
+
+.app-footer.simple h3 {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.app-footer.simple p {
+  margin: 0.3rem 0;
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+}
+
+.footer-copy {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+}
+
+/* ✅ Dark mode (still clean, no divider) */
+[data-theme="dark"] .app-footer.simple {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+}

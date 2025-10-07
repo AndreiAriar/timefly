@@ -1,0 +1,272 @@
+/* ================================
+   FAQ PAGE - ST. PAUL EYE CENTER THEME
+   ================================ */
+
+/* FAQ-specific namespace to prevent conflicts */
+.faq-page {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: var(--faq-bg-color, #ffffff);
+  color: var(--faq-text-color, #1b3e2f);
+  transition: background 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+/* FAQ-specific color variables */
+.faq-page {
+  /* Light mode colors */
+  --faq-bg-color: #ffffff;
+  --faq-text-color: #1e293b;
+  --faq-section-bg: #ffffff;
+  --faq-hover-bg: #f8fafc;
+  --faq-border-color: #e2e8f0;
+  --faq-question-color: #0f172a;
+  --faq-answer-color: #475569;
+  --faq-icon-color: #3b82f6;
+  --faq-heading-color: #0f172a;
+  
+  /* Dark mode colors - Matching dashboard.css */
+  --faq-dark-bg-color: #0d1117;
+  --faq-dark-text-color: #e6edf3;
+  --faq-dark-section-bg: #0d1117;
+  --faq-dark-hover-bg: #161b22;
+  --faq-dark-border-color: #30363d;
+  --faq-dark-question-color: #f0f6fc;
+  --faq-dark-answer-color: #8b949e;
+  --faq-dark-icon-color: #58a6ff;
+  --faq-dark-heading-color: #f0f6fc;
+}
+
+/* Section Wrapper */
+.faq-section {
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px;
+  background: var(--faq-section-bg);
+  transition: background 0.3s ease;
+}
+
+/* Main Container */
+.faq-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  max-width: 1100px;
+  width: 100%;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Left Side - Image */
+.faq-image {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  min-width: 300px;
+}
+
+.faq-img {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  object-fit: contain;
+  margin-top: 10px;
+}
+
+/* Right Side - FAQ */
+.faq-content {
+  flex: 1;
+  padding: 20px 40px;
+  color: var(--faq-text-color);
+  align-self: flex-start;
+  transition: color 0.3s ease;
+}
+
+.faq-content h1 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: var(--faq-heading-color);
+  transition: color 0.3s ease;
+}
+
+/* FAQ Item */
+.faq-item {
+  border-bottom: 1px solid var(--faq-border-color);
+  padding: 15px 0;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.faq-item:hover {
+  background: var(--faq-hover-bg);
+  border-radius: 8px;
+}
+
+.faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.faq-question h3 {
+  color: var(--faq-question-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+/* Toggle Icon */
+.toggle-icon {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.toggle-icon .line {
+  position: absolute;
+  background-color: var(--faq-icon-color);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.toggle-icon .vertical {
+  width: 3px;
+  height: 16px;
+  top: 4px;
+  left: 10px;
+}
+
+.toggle-icon .horizontal {
+  width: 16px;
+  height: 3px;
+  top: 10px;
+  left: 4px;
+}
+
+/* When open → turn into minus */
+.toggle-icon.open .vertical {
+  transform: rotate(90deg);
+  opacity: 0;
+}
+
+.toggle-icon.open {
+  transform: rotate(180deg);
+}
+
+/* FAQ Answers */
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.faq-answer.show {
+  max-height: 200px;
+  margin-top: 10px;
+}
+
+.faq-answer p {
+  color: var(--faq-answer-color);
+  line-height: 1.6;
+  transition: color 0.3s ease;
+}
+
+/* ================================
+   DARK MODE STYLES - Matching dashboard.css
+   ================================ */
+
+/* System preference detection */
+@media (prefers-color-scheme: dark) {
+  .faq-page {
+    --faq-bg-color: var(--faq-dark-bg-color);
+    --faq-text-color: var(--faq-dark-text-color);
+    --faq-section-bg: var(--faq-dark-section-bg);
+    --faq-hover-bg: var(--faq-dark-hover-bg);
+    --faq-border-color: var(--faq-dark-border-color);
+    --faq-question-color: var(--faq-dark-question-color);
+    --faq-answer-color: var(--faq-dark-answer-color);
+    --faq-icon-color: var(--faq-dark-icon-color);
+    --faq-heading-color: var(--faq-dark-heading-color);
+  }
+}
+
+/* Manual dark mode class - matches dashboard.css [data-theme="dark"] */
+.faq-page.dark-mode,
+[data-theme="dark"] .faq-page {
+  --faq-bg-color: var(--faq-dark-bg-color);
+  --faq-text-color: var(--faq-dark-text-color);
+  --faq-section-bg: var(--faq-dark-section-bg);
+  --faq-hover-bg: var(--faq-dark-hover-bg);
+  --faq-border-color: var(--faq-dark-border-color);
+  --faq-question-color: var(--faq-dark-question-color);
+  --faq-answer-color: var(--faq-dark-answer-color);
+  --faq-icon-color: var(--faq-dark-icon-color);
+  --faq-heading-color: var(--faq-dark-heading-color);
+}
+
+/* If you want to support the dashboard's data-theme attribute globally */
+[data-theme="dark"] .faq-page {
+  --faq-bg-color: var(--faq-dark-bg-color);
+  --faq-text-color: var(--faq-dark-text-color);
+  --faq-section-bg: var(--faq-dark-section-bg);
+  --faq-hover-bg: var(--faq-dark-hover-bg);
+  --faq-border-color: var(--faq-dark-border-color);
+  --faq-question-color: var(--faq-dark-question-color);
+  --faq-answer-color: var(--faq-dark-answer-color);
+  --faq-icon-color: var(--faq-dark-icon-color);
+  --faq-heading-color: var(--faq-dark-heading-color);
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .faq-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .faq-content {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .faq-question {
+    justify-content: center;
+  }
+
+  .faq-img {
+    width: 80%;
+    max-width: 400px;
+    margin-bottom: 20px;
+  }
+}
+
+/* Ensure FAQ page doesn't affect other pages */
+.faq-page * {
+  box-sizing: border-box;
+}
+
+/* Reset any potential conflicts with dashboard styles */
+.faq-page .dashboard-header,
+.faq-page .main-content,
+.faq-page .stats-section,
+.faq-page .hero-section {
+  display: none !important;
+}
+
+/* Make sure FAQ styles don't leak out */
+.faq-section,
+.faq-container,
+.faq-image,
+.faq-content,
+.faq-item,
+.faq-question,
+.faq-answer,
+.toggle-icon {
+  /* These styles are scoped to FAQ page only */
+}

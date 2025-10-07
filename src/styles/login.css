@@ -1,0 +1,543 @@
+/* Container */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff, #d9e4ff);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+}
+
+/* Card with Background Image */
+.login-card {
+  background: url('../images/logo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* remove default paragraph margins INSIDE card (helps alignment) */
+.login-card p {
+  margin: 0;
+}
+
+/* Title */
+.login-card h1 {
+  margin-bottom: 24px;
+  color: #1a1a1a;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* Input fields - Transparent */
+.login-card input {
+  width: 100%;
+  padding: 14px 16px;
+  margin: 10px 0;
+  border: 1px solid #d1d9e6;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: 0.3s;
+  box-sizing: border-box;
+  background-color: transparent;
+  color: #333;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Disabled input state */
+.login-card input.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Focus state */
+.login-card input:focus {
+  border-color: #4f8ef7;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Password field wrapper */
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.password-field .toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #777;
+  font-size: 18px;
+  transition: 0.3s;
+}
+
+.password-field .toggle-password:hover {
+  color: #4f8ef7;
+}
+
+.password-field .toggle-password.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Button */
+.login-card button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 16px;
+  background-color: #4f8ef7;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.login-card button:hover:not(:disabled) {
+  background-color: #3c6fd3;
+}
+
+.login-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Submit button specific styles */
+.submit-btn.loading {
+  background-color: #6b9bff;
+}
+
+/* Google Button */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #4285f4;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 1rem;
+  font-size: 16px;
+  font-weight: 600;
+  transition: 0.3s;
+  box-sizing: border-box;
+}
+
+.google-btn:hover:not(:disabled) {
+  background: #357ae8;
+}
+
+.google-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.google-btn.loading {
+  background: #6b9bff;
+}
+
+/* Spinner animation for loading states */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  color: #777;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ccc;
+  transform: translateY(-50%);
+}
+
+.divider span {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  white-space: nowrap;
+}
+
+/* Messages */
+.error-message {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  text-align: center;
+  padding: 8px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+}
+
+.success-message {
+  color: #155724;
+  font-size: 14px;
+  margin: 10px 0;
+  text-align: center;
+  padding: 8px;
+  background-color: #d4edda;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+}
+
+/* Bottom navigation row */
+.bottom-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  width: 100%;
+  gap: 12px;
+  flex-wrap: nowrap; /* prevent wrapping so both items stay on one line */
+  min-height: 28px;  /* ensures consistent vertical alignment baseline */
+  box-sizing: border-box;
+  padding-top: 6px;  /* tiny spacing so divider / buttons don't feel cramped */
+}
+
+/* make each child an inline-flex and vertically centered for pixel-perfect alignment */
+.bottom-navigation > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;       /* remove default margins */
+  line-height: 1;  /* tighten line height so baselines match */
+}
+
+/* Left side (Sign Up) */
+.redirect-text {
+  font-size: 0.9rem;
+  color: #444;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Forgot password under input */
+.forgot-password {
+  text-align: left;
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Link styling - no underline by default */
+.link-text {
+  color: #4f8ef7;
+  text-decoration: none !important; /* Remove browser underline */
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.3s ease;
+  position: relative;
+  padding-bottom: 4px;      /* Controls underline distance */
+  line-height: 1;           /* Prevents extra space below text */
+}
+
+.link-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.3s ease;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.link-text:hover::after,
+.link-text:focus-visible::after {
+  width: 100%;
+}
+
+/* Google button updated */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff; /* White background */
+  border: 1px solid #b3d4fc; /* Light blue border */
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.google-btn:hover {
+  background: #f7faff;
+  border-color: #4f8ef7;
+}
+
+.google-icon {
+  flex-shrink: 0;
+}
+
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.28s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: scale(0.98) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal h2 {
+  margin-bottom: 20px;
+  color: #1a1a1a;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.modal input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  border: 1px solid #d1d9e6;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: 0.3s;
+  box-sizing: border-box;
+  background-color: #fff;
+  color: #333;
+}
+
+.modal input:focus {
+  border-color: #4f8ef7;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.2);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancel-btn, .reset-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #5a6268;
+}
+
+.reset-btn {
+  background-color: #4f8ef7;
+  color: white;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background-color: #3c6fd3;
+}
+
+.reset-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================= */
+/* Loading Spinner Component */
+/* ========================= */
+.app-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff, #d9e4ff);
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(79, 142, 247, 0.2);
+  border-top-color: #4f8ef7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 10px;
+  }
+
+  .login-card {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+
+  .login-card h1 {
+    font-size: 24px;
+  }
+
+  .login-card input,
+  .login-card button,
+  .google-btn {
+    font-size: 14px;
+  }
+
+  .modal {
+    padding: 20px;
+    margin: 10px;
+  }
+
+  .modal h2 {
+    font-size: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn, .reset-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 320px) {
+  .login-card {
+    padding: 20px 15px;
+  }
+
+  .login-card h1 {
+    font-size: 22px;
+  }
+
+  .modal {
+    padding: 15px;
+  }
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.google-btn:hover {
+  background: #f7f7f7;
+}
+
+.google-icon {
+  flex-shrink: 0;
+}
+
+
+/* Center the bottom navigation and redirect text */
+.bottom-navigation {
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+

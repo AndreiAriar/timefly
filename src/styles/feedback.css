@@ -1,0 +1,405 @@
+/* ==============================
+   FEEDBACK PAGE - TIMEFLY THEME
+   ============================== */
+
+/* Feedback-specific namespace to prevent conflicts */
+.feedback-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 20px;
+  font-family: "Poppins", sans-serif;
+  background: var(--feedback-bg-color, #f9fbfd);
+  color: var(--feedback-text-color, #1e293b);
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+/* Feedback-specific color variables */
+.feedback-page {
+  /* Light mode colors */
+  --feedback-bg-color: #f9fbfd;
+  --feedback-text-color: #1e293b;
+  --feedback-container-bg: #ffffff;
+  --feedback-border-color: #e2e8f0;
+  --feedback-hover-color: #f1f5f9;
+  --feedback-primary-gradient: linear-gradient(90deg, #23a6d5, #23d5ab);
+  --feedback-primary-hover: linear-gradient(90deg, #1d8db8, #1bbd8a);
+  --feedback-secondary-bg: #e0e0e0;
+  --feedback-secondary-hover: #cfcfcf;
+  --feedback-star-color: #ccc;
+  --feedback-star-filled: #f5b50a;
+  --feedback-heading-color: #0f172a;
+  --feedback-subtitle-color: #475569;
+  
+  /* Dark mode colors - Matching dashboard.css */
+  --feedback-dark-bg-color: #0d1117;
+  --feedback-dark-text-color: #e6edf3;
+  --feedback-dark-container-bg: #161b22;
+  --feedback-dark-border-color: #30363d;
+  --feedback-dark-hover-color: #1f2937;
+  --feedback-dark-primary-gradient: linear-gradient(90deg, #1e88e5, #00acc1);
+  --feedback-dark-primary-hover: linear-gradient(90deg, #1976d2, #0097a7);
+  --feedback-dark-secondary-bg: #374151;
+  --feedback-dark-secondary-hover: #4b5563;
+  --feedback-dark-star-color: #6b7280;
+  --feedback-dark-star-filled: #f59e0b;
+  --feedback-dark-heading-color: #f0f6fc;
+  --feedback-dark-subtitle-color: #8b949e;
+}
+
+/* CONTAINER */
+.feedback-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1100px;
+  width: 100%;
+}
+
+/* INTRO SECTION */
+.feedback-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.text-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.text-section h2 {
+  font-size: 2.5rem;
+  color: var(--feedback-heading-color);
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.text-section p {
+  font-size: 1.05rem;
+  color: var(--feedback-subtitle-color);
+  margin-bottom: 30px;
+  line-height: 1.7;
+}
+
+.feedback-btn {
+  padding: 12px 28px;
+  font-size: 1rem;
+  color: white;
+  background: var(--feedback-primary-gradient);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-weight: 500;
+}
+
+.feedback-btn:hover {
+  background: var(--feedback-primary-hover);
+  transform: translateY(-2px);
+}
+
+/* IMAGE SECTION */
+.image-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.image-section img {
+  width: 90%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 20px;
+  object-fit: contain;
+}
+
+/* FORM SECTION (Modal) */
+.feedback-form-section {
+  text-align: center;
+  width: 100%;
+  max-width: 460px;
+  background: var(--feedback-container-bg);
+  padding: 30px 25px 50px;
+  border-radius: 20px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  position: relative;
+  top: -60px;
+  transition: all 0.3s ease;
+  border: 1px solid var(--feedback-border-color);
+}
+
+/* ✅ Modal Image */
+.modal-feedback-image {
+  width: 80px;
+  height: auto;
+  margin-bottom: 12px;
+}
+
+/* Title */
+.feedback-form-section h2 {
+  font-size: 1.8rem;
+  color: var(--feedback-heading-color);
+  margin-bottom: 8px;
+}
+
+/* Subtitle */
+.feedback-form-section p {
+  color: var(--feedback-subtitle-color);
+  margin-bottom: 18px;
+  font-size: 0.95rem;
+}
+
+/* STARS */
+.rating-stars {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 1.7rem;
+  cursor: pointer;
+}
+
+.star {
+  color: var(--feedback-star-color);
+  transition: color 0.3s, transform 0.2s;
+}
+
+.star:hover {
+  transform: scale(1.1);
+}
+
+.star.filled {
+  color: var(--feedback-star-filled);
+}
+
+/* TEXTAREA */
+.feedback-form textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: none;
+  padding: 12px;
+  border: 1px solid var(--feedback-border-color);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 1rem;
+  margin-bottom: 18px;
+  transition: 0.3s;
+  background: var(--feedback-container-bg);
+  color: var(--feedback-text-color);
+}
+
+.feedback-form textarea:focus {
+  border-color: #23a6d5;
+  box-shadow: 0 0 0 2px rgba(35, 165, 213, 0.1);
+  outline: none;
+}
+
+.feedback-form textarea::placeholder {
+  color: var(--feedback-subtitle-color);
+}
+
+/* BUTTONS */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.submit-btn,
+.cancel-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.3s;
+  font-weight: 500;
+}
+
+.submit-btn {
+  background: var(--feedback-primary-gradient);
+  color: #fff;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--feedback-primary-hover);
+  transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cancel-btn {
+  background: var(--feedback-secondary-bg);
+  color: var(--feedback-text-color);
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: var(--feedback-secondary-hover);
+}
+
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================
+   DARK MODE STYLES
+   ========================== */
+
+/* System preference detection */
+@media (prefers-color-scheme: dark) {
+  .feedback-page {
+    --feedback-bg-color: var(--feedback-dark-bg-color);
+    --feedback-text-color: var(--feedback-dark-text-color);
+    --feedback-container-bg: var(--feedback-dark-container-bg);
+    --feedback-border-color: var(--feedback-dark-border-color);
+    --feedback-hover-color: var(--feedback-dark-hover-color);
+    --feedback-primary-gradient: var(--feedback-dark-primary-gradient);
+    --feedback-primary-hover: var(--feedback-dark-primary-hover);
+    --feedback-secondary-bg: var(--feedback-dark-secondary-bg);
+    --feedback-secondary-hover: var(--feedback-dark-secondary-hover);
+    --feedback-star-color: var(--feedback-dark-star-color);
+    --feedback-star-filled: var(--feedback-dark-star-filled);
+    --feedback-heading-color: var(--feedback-dark-heading-color);
+    --feedback-subtitle-color: var(--feedback-dark-subtitle-color);
+  }
+}
+
+/* Manual dark mode class - matches dashboard.css [data-theme="dark"] */
+.feedback-page.dark-mode,
+[data-theme="dark"] .feedback-page {
+  --feedback-bg-color: var(--feedback-dark-bg-color);
+  --feedback-text-color: var(--feedback-dark-text-color);
+  --feedback-container-bg: var(--feedback-dark-container-bg);
+  --feedback-border-color: var(--feedback-dark-border-color);
+  --feedback-hover-color: var(--feedback-dark-hover-color);
+  --feedback-primary-gradient: var(--feedback-dark-primary-gradient);
+  --feedback-primary-hover: var(--feedback-dark-primary-hover);
+  --feedback-secondary-bg: var(--feedback-dark-secondary-bg);
+  --feedback-secondary-hover: var(--feedback-dark-secondary-hover);
+  --feedback-star-color: var(--feedback-dark-star-color);
+  --feedback-star-filled: var(--feedback-dark-star-filled);
+  --feedback-heading-color: var(--feedback-dark-heading-color);
+  --feedback-subtitle-color: var(--feedback-dark-subtitle-color);
+}
+
+/* If you want to support the dashboard's data-theme attribute globally */
+[data-theme="dark"] .feedback-page {
+  --feedback-bg-color: var(--feedback-dark-bg-color);
+  --feedback-text-color: var(--feedback-dark-text-color);
+  --feedback-container-bg: var(--feedback-dark-container-bg);
+  --feedback-border-color: var(--feedback-dark-border-color);
+  --feedback-hover-color: var(--feedback-dark-hover-color);
+  --feedback-primary-gradient: var(--feedback-dark-primary-gradient);
+  --feedback-primary-hover: var(--feedback-dark-primary-hover);
+  --feedback-secondary-bg: var(--feedback-dark-secondary-bg);
+  --feedback-secondary-hover: var(--feedback-dark-secondary-hover);
+  --feedback-star-color: var(--feedback-dark-star-color);
+  --feedback-star-filled: var(--feedback-dark-star-filled);
+  --feedback-heading-color: var(--feedback-dark-heading-color);
+  --feedback-subtitle-color: var(--feedback-dark-subtitle-color);
+}
+
+/* ==========================
+   TOAST NOTIFICATION STYLES
+   ========================== */
+
+.toast {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  padding: 14px 22px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: toastSlideIn 0.4s ease forwards;
+  z-index: 9999;
+}
+
+.toast-success {
+  background: linear-gradient(90deg, #23d5ab, #23a6d5);
+}
+
+.toast-error {
+  background: linear-gradient(90deg, #ff5f6d, #ffc371);
+}
+
+/* Toast Animation */
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toast Exit Animation */
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .feedback-intro {
+    flex-direction: column-reverse;
+    text-align: center;
+  }
+
+  .image-section img {
+    max-width: 300px;
+  }
+
+  .feedback-form-section {
+    padding: 28px 18px 50px;
+    max-width: 380px;
+    top: 0;
+  }
+
+  .text-section h2 {
+    font-size: 2rem;
+  }
+
+  .toast {
+    right: 50%;
+    transform: translateX(50%);
+    width: 80%;
+    text-align: center;
+  }
+}
+
+/* Ensure Feedback page doesn't affect other pages */
+.feedback-page * {
+  box-sizing: border-box;
+}
+
+/* Reset any potential conflicts with dashboard styles */
+.feedback-page .dashboard-header,
+.feedback-page .main-content,
+.feedback-page .stats-section,
+.feedback-page .hero-section {
+  display: none !important;
+}
