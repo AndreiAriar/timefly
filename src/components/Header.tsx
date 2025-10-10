@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Search, User, Camera, Moon, Sun, LogOut } from "lucide-react";
-import { getAuth, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import {
+  getAuth,
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser,
+} from "firebase/auth";
 
 interface HeaderProps {
   searchTerm: string;
@@ -11,10 +16,18 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [userProfile, setUserProfile] = useState<{ name?: string; email?: string; photo?: string }>({});
+  const [userProfile, setUserProfile] = useState<{
+    name?: string;
+    email?: string;
+    photo?: string;
+  }>({});
   const auth = getAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // 👈 Detect current page
 
+  /* =========================
+     AUTH STATE
+  ========================== */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
       if (user) {
@@ -31,8 +44,14 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
     return () => unsubscribe();
   }, [auth]);
 
+  /* =========================
+     THEME MANAGEMENT
+  ========================== */
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+    const storedTheme = localStorage.getItem("theme") as
+      | "light"
+      | "dark"
+      | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const initialTheme = storedTheme || (prefersDark ? "dark" : "light");
     setTheme(initialTheme);
@@ -46,6 +65,9 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
     document.documentElement.setAttribute("data-theme", newTheme);
   };
 
+  /* =========================
+     PROFILE PHOTO UPLOAD
+  ========================== */
   const handleProfilePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && auth.currentUser) {
       const file = e.target.files[0];
@@ -59,6 +81,9 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
     }
   };
 
+  /* =========================
+     LOGOUT
+  ========================== */
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -68,6 +93,19 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
     }
   };
 
+  /* =========================
+     CONTEXT-AWARE PLACEHOLDER
+  ========================== */
+  const getSearchPlaceholder = () => {
+    if (location.pathname.includes("/doctors")) return "Search doctors...";
+    if (location.pathname.includes("/appointments"))
+      return "Search appointments...";
+    return "Search appointments, patients...";
+  };
+
+  /* =========================
+     RENDER
+  ========================== */
   return (
     <header className="dashboard-header">
       {/* Left: Logo + Nav */}
@@ -77,7 +115,11 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
           <span className="logo-title">TimeFly</span>
         </NavLink>
 
-        <nav className="nav-links" role="navigation" aria-label="Main navigation">
+        <nav
+          className="nav-links"
+          role="navigation"
+          aria-label="Main navigation"
+        >
           {["/about", "/doctors", "/faq", "/feedback"].map((path) => {
             const labels: { [key: string]: string } = {
               "/about": "About Us",
@@ -90,7 +132,9 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
                 key={path}
                 to={path}
                 end
-                className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+                className={({ isActive }) =>
+                  `nav-link${isActive ? " active" : ""}`
+                }
               >
                 {labels[path]}
               </NavLink>
@@ -101,16 +145,16 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
 
       {/* Right: Search + Profile */}
       <div className="header-right">
-        {/* ✅ Search bar in header */}
+        {/* ✅ Context-Aware Global Search */}
         <div className="search-container">
           <Search className="search-icon" size={18} aria-hidden="true" />
           <input
             type="text"
-            placeholder="Search appointments, patients..."
+            placeholder={getSearchPlaceholder()}
             className="search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            aria-label="Search appointments and patients"
+            aria-label="Search bar"
           />
         </div>
 
@@ -122,7 +166,11 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
           >
             <div className="user-avatar">
               {userProfile?.photo ? (
-                <img src={userProfile.photo} alt={userProfile.name} className="avatar-image" />
+                <img
+                  src={userProfile.photo}
+                  alt={userProfile.name}
+                  className="avatar-image"
+                />
               ) : (
                 <User size={16} />
               )}
@@ -134,7 +182,11 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
               <div className="profile-header">
                 <div className="profile-avatar-lg">
                   {userProfile?.photo ? (
-                    <img src={userProfile.photo} alt={userProfile.name} className="avatar-image" />
+                    <img
+                      src={userProfile.photo}
+                      alt={userProfile.name}
+                      className="avatar-image"
+                    />
                   ) : (
                     <User size={32} />
                   )}

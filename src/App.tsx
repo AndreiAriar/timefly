@@ -1,10 +1,10 @@
 import React, { useEffect, useState, createContext, useContext } from "react";
-import { Routes, Route, Navigate, useNavigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./styles/toastify-custom.css";
 import "./styles/staff-isolation.css";
-import "./styles/global-theme.css"; // ✅ Added for dark/light mode styling
+import "./styles/global-theme.css"; // ✅ For dark/light mode styling
 
 // Components
 import Login from "./components/Login";
@@ -13,7 +13,7 @@ import PatientDashboard from "./components/PatientDashboard";
 import DoctorDashboard from "./components/DoctorDashboard";
 import NotFound from "./components/NotFound";
 import Header from "./components/Header";
-import Footer from "./components/Footer"; // ✅ Global footer
+import Footer from "./components/Footer";
 
 // Public Pages
 import About from "./components/About";
@@ -21,6 +21,7 @@ import Doctors from "./components/Doctors";
 import FAQ from "./components/FAQ";
 import Feedback from "./components/Feedback";
 
+// Lazy-loaded dashboard
 const StaffDashboard = React.lazy(() => import("./components/StaffDashboard"));
 
 // Firebase
@@ -41,20 +42,47 @@ interface UserData {
 }
 
 // ------------------------
-// THEME CONTEXT (Dark/Light Mode)
+// THEME CONTEXT
 // ------------------------
 const ThemeContext = createContext<any>(null);
 export const useTheme = () => useContext(ThemeContext);
 
 const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [darkMode, setDarkMode] = useState<boolean>(
-    localStorage.getItem("theme") === "dark"
-  );
+  // ✅ Auto-detect system theme if no saved preference
+  const getInitialTheme = (): boolean => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme === "dark";
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  };
 
+  const [darkMode, setDarkMode] = useState<boolean>(getInitialTheme());
+
+  // ✅ Apply and persist theme changes
   useEffect(() => {
+    const theme = darkMode ? "dark" : "light";
+
+    // Apply to <html> and <body> for CSS targeting
+    document.documentElement.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-theme", theme);
+
+    // Keep compatibility with old .dark-mode CSS rules
     document.body.classList.toggle("dark-mode", darkMode);
-    localStorage.setItem("theme", darkMode ? "dark" : "light");
+
+    // Persist user choice
+    localStorage.setItem("theme", theme);
   }, [darkMode]);
+
+  // ✅ Listen to system theme changes dynamically (optional)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem("theme")) {
+        setDarkMode(e.matches);
+      }
+    };
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   const toggleTheme = () => setDarkMode((prev) => !prev);
 
@@ -66,21 +94,36 @@ const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 };
 
 // ------------------------
-// MAIN LAYOUT
+// MAIN LAYOUT (Header + Footer)
 // ------------------------
 const MainLayout: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { searchTerm, setSearchTerm } = useSearch();
+  const location = useLocation();
+
+  // ✅ Dynamic search placeholder based on page
+  const getPlaceholder = () => {
+    if (location.pathname.includes("/doctors")) return "Search doctors...";
+    if (location.pathname.includes("/dashboard")) return "Search appointments...";
+    if (location.pathname.includes("/staff-dashboard")) return "Search patients or appointments...";
+    return "Search...";
+  };
+
   return (
     <>
-      <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <Header
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        // @ts-ignore - extending HeaderProps to pass custom placeholder
+        placeholder={getPlaceholder()}
+      />
       <main>{children ?? <Outlet />}</main>
-      <Footer /> {/* ✅ Global footer */}
+      <Footer />
     </>
   );
 };
 
 // ------------------------
-// APP CONTENT
+// APP CONTENT (Authentication + Routing)
 // ------------------------
 const AppContent = () => {
   const [user, setUser] = useState<UserData | null>(null);
@@ -159,7 +202,7 @@ const AppContent = () => {
         }
       />
 
-      {/* Routes with header and footer */}
+      {/* Routes with Header + Footer */}
       <Route element={<MainLayout />}>
         <Route path="/about" element={<About />} />
         <Route path="/doctors" element={<Doctors />} />

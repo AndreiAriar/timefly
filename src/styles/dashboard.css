@@ -220,12 +220,19 @@ body {
 }
 
 
+/* Light Mode */
 .dashboard-container {
   min-height: 100vh;
-  background: var(--bg-secondary);
+  background: #ffffff; /* Plain white background */
   margin: 0;
   padding: 0;
 }
+
+/* Dark Mode */
+[data-theme="dark"] .dashboard-container {
+  background: #0f172a; /* Matches dark blue tone of header/footer */
+}
+
 
 /* ===== LOADING STATES ===== */
 .loading-state {
@@ -1221,15 +1228,16 @@ select:active {
 
 .hero-section {
   position: relative;
-  padding: var(--space-xl) var(--space-xl); /* ✅ reduced vertical padding */
+  padding: var(--space-xl) var(--space-xl);
   background: url('/images/eye_center.png') center/cover no-repeat;
   color: #ffffff;
   text-align: center;
-  border-radius: var(--radius-xl);
+border-radius: var(--radius-xl);
   overflow: hidden;
-  margin: var(--space-lg) var(--space-xl) var(--space-xl) var(--space-xl); /* slightly lower position */
+  margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
   background-color: var(--bg-secondary);
 }
+
 
 
 
@@ -1642,8 +1650,8 @@ select:active {
 .stat-card {
   background: var(--bg-primary);
   padding: var(--space-lg);
-  border-radius: var(--radius-lg); /* iOS-style rounded corners */
-  box-shadow: var(--shadow-sm);
+  border-radius: 20px; /* Rounded corners for card */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--border-light);
   transition: var(--transition-normal);
   display: flex;
@@ -1659,12 +1667,14 @@ select:active {
 /* ===== ICON STYLES ===== */
 .stat-icon {
   padding: var(--space-md);
-  border-radius: var(--border-radius);
+  border-radius: 16px; /* Rounded icon box */
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
 }
 
+/* Light Mode Icons */
 .stat-blue .stat-icon {
   background: rgba(59, 130, 246, 0.1);
   color: var(--primary);
@@ -1678,6 +1688,22 @@ select:active {
 .stat-green .stat-icon {
   background: rgba(16, 185, 129, 0.1);
   color: var(--success);
+}
+
+/* ===== DARK MODE ICONS ===== */
+[data-theme="dark"] .stat-blue .stat-icon {
+  background: rgba(59, 130, 246, 0.25);
+  color: #3b82f6; /* Bright blue for dark mode */
+}
+
+[data-theme="dark"] .stat-orange .stat-icon {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24; /* Bright orange for clock icon */
+}
+
+[data-theme="dark"] .stat-green .stat-icon {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399; /* Bright green for total icon */
 }
 
 /* ===== CONTENT STYLES ===== */
@@ -1702,6 +1728,10 @@ select:active {
 .stat-orange .stat-value { color: var(--warning); }
 .stat-green .stat-value { color: var(--success); }
 
+[data-theme="dark"] .stat-blue .stat-value { color: #60a5fa; }
+[data-theme="dark"] .stat-orange .stat-value { color: #fbbf24; }
+[data-theme="dark"] .stat-green .stat-value { color: #34d399; }
+
 .stat-subtitle {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
@@ -1716,6 +1746,11 @@ select:active {
 .stat-blue .stat-change { color: var(--primary); }
 .stat-orange .stat-change { color: var(--warning); }
 .stat-green .stat-change { color: var(--success); }
+
+[data-theme="dark"] .stat-blue .stat-change { color: #60a5fa; }
+[data-theme="dark"] .stat-orange .stat-change { color: #fbbf24; }
+[data-theme="dark"] .stat-green .stat-change { color: #34d399; }
+
 
 /* ===== MAIN CONTENT ===== */
 .main-content {
@@ -1914,42 +1949,93 @@ select:active {
   display: flex;
   gap: var(--space-xs);
 }
+/* ===============================
+   ACTION & CANCEL (DELETE) BUTTONS
+   =============================== */
+
+/* Base action button */
 .action-btn {
-  color: var(--text-secondary);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-light);
+  color: #000000; /* Black in light mode */
+  background: transparent;
+  border: none;
   padding: 8px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: color 0.25s ease, transform 0.2s ease;
+  cursor: pointer;
 }
 
-/* View button hover */
+/* Cancel/Delete button */
+.cancel-btn {
+  color: #000000; /* Black in light mode */
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.25s ease, transform 0.2s ease;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+}
+
+/* Dark mode colors */
+[data-theme="dark"] .action-btn,
+[data-theme="dark"] .cancel-btn {
+  color: var(--text-primary);
+}
+
+/* Hover/focus base */
+.action-btn:hover,
+.cancel-btn:hover,
+.cancel-btn:focus {
+  background: transparent;
+  border: none;
+  transform: scale(1.1);
+}
+
+/* ======================================
+   ✅ CANCEL (TRASH) ICON HOVER FIX
+   ====================================== */
+
+/* Light mode - change stroke only (no fill) */
+.cancel-btn:hover svg,
+.cancel-btn:focus svg {
+  stroke: var(--error, #ef4444) !important; /* Red outline */
+  fill: none !important; /* Prevent filling the icon */
+  color: var(--error, #ef4444) !important;
+}
+
+/* Dark mode - bright red */
+[data-theme="dark"] .cancel-btn:hover svg,
+[data-theme="dark"] .cancel-btn:focus svg {
+  stroke: #f87171 !important;
+  fill: none !important;
+  color: #f87171 !important;
+}
+
+
+/* Specific hover colors maintained */
 .view-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: var(--primary);
   color: var(--primary);
 }
 
-/* Edit button hover */
 .edit-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: var(--warning);
   color: var(--warning);
 }
 
-/* Cancel button hover - now matches the pattern */
-.cancel-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: var(--error);
-  color: var(--error);
+/* ✅ Red hover for delete button */
+.delete-btn:hover {
+  color: var(--error); /* Red in light mode */
 }
 
-.view-btn:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--primary); color: var(--primary); }
-.edit-btn:hover { background: rgba(245, 158, 11, 0.1); border-color: var(--warning); color: var(--warning); }
-.cancel-btn:hover { background: rgba(241, 38, 38, 0.1); border-color: var(--error); color: var(--error); }
+[data-theme="dark"] .delete-btn:hover {
+  color: #f87171; /* Bright red in dark mode */
+}
 
 /* ===== QUEUE SECTION ===== */
 .queue-section {
@@ -2370,9 +2456,10 @@ select:active {
   gap: var(--space-sm);
 }
 
-.status-icon {
-  color: inherit;
+[data-theme="dark"] .status-icon.clock {
+  color: #ffffff !important; /* Ensures clock icon is white in dark mode */
 }
+
 
 .doctor-name {
   font-weight: 500;
@@ -2626,30 +2713,6 @@ select:active {
   transition: all 0.3s ease-in-out;
 }
 
-/* ===== SCOPED BOOKING MODAL STYLES ===== */
-.booking-modal {
-  /* Scoped styles to prevent affecting other pages */
-}
-
-.booking-modal .form-group input,
-.booking-modal .form-group select,
-.booking-modal .time-slot,
-.booking-modal .book-appointment-btn {
-  /* These styles only affect elements inside booking-modal */
-}
-
-/* Ensure booking modal styles don't leak */
-body:not(.booking-page) .booking-modal {
-  /* Reset any potential conflicts */
-}
-
-/* Scoped action buttons for appointments */
-.appointments-section .action-btn,
-.appointments-section .view-btn,
-.appointments-section .edit-btn,
-.appointments-section .delete-btn {
-  /* Styles only affect appointment section buttons */
-}
 
 /* Form fields */
 .booking-form .form-group input,
@@ -2962,6 +3025,44 @@ body:not(.booking-page) .booking-modal {
   font-size: var(--font-size-xs);
   color: var(--error);
   margin-top: 2px;
+}
+
+/* ===== DARK MODE TIME SLOTS - USING THEME COLORS ===== */
+[data-theme="dark"] .time-slot {
+  background: var(--bg-secondary); /* Dark theme secondary background */
+  color: var(--text-primary); /* Dark theme primary text */
+  border: 1px solid var(--border-medium);
+}
+
+[data-theme="dark"] .time-slot:hover:not(.booked):not(:disabled) {
+  background: var(--bg-tertiary); /* Dark theme tertiary background on hover */
+  border-color: var(--primary-light);
+  color: var(--text-primary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .time-slot:active:not(.booked):not(:disabled) {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .time-slot.selected {
+  background: var(--primary-light); /* Use primary light for selected */
+  color: var(--text-inverse); /* Inverse text for contrast */
+  border-color: var(--primary-light);
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+}
+
+[data-theme="dark"] .time-slot.booked {
+  background: var(--bg-primary); /* Dark theme primary background */
+  color: var(--text-tertiary); /* Muted text for booked slots */
+  border-color: var(--border-light);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .booked-indicator {
+  color: #f87171; /* Brighter red for dark mode from your theme */
 }
 
 /* ===== MOBILE RESPONSIVE FOR BOOKING MODAL ===== */
@@ -4872,13 +4973,17 @@ body:not(.booking-page) .booking-modal {
   transition: color var(--transition-fast);
 }
 
-/* Dark mode adaptation for icons */
+/* ============================
+   CLOCK / TIME / CALENDAR ICONS - DARK MODE FIX
+   ============================ */
+
 [data-theme="dark"] .clock-icon,
 [data-theme="dark"] .time-icon,
 [data-theme="dark"] .calendar-icon,
 [data-theme="dark"] .dashboard-calendar-icon {
-  color: var(--text-tertiary);
+  color: #ffffff !important; /* Bright white for dark mode */
 }
+
 
 /* Specific styles for calendar wizard icons */
 .calendar-wizard .clock-icon,
@@ -4926,4 +5031,81 @@ body:not(.booking-page) .booking-modal {
 [data-theme="dark"] .time-icon:hover,
 [data-theme="dark"] .calendar-icon:hover {
   color: var(--primary-light);
+}
+
+/* ===== WIZARD CALENDAR ICON - DARK MODE ONLY ===== */
+[data-theme="dark"] .calendar-wizard .calendar-icon,
+[data-theme="dark"] .calendar-wizard .dashboard-calendar-icon,
+[data-theme="dark"] .calendar-wizard .date-picker-icon,
+[data-theme="dark"] .calendar-wizard input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] .calendar-wizard .form-group svg[data-icon="calendar"],
+[data-theme="dark"] .calendar-wizard .booking-form .calendar-icon {
+  color: #ffffff !important;
+  filter: brightness(0) invert(1); /* Makes wizard calendar icon white */
+}
+
+/* Specific targeting for date input inside wizard */
+[data-theme="dark"] .calendar-wizard input[type="date"] {
+  color-scheme: dark; /* Forces dark mode for wizard date picker */
+}
+
+[data-theme="dark"] .calendar-wizard input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2); /* White native calendar icon */
+  cursor: pointer;
+}
+
+/* If using SVG icons inside wizard */
+[data-theme="dark"] .calendar-wizard .calendar-icon svg,
+[data-theme="dark"] .calendar-wizard .dashboard-calendar-icon svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* ===== LIGHT MODE RESET (Wizard Calendar) ===== */
+[data-theme="light"] .calendar-wizard .calendar-icon,
+[data-theme="light"] .calendar-wizard .dashboard-calendar-icon,
+[data-theme="light"] .calendar-wizard .date-picker-icon,
+[data-theme="light"] .calendar-wizard input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] .calendar-wizard .form-group svg[data-icon="calendar"],
+[data-theme="light"] .calendar-wizard .booking-form .calendar-icon {
+  color: #1e1e1e !important;
+  filter: none !important;
+}
+
+/* ===== CLOCK & STATUS ICONS (Unchanged) ===== */
+[data-theme="dark"] .status-icon,
+[data-theme="dark"] .time-slot .icon,
+[data-theme="dark"] .lucide-clock,
+[data-theme="dark"] .booking-form .lucide-clock {
+  color: #ffffff !important;
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .status-icon,
+[data-theme="light"] .time-slot .icon,
+[data-theme="light"] .lucide-clock,
+[data-theme="light"] .booking-form .lucide-clock {
+  color: #000000 !important;
+  filter: none !important;
+}
+
+/* ============================
+   CLOCK ICON COLOR FIX - CALENDAR WIZARD ONLY
+   ============================ */
+
+/* Light Mode - dark gray clock icon */
+[data-theme="light"] .calendar-wizard .clock-icon {
+  color: #1e1e1e !important;
+}
+
+/* Dark Mode - pure white clock icon */
+[data-theme="dark"] .calendar-wizard .clock-icon {
+  color: #ffffff !important;
+}
+
+/* Optional: keep white color on hover/focus in dark mode */
+[data-theme="dark"] .calendar-wizard .clock-icon:hover,
+[data-theme="dark"] .calendar-wizard .clock-icon:focus {
+  color: #ffffff !important;
 }
