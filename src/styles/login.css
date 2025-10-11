@@ -1,3 +1,7 @@
+/* ============================
+   LOGIN PAGE - UPDATED VERSION
+   ============================ */
+
 /* Container */
 .login-container {
   display: flex;
@@ -9,12 +13,9 @@
   padding: 20px;
 }
 
-/* Card with Background Image */
+/* Card */
 .login-card {
-  background: url('../images/logo.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: white;
   padding: 40px 30px;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -22,104 +23,139 @@
   max-width: 400px;
   text-align: center;
   position: relative;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* remove default paragraph margins INSIDE card (helps alignment) */
-.login-card p {
-  margin: 0;
+/* Logo */
+.login-logo {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 12px;
+  object-fit: contain;
 }
 
 /* Title */
 .login-card h1 {
   margin-bottom: 24px;
-  color: #1a1a1a;
-  font-size: 28px;
+  color: #02253a;
+  font-size: 26px;
   font-weight: 600;
 }
-
-/* Input fields - Transparent */
+/* ============================
+   INPUT FIELDS - FINAL BRAND STYLE (EXCLUSIVE TO LOGIN)
+   ============================ */
 .login-card input {
   width: 100%;
   padding: 14px 16px;
   margin: 10px 0;
-  border: 1px solid #d1d9e6;
+  border: 1px solid #ccc !important; /* neutral border by default */
   border-radius: 12px;
   font-size: 16px;
-  transition: 0.3s;
+  background-color: #f0f2f5 !important; /* idle gray background */
+  color: #1a1a1a;
+  transition: all 0.25s ease;
   box-sizing: border-box;
-  background-color: transparent;
-  color: #333;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Disabled input state */
-.login-card input.disabled {
+/* ✅ Focused / active state - lighter navy blue glow */
+.login-card input:focus,
+.login-card input:active {
+  border-color: #184a72 !important;
+  background-color: #ffffff !important; /* white on focus */
+  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(24, 74, 114, 0.35) !important; /* lighter navy glow */
+}
+
+/* ✅ Chrome autofill fix */
+.login-card input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #f0f2f5 inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  border: 1px solid #ccc !important;
+  border-radius: 12px;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.login-card input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  border-color: #184a72 !important;
+}
+
+/* ✅ Disabled state - muted gray */
+.login-card input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  background-color: #e4e6eb !important;
+  border: 1px solid #ccc !important;
 }
 
-/* Focus state */
-.login-card input:focus {
-  border-color: #4f8ef7;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+.login-card input:disabled:focus,
+.login-card input:disabled:active {
+  border-color: #ccc !important;
+  box-shadow: none !important;
 }
 
-/* Password field wrapper */
-.password-field {
+/* ============================
+   PASSWORD FIELD
+   ============================ */
+.login-card .password-field {
   position: relative;
 }
 
-.password-field input {
-  width: 100%;
-  padding-right: 2.5rem;
-}
-
-.password-field .toggle-password {
+.login-card .password-field .toggle-password {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #777;
+  color: #65676b;
   font-size: 18px;
-  transition: 0.3s;
+  transition: color 0.3s ease, opacity 0.3s ease;
 }
 
-.password-field .toggle-password:hover {
-  color: #4f8ef7;
+.login-card .password-field .toggle-password:hover {
+  color: #184a72; /* lighter navy hover */
 }
 
-.password-field .toggle-password.disabled {
+.login-card .password-field .toggle-password.disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
+  color: #b0b3b8;
 }
 
-/* Button */
+/* ============================
+   BUTTONS
+   ============================ */
 .login-card button {
   width: 100%;
   padding: 14px;
   margin-top: 16px;
-  background-color: #4f8ef7;
+  background-color: #02253a;
   color: #fff;
   border: none;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
-  box-sizing: border-box;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-sizing: border-box;
 }
 
 .login-card button:hover:not(:disabled) {
-  background-color: #3c6fd3;
+  background-color: #02253a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(63, 160, 230, 0.3); /* soft blue shadow accent */
+}
+
+.login-card button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-card button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 37, 58, 0.3), 0 0 10px rgba(2, 37, 58, 0.5);
 }
 
 .login-card button:disabled {
@@ -127,33 +163,66 @@
   cursor: not-allowed;
 }
 
-/* Submit button specific styles */
-.submit-btn.loading {
-  background-color: #6b9bff;
-}
-
-/* Google Button */
-.google-btn {
+/* ============================
+   DIVIDER (or)
+   ============================ */
+.divider {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: #4285f4;
-  color: white;
-  border: none;
-  padding: 0.75rem;
+  text-align: center;
+  margin: 20px 0;
+  color: #777;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ccc;
+}
+
+.divider span {
+  padding: 0 10px;
+  font-size: 14px;
+  color: #777;
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+/* ============================
+   GOOGLE BUTTON
+   ============================ */
+.google-btn {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  color: #333;
+  font-weight: 500;
   border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
-  width: 100%;
-  margin-top: 1rem;
-  font-size: 16px;
-  font-weight: 600;
-  transition: 0.3s;
-  box-sizing: border-box;
+  transition: all 0.3s;
+  margin-top: 0;
 }
 
 .google-btn:hover:not(:disabled) {
-  background: #357ae8;
+  background: #f7f7f7;
+  border-color: #bbb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.google-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.google-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 37, 58, 0.3), 0 0 10px rgba(2, 37, 58, 0.5);
 }
 
 .google-btn:disabled {
@@ -161,383 +230,307 @@
   cursor: not-allowed;
 }
 
-.google-btn.loading {
-  background: #6b9bff;
+.google-icon {
+  width: 20px;
+  height: 20px;
 }
 
-/* Spinner animation for loading states */
-.spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Divider */
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 20px 0;
-  color: #777;
-  position: relative;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #ccc;
-  transform: translateY(-50%);
-}
-
-.divider span {
-  padding: 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #555;
-  white-space: nowrap;
-}
-
-/* Messages */
-.error-message {
-  color: #dc3545;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-  text-align: center;
-  padding: 8px;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-}
-
-.success-message {
-  color: #155724;
-  font-size: 14px;
-  margin: 10px 0;
-  text-align: center;
-  padding: 8px;
-  background-color: #d4edda;
-  border-radius: 8px;
-  border: 1px solid #c3e6cb;
-}
-
-/* Bottom navigation row */
-.bottom-navigation {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  width: 100%;
-  gap: 12px;
-  flex-wrap: nowrap; /* prevent wrapping so both items stay on one line */
-  min-height: 28px;  /* ensures consistent vertical alignment baseline */
-  box-sizing: border-box;
-  padding-top: 6px;  /* tiny spacing so divider / buttons don't feel cramped */
-}
-
-/* make each child an inline-flex and vertically centered for pixel-perfect alignment */
-.bottom-navigation > * {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;       /* remove default margins */
-  line-height: 1;  /* tighten line height so baselines match */
-}
-
-/* Left side (Sign Up) */
-.redirect-text {
-  font-size: 0.9rem;
-  color: #444;
-  text-align: left;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Forgot password under input */
+/* ============================
+   FORGOT PASSWORD - UPDATED
+   ============================ */
 .forgot-password {
-  text-align: left;
-  margin: 6px 0 0;
+  text-align: right;
+  margin-top: 6px;
+  margin-bottom: 0;
   font-size: 0.85rem;
-  display: flex;
-  align-items: center;
 }
 
-/* Link styling - no underline by default */
 .link-text {
-  color: #4f8ef7;
-  text-decoration: none !important; /* Remove browser underline */
+  color: #02253a; 
   cursor: pointer;
   font-weight: 600;
-  transition: color 0.3s ease;
+  text-decoration: none;
+  transition: all 0.3s;
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 4px;
   position: relative;
-  padding-bottom: 4px;      /* Controls underline distance */
-  line-height: 1;           /* Prevents extra space below text */
 }
 
+/* Smooth sliding underline effect */
 .link-text::after {
-  content: "";
+  content: '';
   position: absolute;
-  left: 0;
-  bottom: 0;
   width: 0;
   height: 2px;
-  background: currentColor;
-  transition: width 0.3s ease;
-  border-radius: 2px;
-  pointer-events: none;
+  bottom: 0;
+  left: 50%;
+  background-color: #02253a;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
 }
 
-.link-text:hover::after,
-.link-text:focus-visible::after {
+.link-text:hover::after {
   width: 100%;
 }
 
-/* Google button updated */
-.google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: #fff; /* White background */
-  border: 1px solid #b3d4fc; /* Light blue border */
-  padding: 0.6rem 1rem;
-  border-radius: 0.75rem;
+.link-text:hover {
+  color: #02253a;
+  text-decoration: none;
+}
+
+.link-text:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(2, 37, 58, 0.3);
+  background-color: rgba(2, 37, 58, 0.05);
+}
+
+/* ============================
+   BOTTOM NAV - UPDATED
+   ============================ */
+.bottom-navigation {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.redirect-text {
+  margin: 0;
+}
+
+/* Sign Up link with smooth sliding underline */
+.signup-link {
+  color: #02253a;
+  font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.3s;
+  position: relative;
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 4px;
 }
 
-.google-btn:hover {
-  background: #f7faff;
-  border-color: #4f8ef7;
+.signup-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background-color: #02253a;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
 }
 
-.google-icon {
-  flex-shrink: 0;
+.signup-link:hover::after {
+  width: 100%;
 }
 
+.signup-link:hover {
+  color: #02253a;
+  text-decoration: none;
+}
 
-/* Modal Styles */
+.signup-link:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(2, 37, 58, 0.3);
+  background-color: rgba(2, 37, 58, 0.05);
+}
+
+/* ============================
+   MODAL
+   ============================ */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.25s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .modal {
   background: white;
-  border-radius: 16px;
   padding: 30px;
-  width: 90%;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   max-width: 400px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  animation: modalSlideIn 0.28s ease-out;
-}
-
-@keyframes modalSlideIn {
-  from { opacity: 0; transform: scale(0.98) translateY(-8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  width: 90%;
 }
 
 .modal h2 {
+  margin-top: 0;
   margin-bottom: 20px;
   color: #1a1a1a;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
-  text-align: center;
 }
 
 .modal input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 16px;
   margin-bottom: 20px;
-  border: 1px solid #d1d9e6;
-  border-radius: 12px;
+  border: 2px solid #02253a;
+  border-radius: 10px;
   font-size: 16px;
-  transition: 0.3s;
+  background-color: #ffffff;
+  color: #1a1a1a;
+  transition: all 0.25s ease;
   box-sizing: border-box;
-  background-color: #fff;
-  color: #333;
 }
 
-.modal input:focus {
-  border-color: #4f8ef7;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.2);
+/* ============================
+   RESET PASSWORD MODAL INPUT - LIGHT BLUE MESSENGER STYLE
+   ============================ */
+.modal input {
+  width: 100%;
+  padding: 12px 14px;
+  margin: 10px 0;
+  border: 1px solid #ccc !important; /* neutral base border */
+  border-radius: 10px;
+  font-size: 15px;
+  background-color: #f0f2f5 !important; /* soft gray background */
+  color: #1a1a1a;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
 }
 
+/* ✅ Fixed modal input focus state - bright blue glow */
+.modal input:focus,
+.modal input:active {
+  border-color: #1a73e8 !important; /* vivid light blue */
+  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.45) !important; /* brighter glow */
+  background-color: #ffffff !important; /* clean white on focus */
+}
+
+/* ✅ Autofill fix for consistent color */
+.modal input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #f0f2f5 inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  border: 1px solid #ccc !important;
+  border-radius: 10px;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.modal input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  border-color: #1a73e8 !important;
+}
+
+/* ✅ Disabled state - muted appearance */
+.modal input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #e4e6eb !important;
+  border: 1px solid #ccc !important;
+}
+
+.modal input:disabled:focus,
+.modal input:disabled:active {
+  border-color: #ccc !important;
+  box-shadow: none !important;
+}
+
+/* ============================
+   MODAL BUTTONS
+   ============================ */
 .modal-actions {
   display: flex;
-  gap: 12px;
   justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.cancel-btn, .reset-btn {
-  padding: 12px 20px;
+.cancel-btn,
+.reset-btn {
   border: none;
+  padding: 10px 18px;
   border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+/* Cancel button */
 .cancel-btn {
-  background-color: #6c757d;
+  background: #6c757d;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
   color: white;
 }
 
-.cancel-btn:hover {
-  background-color: #5a6268;
+.cancel-btn:hover:not(:disabled) {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
 }
 
+.cancel-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.3);
+}
+
+/* Reset button */
 .reset-btn {
-  background-color: #4f8ef7;
+  background: #1a73e8; /* matches the input focus color */
   color: white;
+  box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
 }
 
 .reset-btn:hover:not(:disabled) {
-  background-color: #3c6fd3;
+  background: #1666c1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
 }
 
+.reset-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.3);
+}
+
+/* Disabled buttons */
+.cancel-btn:disabled,
 .reset-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ========================= */
-/* Loading Spinner Component */
-/* ========================= */
-.app-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f0f4ff, #d9e4ff);
-}
-
+/* Spinner */
 .spinner {
-  width: 60px;
-  height: 60px;
-  border: 6px solid rgba(79, 142, 247, 0.2);
-  border-top-color: #4f8ef7;
-  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
-/* Responsive */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================
+   RESPONSIVE DESIGN
+   ============================ */
 @media (max-width: 480px) {
-  .login-container {
-    padding: 10px;
-  }
-
-  .login-card {
-    padding: 30px 20px;
-    margin: 10px;
-  }
-
-  .login-card h1 {
-    font-size: 24px;
-  }
-
-  .login-card input,
-  .login-card button,
-  .google-btn {
-    font-size: 14px;
-  }
-
-  .modal {
-    padding: 20px;
-    margin: 10px;
-  }
-
-  .modal h2 {
-    font-size: 20px;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-  }
-
-  .cancel-btn, .reset-btn {
-    width: 100%;
-    justify-content: center;
-  }
+  .login-container { padding: 16px; }
+  .login-card { padding: 30px 20px; }
+  .login-logo { width: 50px; height: 50px; }
+  .login-card h1 { font-size: 22px; margin-bottom: 20px; }
+  .login-card input { padding: 12px 14px; font-size: 15px; }
+  .login-card button { padding: 12px; font-size: 15px; }
+  .google-btn { padding: 11px; }
+  .modal { padding: 25px 20px; }
+  .modal h2 { font-size: 20px; }
+  .modal-actions { flex-direction: column-reverse; gap: 8px; }
+  .cancel-btn, .reset-btn { width: 100%; justify-content: center; }
 }
 
-@media (max-width: 320px) {
-  .login-card {
-    padding: 20px 15px;
-  }
-
-  .login-card h1 {
-    font-size: 22px;
-  }
-
-  .modal {
-    padding: 15px;
-  }
+@media (max-width: 360px) {
+  .login-card { padding: 25px 18px; }
+  .login-card h1 { font-size: 20px; }
+  .login-card input { padding: 11px 12px; font-size: 14px; }
 }
-
-.google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 0.6rem 1rem;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.google-btn:hover {
-  background: #f7f7f7;
-}
-
-.google-icon {
-  flex-shrink: 0;
-}
-
-
-/* Center the bottom navigation and redirect text */
-.bottom-navigation {
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  text-align: center;
-}
-

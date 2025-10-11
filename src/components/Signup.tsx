@@ -124,6 +124,9 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
   return (
     <div className="signup-container">
       <div className="signup-card">
+        {/* Added Logo at the top */}
+        <img src="../images/logo.jpg" alt="TimeFly Logo" className="signup-logo" />
+        
         <h1>Create Your Account</h1>
 
         {!verificationStep ? (
@@ -165,7 +168,7 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
               Sign Up
             </button>
 
-            <div className="divider"><span>OR</span></div>
+            <div className="divider"><span>or</span></div>
 
             <button
               type="button"

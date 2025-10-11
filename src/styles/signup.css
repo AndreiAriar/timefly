@@ -1,3 +1,7 @@
+/* ============================
+   SIGNUP PAGE - UPDATED VERSION
+   ============================ */
+
 /* Container */
 .signup-container {
   display: flex;
@@ -9,12 +13,9 @@
   padding: 20px;
 }
 
-/* Card with Background Image */
+/* Card */
 .signup-card {
-  background: url('../images/logo.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: white;
   padding: 40px 30px;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -22,113 +23,152 @@
   max-width: 400px;
   text-align: center;
   position: relative;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  /* Optional: Add slight overlay to improve text contrast */
-  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Logo */
+.signup-logo {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 12px;
+  object-fit: contain;
 }
 
 /* Title */
 .signup-card h1 {
   margin-bottom: 24px;
-  color: #1a1a1a;
-  font-size: 28px;
+  color: #02253a;
+  font-size: 26px;
   font-weight: 600;
 }
 
-/* Input fields - Transparent */
+/* =============
+   INPUT FIELDS 
+   ============== */
 .signup-card input {
   width: 100%;
   padding: 14px 16px;
   margin: 10px 0;
-  border: 1px solid #d1d9e6;
+  border: 1px solid #ccc !important; /* softer neutral border */
   border-radius: 12px;
   font-size: 16px;
-  transition: 0.3s;
+  background-color: #f0f2f5 !important; /* gray background like Messenger */
+  color: #1a1a1a;
+  transition: all 0.25s ease;
   box-sizing: border-box;
-  /* Transparent background */
-  background-color: transparent;
-  color: #333; /* Dark text for readability */
-  /* Optional: Add subtle inner shadow for depth */
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Focus state */
-.signup-card input:focus {
-  border-color: #4f8ef7;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+/* ✅ Focused / active state - lighter navy border and glow */
+.signup-card input:focus,
+.signup-card input:active {
+  border-color: #184a72 !important;
+  background-color: #ffffff !important; /* turns white when focused */
+  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(24, 74, 114, 0.35) !important; /* soft navy glow */
 }
 
-/* Password field wrapper */
-.password-field {
+/* ✅ Chrome autofill fix (maintains correct colors) */
+.signup-card input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #f0f2f5 inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  border: 1px solid #ccc !important;
+  border-radius: 12px;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.signup-card input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  border-color: #184a72 !important;
+}
+
+/* ✅ Disabled inputs - muted gray state */
+.signup-card input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #e4e6eb !important;
+  border: 1px solid #ccc !important;
+}
+
+.signup-card input:disabled:focus,
+.signup-card input:disabled:active {
+  border-color: #ccc !important;
+  box-shadow: none !important;
+}
+
+/* ================
+   PASSWORD FIELD 
+   ================ */
+.signup-card .password-field {
   position: relative;
 }
 
-.password-field input {
-  width: 100%;
-  padding-right: 2.5rem;
-}
-
-.password-field .toggle-password {
+.signup-card .password-field .toggle-password {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #777;
+  color: #65676b; /* neutral gray */
   font-size: 18px;
-  transition: 0.3s;
+  transition: color 0.3s ease, opacity 0.3s ease;
 }
 
-.password-field .toggle-password:hover {
-  color: #4f8ef7;
+.signup-card .password-field .toggle-password:hover {
+  color: #184a72; /* lighter navy hover */
 }
 
-/* Button */
+.signup-card .password-field .toggle-password.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  color: #b0b3b8; /* lighter gray for disabled state */
+}
+
+
+/* ============================
+   BUTTONS - UPDATED with #02253a
+   ============================ */
 .signup-card button {
   width: 100%;
   padding: 14px;
   margin-top: 16px;
-  background-color: #4f8ef7;
+  background-color: #02253a;
   color: #fff;
   border: none;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
-  box-sizing: border-box;
-}
-
-.signup-card button:hover {
-  background-color: #3c6fd3;
-}
-
-/* Google Button */
-.google-btn {
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  background: #4285f4;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 12px;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 1rem;
-  font-size: 16px;
-  font-weight: 600;
-  transition: 0.3s;
+  gap: 8px;
   box-sizing: border-box;
 }
 
-.google-btn:hover {
-  background: #357ae8;
+.signup-card button:hover:not(:disabled) {
+  background-color: #02253a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 37, 58, 0.4);
 }
-/* Divider - Plain text with lines, no background box */
+
+.signup-card button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ✅ UPDATED BUTTON FOCUS HIGHLIGHT with #02253a */
+.signup-card button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 37, 58, 0.3), 0 0 10px rgba(2, 37, 58, 0.5);
+}
+
+.signup-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================
+   DIVIDER (or)
+   ============================ */
 .divider {
   display: flex;
   align-items: center;
@@ -137,217 +177,331 @@
   color: #777;
 }
 
-/* Left and right lines */
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: #ccc;
-  margin: 0 10px; /* ensures spacing so text is not overlapped */
 }
 
-/* Center text */
 .divider span {
+  padding: 0 10px;
   font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase; /* forces "or" → "OR" */
-  color: #555;
-  white-space: nowrap;
+  color: #777;
+  font-weight: 400;
 }
 
-
-/* Messages */
-.error-message {
-  color: #dc3545;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-  text-align: center;
-  padding: 8px;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
+/* ============================
+   GOOGLE BUTTON - UPDATED with #02253a
+   ============================ */
+.google-btn {
+  background: #ffffff;
+  border: 1px solid #02253a;
+  color: #02253a;
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 0;
 }
 
-.success-message {
-  color: #155724;
-  font-size: 14px;
-  margin: 10px 0;
-  text-align: center;
-  padding: 8px;
-  background-color: #d4edda;
-  border-radius: 8px;
-  border: 1px solid #c3e6cb;
+.google-btn:hover:not(:disabled) {
+  background: #02253a;
+  color: #ffffff;
+  border-color: #02253a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 37, 58, 0.4);
 }
 
-/* Navigation text */
-.signup-card p {
-  margin-top: 20px;
-  font-size: 14px;
-  color: #555;
+.google-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.redirect-text {
+/* ✅ UPDATED GOOGLE BUTTON FOCUS with #02253a */
+.google-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 37, 58, 0.3), 0 0 10px rgba(2, 37, 58, 0.5);
+}
+
+.google-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Login link */
+.login-link {
   margin-top: 1rem;
+  text-align: center;
   font-size: 0.9rem;
   color: #444;
 }
 
-/* Link styling */
-/* Link styling - no underline by default */
+/* Links */
 .link-text {
-  color: #4f8ef7;
-  text-decoration: none !important; /* Remove browser underline */
+  color: #02253a; 
   cursor: pointer;
   font-weight: 600;
-  transition: color 0.3s ease;
+  text-decoration: none;
+  transition: all 0.3s;
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 4px;
   position: relative;
-  padding-bottom: 4px;      /* Controls underline distance */
-  line-height: 1;           /* Prevents extra space below text */
-  outline: none;            /* ✅ Removes focus outline/box */
 }
 
-.link-text:focus,
-.link-text:active {
-  outline: none;            /* ✅ Ensure no box shows */
-  box-shadow: none;         /* ✅ Prevent shadow/glow on click */
-}
-
+/* Smooth sliding underline effect */
 .link-text::after {
-  content: "";
+  content: '';
   position: absolute;
-  left: 0;
-  bottom: 0;
   width: 0;
   height: 2px;
-  background: currentColor;
-  transition: width 0.3s ease;
-  border-radius: 2px;
-  pointer-events: none;
+  bottom: 0;
+  left: 50%;
+  background-color: #02253a;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
 }
 
-.link-text:hover::after,
-.link-text:focus-visible::after {
+.link-text:hover::after {
   width: 100%;
 }
 
-
-/* Responsive */
-@media (max-width: 480px) {
-  .signup-container {
-    padding: 10px;
-  }
-  
-  .signup-card {
-    padding: 30px 20px;
-    margin: 10px;
-  }
-  
-  .signup-card h1 {
-    font-size: 24px;
-  }
-  
-  .signup-card input,
-  .signup-card button,
-  .google-btn {
-    font-size: 14px;
-  }
+.link-text:hover {
+  color: #02253a;
+  text-decoration: none;
 }
 
-/* For very small screens */
-@media (max-width: 320px) {
-  .signup-card {
-    padding: 20px 15px;
-  }
-  
-  .signup-card h1 {
-    font-size: 22px;
-  }
+/* ✅ UPDATED LINK FOCUS with #02253a */
+.link-text:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(2, 37, 58, 0.3);
+  background-color: rgba(2, 37, 58, 0.05);
 }
 
-.google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: #fff;
-  border: 1px solid #ccc;
-  color: #444;
-  font-weight: 500;
-  padding: 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.google-btn:hover {
-  background: #f7f7f7;
-  border-color: #bbb;
-}
-.google-icon {
-  font-size: 1rem;   /* smaller so it matches text */
-  width: 18px;       /* fixed size for consistency */
-  height: 18px;
-  flex-shrink: 0;    /* prevents distortion */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Backdrop for modal */
+/* ============================
+   VERIFICATION OVERLAY
+   ============================ */
 .verification-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4); /* semi-transparent dark background */
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-/* White modal box */
 .verification-card {
+  background: white;
+  padding: 35px 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
   text-align: center;
-  padding: 2rem;
-  background: #fff; /* white modal background */
-  border-radius: 12px;
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
-  width: 100%;
-  max-width: 380px;
-  position: relative;
-  z-index: 1001;
 }
 
-/* Plane logo */
-.verification-card .plane-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 1rem auto;
-  background: url("/images/paper_plane.jpg") no-repeat center center;
-  background-size: contain;
+.verification-card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+  font-size: 22px;
+  font-weight: 600;
 }
 
-/* Verification input */
+.verification-card p {
+  margin-bottom: 20px;
+  color: #555;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.verification-card p span {
+  color: #02253a;
+  font-weight: 600;
+}
+
 .verification-card input {
-  margin: 1rem 0;
-  padding: 0.8rem;
-  font-size: 1.2rem;
-  letter-spacing: 4px;
-  text-align: center;
-  border: 1px solid #ddd;
-  border-radius: 8px;
   width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 2px solid #02253a;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 4px;
+  background-color: #ffffff;
+  color: #1a1a1a;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
 }
 
-/* Resend link */
-.resend-btn {
-  background: none;
+/* ✅ COMPLETELY FIXED: Consistent border width with enhanced shadow */
+.verification-card input:focus,
+.verification-card input:active {
+  border-color: #02253a;
+  border-width: 2px; /* Consistent border width */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 37, 58, 0.15); /* Enhanced shadow for focus state */
+  background-color: #ffffff;
+}
+
+.verification-card button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background-color: #02253a;
+  color: #fff;
   border: none;
-  color: #0078ff;
-  margin-top: 1rem;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  text-decoration: underline;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.verification-card button:hover:not(:disabled) {
+  background-color: #02253a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 37, 58, 0.4);
+}
+
+.verification-card button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ✅ UPDATED VERIFICATION BUTTON FOCUS with #02253a */
+.verification-card button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 37, 58, 0.3), 0 0 10px rgba(2, 37, 58, 0.5);
+}
+
+.verification-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Resend button */
+.resend-btn {
+  background-color: transparent !important;
+  color: #02253a !important;
+  border: 2px solid #02253a !important;
+  margin-top: 10px;
+}
+
+.resend-btn:hover:not(:disabled) {
+  background-color: rgba(2, 37, 58, 0.1) !important;
+  color: #02253a !important;
+  border-color: #02253a !important;
+  transform: translateY(-2px);
+}
+
+/* ✅ UPDATED RESEND BUTTON FOCUS with #02253a */
+.resend-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 37, 58, 0.2) !important;
+}
+
+/* Spinner */
+.spinner {
+  animation: spinSignup 1s linear infinite;
+}
+
+@keyframes spinSignup {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================
+   RESPONSIVE DESIGN
+   ============================ */
+@media (max-width: 480px) {
+  .signup-container {
+    padding: 16px;
+  }
+
+  .signup-card {
+    padding: 30px 20px;
+  }
+
+  .signup-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .signup-card h1 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .signup-card input {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+
+  .signup-card button {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .google-btn {
+    padding: 11px;
+  }
+
+  .verification-card {
+    padding: 30px 20px;
+  }
+
+  .verification-card h2 {
+    font-size: 20px;
+  }
+
+  .verification-card input {
+    font-size: 16px;
+    letter-spacing: 3px;
+  }
+}
+
+@media (max-width: 360px) {
+  .signup-card {
+    padding: 25px 18px;
+  }
+
+  .signup-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .signup-card h1 {
+    font-size: 20px;
+  }
+
+  .signup-card input {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .verification-card {
+    padding: 25px 18px;
+  }
 }

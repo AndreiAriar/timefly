@@ -245,6 +245,80 @@ app.post("/send-feedback", async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to send feedback" });
   }
 });
+// ============================
+// ❌ Send Appointment Cancellation Email
+// ============================
+app.post("/send-cancellation", async (req, res) => {
+  const { appointmentId, name, email, date, time, doctor, reason } = req.body;
+  console.log("📩 Cancellation request:", req.body);
+
+  if (!appointmentId || !name || !reason) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Missing required fields" });
+  }
+
+  try {
+    const transporter = createTransporter();
+
+    // Format the date nicely
+    let formattedDate = date;
+    if (date) {
+      const [year, month, day] = date.split("-");
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      formattedDate = dateObj.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+
+    // Send email to clinic
+    await transporter.sendMail({
+      from: `"TimeFly Clinic" <${process.env.EMAIL_USER}>`,
+      to: "timefly.healthcare@gmail.com",
+      subject: `❌ Appointment Cancellation - ${name}`,
+      html: `
+        <div style="font-family: 'Poppins', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+          <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="color: #991b1b; margin: 0;">⚠️ Appointment Cancelled</h2>
+          </div>
+          
+          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #374151;">Patient Information</h3>
+            <p style="margin: 5px 0;"><strong>Name:</strong> ${name}</p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${email || "N/A"}</p>
+            <p style="margin: 5px 0;"><strong>Appointment ID:</strong> ${appointmentId}</p>
+          </div>
+
+          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #374151;">Appointment Details</h3>
+            <p style="margin: 5px 0;"><strong>Doctor:</strong> ${doctor || "N/A"}</p>
+            <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate || "N/A"}</p>
+            <p style="margin: 5px 0;"><strong>Time:</strong> ${time || "N/A"}</p>
+          </div>
+
+          <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <h3 style="margin-top: 0; color: #92400e;">Cancellation Reason</h3>
+            <p style="color: #78350f; line-height: 1.6;">${reason}</p>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+          
+          <p style="font-size: 0.875rem; color: #6b7280; text-align: center;">
+            This cancellation notification was automatically sent from TimeFly's appointment management system.
+          </p>
+        </div>
+      `,
+    });
+
+    console.log(`✅ Cancellation email sent to clinic for appointment ${appointmentId}`);
+    res.json({ success: true, message: "Cancellation email sent successfully!" });
+  } catch (error) {
+    console.error("❌ Error sending cancellation email:", error.message);
+    res.status(500).json({ success: false, error: "Failed to send cancellation email" });
+  }
+});
 
 // ============================
 // 🛑 404 Handler

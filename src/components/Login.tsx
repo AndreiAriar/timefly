@@ -34,39 +34,23 @@ const Login: React.FC = () => {
         const role = userData.role;
 
         if (role === "Doctor") {
-          toast.success("🎉 Welcome Doctor!", { autoClose: 10000, closeButton: true });
-          setTimeout(() => {
-            toast.dismiss();
-            toast.info("Redirecting to doctor dashboard...", { autoClose: 10000, closeButton: true });
-            setTimeout(() => navigate("/doctor-dashboard"), 2000);
-          }, 2000);
+          toast.success("🎉 Welcome Doctor!", { autoClose: 10000 });
+          setTimeout(() => navigate("/doctor-dashboard"), 2000);
         } else if (role === "Staff" || role === "Admin") {
-          toast.success("🎉 Welcome Staff!", { autoClose: 10000, closeButton: true });
-          setTimeout(() => {
-            toast.dismiss();
-            toast.info("Redirecting to staff dashboard...", { autoClose: 10000, closeButton: true });
-            setTimeout(() => navigate("/staff-dashboard"), 2000);
-          }, 2000);
+          toast.success("🎉 Welcome Staff!", { autoClose: 10000 });
+          setTimeout(() => navigate("/staff-dashboard"), 2000);
         } else {
-          toast.success("🎉 Logged in successfully!", { autoClose: 10000, closeButton: true });
-          setTimeout(() => {
-            toast.dismiss();
-            toast.info("Redirecting to patient dashboard...", { autoClose: 10000, closeButton: true });
-            setTimeout(() => navigate("/dashboard"), 2000);
-          }, 2000);
+          toast.success("🎉 Logged in successfully!", { autoClose: 10000 });
+          setTimeout(() => navigate("/dashboard"), 2000);
         }
         return;
       }
 
-      toast.success("🎉 Logged in successfully!", { autoClose: 10000, closeButton: true });
-      setTimeout(() => {
-        toast.dismiss();
-        toast.info("Redirecting to dashboard...", { autoClose: 10000, closeButton: true });
-        setTimeout(() => navigate("/dashboard"), 2000);
-      }, 2000);
+      toast.success("🎉 Logged in successfully!", { autoClose: 10000 });
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       console.error("Error checking user role:", error);
-      toast.error("Failed to verify role. Redirecting to patient dashboard.", { autoClose: 10000, closeButton: true });
+      toast.error("Failed to verify role. Redirecting to dashboard.");
       setTimeout(() => navigate("/dashboard"), 3000);
     }
   };
@@ -80,7 +64,7 @@ const Login: React.FC = () => {
       await checkUserRoleAndRedirect(userCredential.user);
     } catch (err: any) {
       setIsLoading(false);
-      toast.error(`❌ ${err.message || "Login failed"}`, { autoClose: 10000, closeButton: true });
+      toast.error(`❌ ${err.message || "Login failed"}`);
     }
   };
 
@@ -92,23 +76,23 @@ const Login: React.FC = () => {
       await checkUserRoleAndRedirect(userCredential.user);
     } catch (err: any) {
       setIsGoogleLoading(false);
-      toast.error(`❌ ${err.message || "Google sign-in failed"}`, { autoClose: 10000, closeButton: true });
+      toast.error(`❌ ${err.message || "Google sign-in failed"}`);
     }
   };
 
   const handlePasswordReset = async () => {
     if (!resetEmail) {
-      toast.error("👉 Please enter your email.", { autoClose: 10000, closeButton: true });
+      toast.error("👉 Please enter your email.");
       return;
     }
     setResetLoading(true);
     try {
       await sendPasswordResetEmail(auth, resetEmail);
-      toast.success("📩 Password reset email sent! Check your inbox.", { autoClose: 10000, closeButton: true });
+      toast.success("📧 Password reset email sent!");
       setIsModalOpen(false);
       setResetEmail("");
     } catch (err: any) {
-      toast.error(`❌ ${err.message || "Failed to send reset email"}`, { autoClose: 10000, closeButton: true });
+      toast.error(`❌ ${err.message || "Failed to send reset email"}`);
     } finally {
       setResetLoading(false);
     }
@@ -125,7 +109,11 @@ const Login: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>TimeFly Login</h1>
+        {/* Added Logo at the top */}
+        <img src="../images/logo.jpg" alt="TimeFly Logo" className="login-logo" />
+
+        <h1>Login to TimeFly</h1>
+
         <form onSubmit={handleSubmit}>
           <input
             id="email"
@@ -137,7 +125,6 @@ const Login: React.FC = () => {
             autoComplete="email"
             required
             disabled={isFormDisabled}
-            className={isFormDisabled ? "disabled" : ""}
           />
 
           <div className="password-field">
@@ -151,13 +138,10 @@ const Login: React.FC = () => {
               autoComplete="current-password"
               required
               disabled={isFormDisabled}
-              className={isFormDisabled ? "disabled" : ""}
             />
             <span
-              className={`toggle-password ${isFormDisabled ? "disabled" : ""}`}
+              className="toggle-password"
               onClick={() => !isFormDisabled && setShowPassword(!showPassword)}
-              role="button"
-              tabIndex={isFormDisabled ? -1 : 0}
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
@@ -165,7 +149,7 @@ const Login: React.FC = () => {
 
           <p className="forgot-password">
             <span
-              className={`link-text ${isFormDisabled ? "disabled" : ""}`}
+              className="link-text"
               onClick={() => !isFormDisabled && setIsModalOpen(true)}
             >
               Forgot Password?
@@ -175,7 +159,6 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={isFormDisabled}
-            className={`submit-btn ${isFormDisabled ? "loading" : ""}`}
           >
             {isLoading ? (
               <>
@@ -187,11 +170,11 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        <div className="divider"><span>OR</span></div>
+        <div className="divider"><span>or</span></div>
 
         <button
           onClick={handleGoogleSignIn}
-          className={`google-btn ${isGoogleLoading ? "loading" : ""}`}
+          className="google-btn"
           disabled={isFormDisabled}
         >
           {isGoogleLoading ? (
@@ -212,9 +195,9 @@ const Login: React.FC = () => {
 
         <div className="bottom-navigation">
           <p className="redirect-text">
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <span
-              className={`link-text ${isFormDisabled ? "disabled" : ""}`}
+              className="link-text"
               onClick={() => !isFormDisabled && navigate("/signup")}
             >
               Sign Up
@@ -223,6 +206,7 @@ const Login: React.FC = () => {
         </div>
       </div>
 
+      {/* Password Reset Modal */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal">
@@ -236,18 +220,10 @@ const Login: React.FC = () => {
               disabled={resetLoading}
             />
             <div className="modal-actions">
-              <button
-                className="cancel-btn"
-                onClick={handleModalClose}
-                disabled={resetLoading}
-              >
+              <button className="cancel-btn" onClick={handleModalClose} disabled={resetLoading}>
                 Cancel
               </button>
-              <button
-                className="reset-btn"
-                onClick={handlePasswordReset}
-                disabled={resetLoading}
-              >
+              <button className="reset-btn" onClick={handlePasswordReset} disabled={resetLoading}>
                 {resetLoading ? (
                   <>
                     <FaSpinner className="spinner" /> Sending...

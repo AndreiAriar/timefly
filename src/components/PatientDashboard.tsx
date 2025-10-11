@@ -44,7 +44,7 @@ import { db, auth } from '../../firebase';
 import "../styles/dashboard.css";
 import { toast } from "react-toastify";
 import { useSearch } from "./SearchContext"; 
-import { useTheme } from "../App";
+import { useTheme } from "./ThemeContext";
 
 
 
@@ -151,7 +151,7 @@ interface Notification {
 
 const PatientDashboard = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const { darkMode: isDarkMode, toggleTheme: toggleDarkMode } = useTheme();
+  const { darkMode: isDarkMode, toggleDarkMode } = useTheme();
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -183,6 +183,9 @@ const PatientDashboard = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [isSendingCancellation, setIsSendingCancellation] = useState(false);
 
   // Add notification function
   const addNotification = (
@@ -544,25 +547,16 @@ const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElem
     }
     return days;
   };
+
 const generateTimeSlots = () => {
   const slots: TimeSlot[] = [];
-  
-  // Use selectedCalendarDoctor if in wizard, otherwise use form doctor
+
   const doctorId = selectedCalendarDoctor?.id || formData.doctor;
   const dateToUse = selectedCalendarDate || formData.date;
-  
   const selectedDoctor = doctors.find(doc => doc.id === doctorId);
-  
-  // Add debugging
-  console.log('Generating time slots:', {
-    selectedDoctorId: doctorId,
-    selectedDate: dateToUse,
-    doctorFound: !!selectedDoctor,
-    allDoctors: doctors.map(d => ({ id: d.id, name: d.name }))
-  });
-  
+
   if (!selectedDoctor || !dateToUse) {
-    console.log('Missing doctor or date');
+    console.log("Missing doctor or date");
     return slots;
   }
 
@@ -572,46 +566,69 @@ const generateTimeSlots = () => {
     workingHours = scheduleForDate.customHours;
   }
 
-  const [startHour, startMinute] = workingHours.start.split(':').map(Number);
-  const [endHour, endMinute] = workingHours.end.split(':').map(Number);
+  const bufferTime = selectedDoctor.bufferTime || 15; // Default 15-minute buffer
+  const [startHour, startMinute] = workingHours.start.split(":").map(Number);
+  const [endHour, endMinute] = workingHours.end.split(":").map(Number);
   const startTotalMinutes = startHour * 60 + startMinute;
   const endTotalMinutes = endHour * 60 + endMinute;
 
   const now = new Date();
-  const philippinesNow = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
-  );
+  const philippinesNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
   const currentDateStr = philippinesNow.toISOString().split("T")[0];
   const currentTotalMinutes = philippinesNow.getHours() * 60 + philippinesNow.getMinutes();
 
-  for (let totalMinutes = startTotalMinutes; totalMinutes < endTotalMinutes; totalMinutes += 30) {
-    const hour = Math.floor(totalMinutes / 60);
-    const minute = totalMinutes % 60;
-    const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  // Each cycle = 15 active mins + 15 buffer
+  const activeDuration = 15;
+  const slotDuration = activeDuration + bufferTime;
+
+  for (let totalMinutes = startTotalMinutes; totalMinutes + slotDuration <= endTotalMinutes; totalMinutes += slotDuration) {
+    const appointmentStart = totalMinutes;
+    const appointmentEnd = appointmentStart + activeDuration;
+    const bufferStart = appointmentEnd;
+
+    // Convert appointment start to readable format
+    const time24 = `${Math.floor(appointmentStart / 60)
+      .toString()
+      .padStart(2, "0")}:${(appointmentStart % 60).toString().padStart(2, "0")}`;
     const time12 = convertTo12Hour(time24);
 
-    if (dateToUse === currentDateStr && totalMinutes < currentTotalMinutes) {
-      continue;
-    }
+    if (dateToUse === currentDateStr && appointmentStart < currentTotalMinutes) continue;
 
-    const isBooked = appointments.some(apt =>
-      apt.date === dateToUse &&
-      apt.doctorId === selectedDoctor.id && 
-      apt.time === time12 &&
-      apt.status !== 'cancelled' &&
-      (editingAppointment ? apt.id !== editingAppointment.id : true)
+    const isBooked = appointments.some(
+      (apt) =>
+        apt.date === dateToUse &&
+        apt.doctorId === selectedDoctor.id &&
+        apt.time === time12 &&
+        apt.status !== "cancelled" &&
+        (editingAppointment ? apt.id !== editingAppointment.id : true)
     );
 
+    // Add normal slot
     slots.push({
       time: time12,
       available: !isBooked,
-      booked: isBooked
+      booked: isBooked,
+      emergency: false
+    });
+
+    // Add emergency buffer slot (only available if emergency priority is selected)
+    const bufferTime24 = `${Math.floor(bufferStart / 60)
+      .toString()
+      .padStart(2, "0")}:${(bufferStart % 60).toString().padStart(2, "0")}`;
+    const bufferTime12 = convertTo12Hour(bufferTime24);
+
+    slots.push({
+      time: bufferTime12,
+      available: formData.priority === "emergency" && !isBooked,
+      booked: isBooked,
+      emergency: true
     });
   }
-  
-  console.log('Generated slots:', slots.length);
+
+  console.log("Generated slots with emergency buffer:", slots.length);
   return slots;
 };
+
   const convertTo12Hour = (time24: string): string => {
     const [hours, minutes] = time24.split(':');
     const hour = parseInt(hours);
@@ -959,19 +976,65 @@ if (editingAppointment) {
   }
 };
 
-  const handleCancelAppointment = async (id: string) => {
-    try {
-      const appointmentRef = doc(db, 'appointments', id);
-      await updateDoc(appointmentRef, {
-        status: 'cancelled',
-        updatedAt: serverTimestamp()
-      });
-      addNotification('info', 'Appointment cancelled successfully');
-    } catch (error) {
-      console.error('Error cancelling appointment:', error);
-      addNotification('error', 'Failed to cancel appointment');
+const handleCancelAppointment = async (id: string, reason: string) => {
+  try {
+    setIsSendingCancellation(true);
+    
+    // Get appointment details
+    const appointment = appointments.find(apt => apt.id === id);
+    if (!appointment) {
+      addNotification('error', 'Appointment not found');
+      return;
     }
-  };
+
+    // Update appointment status in Firebase
+    const appointmentRef = doc(db, 'appointments', id);
+    await updateDoc(appointmentRef, {
+      status: 'cancelled',
+      cancellationReason: reason,
+      cancelledAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    // Send cancellation email to clinic
+    try {
+      const response = await fetch('http://127.0.0.1:5000/send-cancellation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appointmentId: id,
+          name: appointment.name,
+          email: appointment.email || currentUser?.email || 'N/A',
+          date: appointment.date,
+          time: appointment.time,
+          doctor: appointment.doctor,
+          reason: reason
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ Cancellation email sent to clinic');
+      } else {
+        console.warn('⚠️ Cancellation email failed:', data.error);
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending cancellation email:', emailError);
+      // Don't fail the cancellation if email fails
+    }
+
+    addNotification('info', 'Appointment cancelled successfully');
+    setShowCancelModal(false);
+    setCancelReason('');
+    setSelectedAppointment(null);
+    
+  } catch (error) {
+    console.error('Error cancelling appointment:', error);
+    addNotification('error', 'Failed to cancel appointment');
+  } finally {
+    setIsSendingCancellation(false);
+  }
+};
 
   const handleReschedule = (appointment: Appointment) => {
     setEditingAppointment(appointment);
@@ -1155,7 +1218,7 @@ if (editingAppointment) {
         </div>
       </section>
 
-   {/* Main Content */}
+{/* Main Content */}
 <div className="main-content">
   {/* My Appointments */}
   <section className="appointments-section">
@@ -1262,7 +1325,10 @@ if (editingAppointment) {
                 </button>
                 <button
                   className="action-btn cancel-btn"
-                  onClick={() => handleCancelAppointment(appointment.id)}
+                  onClick={() => {
+                    setSelectedAppointment(appointment);
+                    setShowCancelModal(true);
+                  }}
                   aria-label={`Cancel appointment for ${appointment.name}`}
                   title={`Cancel appointment for ${appointment.name}`}
                 >
@@ -1276,74 +1342,189 @@ if (editingAppointment) {
     </div>
   </section>
 
-{/* Current Queue */}
-<section className="queue-section">
-  <div className="section-header">
-    <div className="section-title">
-      <Clock size={20} />
-      Current Queue
-    </div>
-    <div className="section-subtitle">
-      Real-time queue status - All appointments for today
-    </div>
-  </div>
-
-  {/* Now Serving */}
-  <div className="queue-summary">
-    <span className="serving-label">Now Serving</span>
-    <span className="serving-number">
-      #{currentPatient?.queueNumber || 'None'}
-    </span>
-  </div>
-
-  {/* Next Patient */}
-  {nextPatient && (
-    <div className="queue-summary next-patient">
-      <span className="serving-label">Up Next</span>
-      <span className="serving-number">#{nextPatient.queueNumber}</span>
-    </div>
-  )}
-
-  {/* Queue List */}
-  <div className="queue-list">
-    <div className="queue-header">
-      <span>Queue showing all appointments</span>
+  {/* ✅ KEEP THIS - Current Queue (FIRST ONE) */}
+  <section className="queue-section">
+    <div className="section-header">
+      <div className="section-title">
+        <Clock size={20} />
+        Current Queue
+      </div>
+      <div className="section-subtitle">
+        Real-time queue status - All appointments for today
+      </div>
     </div>
 
-    {queue.length > 0 ? (
-      queue.map((patient) => (
-        <div
-          key={patient.id}
-          className={`queue-card status-${(patient.status || '').toLowerCase()}`}
-        >
-          {/* Top Row */}
-          <div className="queue-top">
-            <span className="queue-number">#{patient.queueNumber}</span>
+    {/* Now Serving */}
+    <div className="queue-summary">
+      <span className="serving-label">Now Serving</span>
+      <span className="serving-number">
+        #{currentPatient?.queueNumber || 'None'}
+      </span>
+    </div>
 
-            <div className="queue-time">
-              <div className="appointment-time">{patient.time}</div>
-              <div className="appointment-date">{patient.date}</div>
-            </div>
-          </div>
-
-          {/* Middle */}
-          <div className="queue-body">
-            <div className="booking-status-row">
-              <span className={`status-pill ${patient.status?.toLowerCase() || ''}`}>
-                {patient.status}
-              </span>
-            </div>
-          </div>
-        </div>
-      ))
-    ) : (
-      <div className="empty-queue">
-        <p>No patients in queue for today</p>
+    {/* Next Patient */}
+    {nextPatient && (
+      <div className="queue-summary next-patient">
+        <span className="serving-label">Up Next</span>
+        <span className="serving-number">#{nextPatient.queueNumber}</span>
       </div>
     )}
+
+   {/* Queue List */}
+<div className="queue-list">
+  <div className="queue-header">
+    <span>Queue showing all appointments</span>
   </div>
+
+  {queue.length > 0 ? (
+    queue.map((patient) => (
+      <div
+        key={patient.id}
+        className={`queue-card 
+          status-${(patient.status || '').toLowerCase()} 
+          priority-${(patient.priority || '').toLowerCase()}`}
+      >
+        {/* Top Row */}
+        <div className="queue-top">
+          <span className="queue-number">#{patient.queueNumber}</span>
+
+          <div className="queue-time">
+            <div className="appointment-time">{patient.time}</div>
+            <div className="appointment-date">{patient.date}</div>
+          </div>
+        </div>
+
+        {/* Middle */}
+        <div className="queue-body">
+          <div className="booking-status-row">
+            {/* Status Pill */}
+            <span className={`status-pill ${patient.status?.toLowerCase() || ''}`}>
+              {patient.status}
+            </span>
+
+            {/* Priority Pill */}
+            <span className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}>
+              {patient.priority === 'emergency' && '🚨 Emergency'}
+              {patient.priority === 'urgent' && '⚠️ Urgent'}
+              {patient.priority === 'normal' && 'Normal'}
+            </span>
+          </div>
+        </div>
+      </div>
+    ))
+  ) : (
+    <div className="empty-queue">
+      <p>No patients in queue for today</p>
+    </div>
+  )}
+</div>
 </section>
 </div>
+{/* ✅ Close main-content div here */}
+
+{/* Cancel Appointment Modal */}
+{showCancelModal && selectedAppointment && (
+  <div 
+    className="modal-overlay" 
+    onClick={() => {
+      setShowCancelModal(false);
+      setCancelReason('');
+      setSelectedAppointment(null);
+    }}
+  >
+    <div
+      className="modal-content cancel-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="modal-header">
+        <h3>Cancel Appointment</h3>
+        <button
+          className="modal-close"
+          onClick={() => {
+            setShowCancelModal(false);
+            setCancelReason('');
+            setSelectedAppointment(null);
+          }}
+          aria-label="Close cancel modal"
+          title="Close cancel modal"
+        >
+          <XCircle size={20} />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="cancel-modal-content">
+        <div className="cancel-warning">
+          <AlertTriangle size={48} className="warning-icon" />
+          <h4>Are you sure you want to cancel this appointment?</h4>
+          <p>This action cannot be undone.</p>
+        </div>
+
+        <div className="cancel-appointment-details">
+          <p><strong>Patient:</strong> {selectedAppointment.name}</p>
+          <p><strong>Doctor:</strong> {selectedAppointment.doctor}</p>
+          <p><strong>Date:</strong> {selectedAppointment.date}</p>
+          <p><strong>Time:</strong> {selectedAppointment.time}</p>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="cancelReason">
+            Reason for cancellation *
+          </label>
+          <textarea
+            id="cancelReason"
+            className="cancel-reason-input"
+            placeholder="Please provide a reason for cancelling this appointment..."
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            rows={4}
+            required
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="cancel-modal-actions">
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              setShowCancelModal(false);
+              setCancelReason('');
+              setSelectedAppointment(null);
+            }}
+            disabled={isSendingCancellation}
+          >
+            No, Keep Appointment
+          </button>
+          <button
+            className="btn-danger"
+            onClick={() => {
+              if (cancelReason.trim()) {
+                handleCancelAppointment(selectedAppointment.id, cancelReason);
+              } else {
+                addNotification('error', 'Please provide a reason for cancellation');
+              }
+            }}
+            disabled={!cancelReason.trim() || isSendingCancellation}
+          >
+            {isSendingCancellation ? (
+              <>
+                <div className="button-spinner"></div>
+                Cancelling...
+              </>
+            ) : (
+              <>
+                <Trash2 size={16} />
+                Yes, Cancel Appointment
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 
 {/* ===== CALENDAR VIEW MODAL (3-Step Wizard - Full Update) ===== */}
 {showCalendarView && (
@@ -1996,43 +2177,60 @@ if (editingAppointment) {
           </div>
         </div>
 
-        {/* UPDATED: Time Slots Section with better visibility */}
-        {formData.date && formData.doctor && (
-          <div className="time-slots-section">
-            <label>Available Time Slots *</label>
-            {timeSlots.length === 0 ? (
-              <div className="no-slots-message">
-                No available time slots for this date. Please select another date.
-              </div>
-            ) : (
-              <div className="time-slots-grid">
-                {timeSlots.map((slot) => (
-                  <button
-                    key={slot.time}
-                    type="button"
-                    className={`time-slot ${!slot.available ? "booked" : ""} ${
-                      formData.time === slot.time ? "selected" : ""
-                    }`}
-                    onClick={() =>
-                      slot.available &&
-                      setFormData((prev) => ({ ...prev, time: slot.time }))
-                    }
-                    disabled={!slot.available}
-                    aria-label={`${slot.time} ${
-                      slot.available ? "available" : "booked"
-                    }`}
-                    title={`${slot.time} ${slot.available ? "available" : "booked"}`}
-                  >
-                    {slot.time}
-                    {!slot.available && (
-                      <span className="booked-indicator">Booked</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {/* UPDATED: Time Slots Section with Emergency Buffer Visibility */}
+{formData.date && formData.doctor && (
+  <div className="time-slots-section">
+    <label>Available Time Slots *</label>
+    {timeSlots.length === 0 ? (
+      <div className="no-slots-message">
+        No available time slots for this date. Please select another date.
+      </div>
+    ) : (
+      <div className="time-slots-grid">
+        {timeSlots
+          // Only show emergency buffer slots if priority is set to "emergency"
+          .filter((slot) =>
+            formData.priority === "emergency" ? true : !slot.emergency
+          )
+          .map((slot) => (
+            <button
+              key={slot.time}
+              type="button"
+              className={`time-slot 
+                ${!slot.available ? "booked" : ""} 
+                ${slot.emergency ? "emergency-slot" : ""} 
+                ${formData.time === slot.time ? "selected" : ""}`}
+              onClick={() =>
+                slot.available &&
+                setFormData((prev) => ({ ...prev, time: slot.time }))
+              }
+              disabled={
+                !slot.available ||
+                (slot.emergency && formData.priority !== "emergency")
+              }
+              aria-label={`${slot.time} ${
+                slot.available ? "available" : "booked"
+              }`}
+              title={
+                slot.emergency
+                  ? "Emergency Only"
+                  : `${slot.time} ${slot.available ? "available" : "booked"}`
+              }
+            >
+              {slot.time}
+              {slot.emergency && (
+                <span className="emergency-badge">Emergency Only</span>
+              )}
+              {!slot.available && !slot.emergency && (
+                <span className="booked-indicator">Booked</span>
+              )}
+            </button>
+          ))}
+      </div>
+    )}
+  </div>
+)}
+
 
         {!formData.date && !formData.doctor && (
           <div className="form-hint-box">
@@ -2295,18 +2493,19 @@ if (editingAppointment) {
             <Edit size={16} /> Reschedule
           </button>
           <button
-            className="btn-danger"
-            onClick={() => {
-              const appointment = selectedAppointment || selectedProfile;
-              if (appointment) {
-                handleCancelAppointment(appointment.id);
-                setShowDetailsModal(false);
-                setSelectedProfile(null);
-              }
-            }}
-          >
-            <Trash2 size={16} /> Cancel Appointment
-          </button>
+  className="btn-danger"
+  onClick={() => {
+    const appointment = selectedAppointment || selectedProfile;
+    if (appointment) {
+      setShowDetailsModal(false);
+      setSelectedProfile(null);
+      setSelectedAppointment(appointment);  // ✅ Set appointment
+      setShowCancelModal(true);  // ✅ Open cancel modal instead
+    }
+  }}
+>
+  <Trash2 size={16} /> Cancel Appointment
+</button>
         </div>
       </div>
     </div>
