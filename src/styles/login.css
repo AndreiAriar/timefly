@@ -40,9 +40,10 @@
   font-size: 26px;
   font-weight: 600;
 }
-/* ============================
-   INPUT FIELDS - FINAL BRAND STYLE (EXCLUSIVE TO LOGIN)
-   ============================ */
+
+/* ==============
+   INPUT FIELDS 
+   ============== */
 .login-card input {
   width: 100%;
   padding: 14px 16px;
@@ -56,13 +57,13 @@
   box-sizing: border-box;
 }
 
-/* ✅ Focused / active state - lighter navy blue glow */
+/* ✅ Focused / active state - thinner black glow */
 .login-card input:focus,
 .login-card input:active {
-  border-color: #184a72 !important;
+  border-color: #000000 !important;
   background-color: #ffffff !important; /* white on focus */
   outline: none !important;
-  box-shadow: 0 0 0 4px rgba(24, 74, 114, 0.35) !important; /* lighter navy glow */
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35) !important; /* thinner black glow */
 }
 
 /* ✅ Chrome autofill fix */
@@ -76,7 +77,7 @@
 
 .login-card input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-  border-color: #184a72 !important;
+  border-color: #000000 !important;
 }
 
 /* ✅ Disabled state - muted gray */

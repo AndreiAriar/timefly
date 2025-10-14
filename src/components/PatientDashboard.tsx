@@ -1341,83 +1341,80 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       )}
     </div>
   </section>
-
-  {/* ✅ KEEP THIS - Current Queue (FIRST ONE) */}
-  <section className="queue-section">
-    <div className="section-header">
-      <div className="section-title">
-        <Clock size={20} />
-        Current Queue
-      </div>
-      <div className="section-subtitle">
-        Real-time queue status - All appointments for today
-      </div>
+{/* ✅ KEEP THIS - Current Queue (FIRST ONE) */}
+<section className="queue-section">
+  <div className="section-header">
+    <div className="section-title">
+      <Clock size={20} />
+      Current Queue
     </div>
-
-    {/* Now Serving */}
-    <div className="queue-summary">
-      <span className="serving-label">Now Serving</span>
-      <span className="serving-number">
-        #{currentPatient?.queueNumber || 'None'}
-      </span>
+    <div className="section-subtitle">
+      Real-time queue status - All appointments for today
     </div>
-
-    {/* Next Patient */}
-    {nextPatient && (
-      <div className="queue-summary next-patient">
-        <span className="serving-label">Up Next</span>
-        <span className="serving-number">#{nextPatient.queueNumber}</span>
-      </div>
-    )}
-
-   {/* Queue List */}
-<div className="queue-list">
-  <div className="queue-header">
-    <span>Queue showing all appointments</span>
   </div>
-
-  {queue.length > 0 ? (
-    queue.map((patient) => (
-      <div
-        key={patient.id}
-        className={`queue-card 
-          status-${(patient.status || '').toLowerCase()} 
-          priority-${(patient.priority || '').toLowerCase()}`}
-      >
-        {/* Top Row */}
-        <div className="queue-top">
-          <span className="queue-number">#{patient.queueNumber}</span>
-
-          <div className="queue-time">
-            <div className="appointment-time">{patient.time}</div>
-            <div className="appointment-date">{patient.date}</div>
-          </div>
-        </div>
-
-        {/* Middle */}
-        <div className="queue-body">
-          <div className="booking-status-row">
-            {/* Status Pill */}
-            <span className={`status-pill ${patient.status?.toLowerCase() || ''}`}>
-              {patient.status}
-            </span>
-
-            {/* Priority Pill */}
-            <span className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}>
-              {patient.priority === 'emergency' && '🚨 Emergency'}
-              {patient.priority === 'urgent' && '⚠️ Urgent'}
-              {patient.priority === 'normal' && 'Normal'}
-            </span>
-          </div>
-        </div>
-      </div>
-    ))
-  ) : (
-    <div className="empty-queue">
-      <p>No patients in queue for today</p>
+  {/* Now Serving */}
+  <div className="queue-summary">
+    <span className="serving-label">Now Serving</span>
+    <span className="serving-number">
+      #{currentPatient?.queueNumber || 'None'}
+    </span>
+  </div>
+  {/* Next Patient */}
+  {nextPatient && (
+    <div className="queue-summary next-patient">
+      <span className="serving-label">Up Next</span>
+      <span className="serving-number">#{nextPatient.queueNumber}</span>
     </div>
   )}
-</div>
+  {/* Queue List */}
+  <div className="queue-list">
+    <div className="queue-header">
+      <span>Queue showing all appointments</span>
+    </div>
+    {queue.length > 0 ? (
+      queue.map((patient) => (
+        <div
+          key={patient.id}
+          className={`queue-card 
+            status-${(patient.status || '').toLowerCase()} 
+            priority-${(patient.priority || '').toLowerCase()} 
+            ${patient.priority === 'emergency' ? 'emergency-blinking' : ''}`}
+        >
+          {/* Top Row */}
+          <div className="queue-top">
+            <span className="queue-number">#{patient.queueNumber}</span>
+            <div className="queue-time">
+              <div className="appointment-time">{patient.time}</div>
+              <div className="appointment-date">{patient.date}</div>
+            </div>
+          </div>
+          {/* Middle */}
+          <div className="queue-body">
+            <div className="booking-status-row">
+              {/* Status Pill */}
+              <span
+                className={`status-pill ${patient.status?.toLowerCase() || ''}`}
+              >
+                {patient.status}
+              </span>
+              {/* Priority Pill */}
+              <span
+                className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}
+              >
+                {patient.priority === 'emergency' && '🚨 Emergency'}
+                {patient.priority === 'urgent' && '⚠️ Urgent'}
+                {patient.priority === 'normal' && 'Normal'}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))
+    ) : (
+      <div className="empty-queue">
+        <p>No patients in queue for today</p>
+      </div>
+    )}
+  </div>
 </section>
 </div>
 {/* ✅ Close main-content div here */}

@@ -18,12 +18,20 @@ import {
 } from "firebase/auth";
 import "../styles/header.css";
 
+/* ============================
+   HEADER PROPS (UPDATED)
+   ============================ */
 interface HeaderProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  placeholder?: string; // ✅ added to allow dynamic placeholder
 }
 
-const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
+const Header: React.FC<HeaderProps> = ({
+  searchTerm,
+  setSearchTerm,
+  placeholder,
+}) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -125,10 +133,11 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
     }
   };
 
+  /* ===== DYNAMIC SEARCH PLACEHOLDER ===== */
   const getSearchPlaceholder = () => {
+    if (placeholder) return placeholder; // ✅ prioritize prop placeholder
     if (location.pathname.includes("/doctors")) return "Search doctors...";
-    if (location.pathname.includes("/appointments"))
-      return "Search appointments...";
+    if (location.pathname.includes("/appointments")) return "Search appointments...";
     return "Search appointments, patients...";
   };
 
@@ -178,7 +187,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, setSearchTerm }) => {
         </div>
 
         <div className="header-right">
-          {/* UPDATED: Animated Inline Search */}
+          {/* ===== SEARCH LINE INPUT ===== */}
           <div
             ref={searchRef}
             className={`search-line-container ${searchActive ? "active" : ""}`}

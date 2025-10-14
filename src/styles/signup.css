@@ -43,30 +43,30 @@
 
 /* =============
    INPUT FIELDS 
-   ============== */
+   ============= */
 .signup-card input {
   width: 100%;
   padding: 14px 16px;
   margin: 10px 0;
-  border: 1px solid #ccc !important; /* softer neutral border */
+  border: 1px solid #ccc !important; /* neutral border by default */
   border-radius: 12px;
   font-size: 16px;
-  background-color: #f0f2f5 !important; /* gray background like Messenger */
+  background-color: #f0f2f5 !important; /* idle gray background */
   color: #1a1a1a;
   transition: all 0.25s ease;
   box-sizing: border-box;
 }
 
-/* ✅ Focused / active state - lighter navy border and glow */
+/* ✅ Focused / active state - thinner black glow */
 .signup-card input:focus,
 .signup-card input:active {
-  border-color: #184a72 !important;
-  background-color: #ffffff !important; /* turns white when focused */
+  border-color: #000000 !important;
+  background-color: #ffffff !important; /* white on focus */
   outline: none !important;
-  box-shadow: 0 0 0 4px rgba(24, 74, 114, 0.35) !important; /* soft navy glow */
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35) !important; /* thinner black glow */
 }
 
-/* ✅ Chrome autofill fix (maintains correct colors) */
+/* ✅ Chrome autofill fix */
 .signup-card input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 1000px #f0f2f5 inset !important;
   -webkit-text-fill-color: #1a1a1a !important;
@@ -77,10 +77,10 @@
 
 .signup-card input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-  border-color: #184a72 !important;
+  border-color: #000000 !important;
 }
 
-/* ✅ Disabled inputs - muted gray state */
+/* ✅ Disabled state - muted gray */
 .signup-card input:disabled {
   opacity: 0.6;
   cursor: not-allowed;

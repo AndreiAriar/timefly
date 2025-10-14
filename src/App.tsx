@@ -48,7 +48,6 @@ const ThemeContext = createContext<any>(null);
 export const useTheme = () => useContext(ThemeContext);
 
 const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  // ✅ Auto-detect system theme if no saved preference
   const getInitialTheme = (): boolean => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) return savedTheme === "dark";
@@ -57,22 +56,14 @@ const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
   const [darkMode, setDarkMode] = useState<boolean>(getInitialTheme());
 
-  // ✅ Apply and persist theme changes
   useEffect(() => {
     const theme = darkMode ? "dark" : "light";
-
-    // Apply to <html> and <body> for CSS targeting
     document.documentElement.setAttribute("data-theme", theme);
     document.body.setAttribute("data-theme", theme);
-
-    // Keep compatibility with old .dark-mode CSS rules
     document.body.classList.toggle("dark-mode", darkMode);
-
-    // Persist user choice
     localStorage.setItem("theme", theme);
   }, [darkMode]);
 
-  // ✅ Listen to system theme changes dynamically (optional)
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
@@ -94,27 +85,43 @@ const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 };
 
 // ------------------------
-// MAIN LAYOUT (Header + Footer)
+// MAIN LAYOUTS
 // ------------------------
-const MainLayout: React.FC<React.PropsWithChildren> = ({ children }) => {
+
+// Public layout (Header + Footer)
+const PublicLayout: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { searchTerm, setSearchTerm } = useSearch();
   const location = useLocation();
 
-  // ✅ Dynamic search placeholder based on page
   const getPlaceholder = () => {
     if (location.pathname.includes("/doctors")) return "Search doctors...";
-    if (location.pathname.includes("/dashboard")) return "Search appointments...";
-    if (location.pathname.includes("/staff-dashboard")) return "Search patients or appointments...";
     return "Search...";
   };
 
   return (
     <>
+      {/* @ts-ignore: allow placeholder prop for Header */}
       <Header
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        // @ts-ignore - extending HeaderProps to pass custom placeholder
         placeholder={getPlaceholder()}
+      />
+      <main>{children ?? <Outlet />}</main>
+      <Footer />
+    </>
+  );
+};
+
+// Patient layout (Header only for PatientDashboard)
+const PatientLayout: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const { searchTerm, setSearchTerm } = useSearch();
+  return (
+    <>
+      {/* @ts-ignore: allow placeholder prop for Header */}
+      <Header
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        placeholder="Search appointments..."
       />
       <main>{children ?? <Outlet />}</main>
       <Footer />
@@ -202,14 +209,16 @@ const AppContent = () => {
         }
       />
 
-      {/* Routes with Header + Footer */}
-      <Route element={<MainLayout />}>
+      {/* Public Pages (Header + Footer) */}
+      <Route element={<PublicLayout />}>
         <Route path="/about" element={<About />} />
         <Route path="/doctors" element={<Doctors />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/feedback" element={<Feedback />} />
+      </Route>
 
-        {/* Dashboards */}
+      {/* Patient Dashboard (Header only here) */}
+      <Route element={<PatientLayout />}>
         <Route
           path="/dashboard"
           element={
@@ -220,29 +229,33 @@ const AppContent = () => {
             )
           }
         />
-        <Route
-          path="/doctor-dashboard"
-          element={
-            user?.role === "Doctor" ? (
-              <DoctorDashboard />
-            ) : (
-              <NotFound message="Access denied: Doctors only." />
-            )
-          }
-        />
-        <Route
-          path="/staff-dashboard"
-          element={
-            user?.role === "Staff" || user?.role === "Admin" ? (
-              <React.Suspense fallback={<div className="staff-loading">Loading Staff Dashboard...</div>}>
-                <StaffDashboard />
-              </React.Suspense>
-            ) : (
-              <NotFound message="Access denied: Staff/Admin only." />
-            )
-          }
-        />
       </Route>
+
+      {/* Doctor Dashboard (no Header) */}
+      <Route
+        path="/doctor-dashboard"
+        element={
+          user?.role === "Doctor" ? (
+            <DoctorDashboard />
+          ) : (
+            <NotFound message="Access denied: Doctors only." />
+          )
+        }
+      />
+
+      {/* Staff Dashboard (no Header) */}
+      <Route
+        path="/staff-dashboard"
+        element={
+          user?.role === "Staff" || user?.role === "Admin" ? (
+            <React.Suspense fallback={<div className="staff-loading">Loading Staff Dashboard...</div>}>
+              <StaffDashboard />
+            </React.Suspense>
+          ) : (
+            <NotFound message="Access denied: Staff/Admin only." />
+          )
+        }
+      />
 
       {/* Catch-all */}
       <Route path="*" element={<NotFound />} />

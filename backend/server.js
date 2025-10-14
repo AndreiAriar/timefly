@@ -73,7 +73,13 @@ app.post("/send-code", async (req, res) => {
       from: `"TimeFly" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your TimeFly Verification Code",
-      html: `<h2>Your verification code is:</h2><h1>${code}</h1>`,
+      html: `
+        <div style="font-family:Arial,sans-serif;padding:20px">
+          <h2>🔐 Your verification code:</h2>
+          <div style="font-size:28px;font-weight:bold;color:#0056b3;">${code}</div>
+          <p>This code will expire in <strong>5 minutes</strong>.</p>
+        </div>
+      `,
     });
 
     res.json({ success: true, message: "Verification code sent!" });
@@ -90,18 +96,16 @@ app.post("/verify-code", (req, res) => {
   const { email, code } = req.body;
   console.log("🔍 Incoming verify-code request:", req.body);
 
-  if (!email || !code) {
+  if (!email || !code)
     return res
       .status(400)
       .json({ success: false, error: "Email and code are required" });
-  }
 
   const record = codes[email.toLowerCase()];
-  if (!record) {
+  if (!record)
     return res
       .status(400)
       .json({ success: false, error: "No code found for this email" });
-  }
 
   const expired = Date.now() - record.createdAt > 5 * 60 * 1000;
   if (expired) {
@@ -111,9 +115,8 @@ app.post("/verify-code", (req, res) => {
       .json({ success: false, error: "Verification code expired" });
   }
 
-  if (record.code !== code.trim()) {
+  if (record.code !== code.trim())
     return res.status(400).json({ success: false, error: "Invalid code" });
-  }
 
   delete codes[email.toLowerCase()];
   res.json({ success: true, message: "Code verified successfully" });
@@ -123,37 +126,50 @@ app.post("/verify-code", (req, res) => {
 // 📧 Send Appointment Reminder
 // ============================
 app.post("/send-reminder", async (req, res) => {
-  const { email, name, date, time } = req.body;
+  const { email, phone, name, date, time } = req.body;
   console.log("📩 Reminder request received:", req.body);
 
-  if (!email || !date || !time) {
+  if (!email && !phone)
     return res
       .status(400)
-      .json({ success: false, error: "Missing required fields" });
-  }
+      .json({ success: false, error: "At least email or phone is required" });
+  if (!date || !time)
+    return res
+      .status(400)
+      .json({ success: false, error: "Missing appointment date/time" });
 
   try {
     const transporter = createTransporter();
-    await transporter.sendMail({
-      from: `"TimeFly Clinic" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "📅 Appointment Reminder - TimeFly Clinic",
-      html: `
-        <h2>Hello ${name || "Patient"},</h2>
-        <p>This is a friendly reminder of your upcoming appointment:</p>
-        <ul>
-          <li><strong>Date:</strong> ${date}</li>
-          <li><strong>Time:</strong> ${time}</li>
-        </ul>
-        <p>⏰ Please arrive at least <strong>10 minutes</strong> before your scheduled time.</p>
-        <p>Thank you,<br/>TimeFly Clinic</p>
-      `,
-    });
 
-    console.log(`✅ Reminder email sent to ${email}`);
-    res.json({ success: true, message: "Reminder email sent!" });
+    if (email) {
+      await transporter.sendMail({
+        from: `"TimeFly Clinic" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "📅 Appointment Reminder - TimeFly Clinic",
+        html: `
+          <div style="font-family:Arial,sans-serif;padding:20px">
+            <h2>Hello ${name || "Patient"},</h2>
+            <p>This is a friendly reminder of your upcoming appointment:</p>
+            <ul>
+              <li><strong>Date:</strong> ${date}</li>
+              <li><strong>Time:</strong> ${time}</li>
+            </ul>
+            <p>⏰ Please arrive at least <strong>10 minutes early</strong>.</p>
+            <p>Thank you,<br/>TimeFly Clinic</p>
+          </div>
+        `,
+      });
+      console.log(`✅ Reminder email sent to ${email}`);
+    }
+
+    // (Optional future SMS integration)
+    if (phone) {
+      console.log(`📱 Reminder would be sent to phone: ${phone}`);
+    }
+
+    res.json({ success: true, message: "Reminder notification sent successfully!" });
   } catch (error) {
-    console.error("❌ Error sending reminder email:", error.message);
+    console.error("❌ Error sending reminder:", error.message);
     res.status(500).json({ success: false, error: "Failed to send reminder" });
   }
 });
@@ -187,17 +203,16 @@ app.post("/send-feedback", async (req, res) => {
       `;
     } else {
       emailContent = `
-        <div style="font-family: 'Poppins', sans-serif; color: #222;">
+        <div style="font-family:'Poppins',sans-serif;color:#222;">
           <h2>📬 New Feedback Received</h2>
           <p><strong>Name:</strong> ${name}</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Subject:</strong> ${subject}</p>
           <p><strong>Message:</strong></p>
-          <blockquote style="background:#f7f7f7; padding:15px; border-left:4px solid #00a896;">
+          <blockquote style="background:#f7f7f7;padding:15px;border-left:4px solid #00a896;">
             ${message}
           </blockquote>
-          <hr style="border:none;border-top:1px solid #ccc; margin:20px 0;">
-          <p style="font-size:0.9rem; color:#555;">This feedback was sent via the TimeFly Healthcare Feedback System.</p>
+          <p style="font-size:0.9rem;color:#555;">Sent via TimeFly Healthcare Feedback System.</p>
         </div>
       `;
     }
@@ -230,9 +245,8 @@ app.post("/send-feedback", async (req, res) => {
         subject: "💬 Thanks for your feedback!",
         html: `
           <h2>Thank you, ${name || "Valued Patient"}!</h2>
-          <p>We’ve received your feedback and truly appreciate your time and thoughts.</p>
-          <p>Our team will review it shortly to improve your TimeFly experience. 💙</p>
-          <br/>
+          <p>We’ve received your feedback and truly appreciate your time.</p>
+          <p>Our team will review it shortly. 💙</p>
           <p>Warm regards,<br/><strong>The TimeFly Team</strong></p>
         `,
       });
@@ -245,6 +259,7 @@ app.post("/send-feedback", async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to send feedback" });
   }
 });
+
 // ============================
 // ❌ Send Appointment Cancellation Email
 // ============================
@@ -261,7 +276,6 @@ app.post("/send-cancellation", async (req, res) => {
   try {
     const transporter = createTransporter();
 
-    // Format the date nicely
     let formattedDate = date;
     if (date) {
       const [year, month, day] = date.split("-");
@@ -273,46 +287,25 @@ app.post("/send-cancellation", async (req, res) => {
       });
     }
 
-    // Send email to clinic
     await transporter.sendMail({
       from: `"TimeFly Clinic" <${process.env.EMAIL_USER}>`,
       to: "timefly.healthcare@gmail.com",
       subject: `❌ Appointment Cancellation - ${name}`,
       html: `
-        <div style="font-family: 'Poppins', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
-          <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h2 style="color: #991b1b; margin: 0;">⚠️ Appointment Cancelled</h2>
-          </div>
-          
-          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0; color: #374151;">Patient Information</h3>
-            <p style="margin: 5px 0;"><strong>Name:</strong> ${name}</p>
-            <p style="margin: 5px 0;"><strong>Email:</strong> ${email || "N/A"}</p>
-            <p style="margin: 5px 0;"><strong>Appointment ID:</strong> ${appointmentId}</p>
-          </div>
-
-          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0; color: #374151;">Appointment Details</h3>
-            <p style="margin: 5px 0;"><strong>Doctor:</strong> ${doctor || "N/A"}</p>
-            <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate || "N/A"}</p>
-            <p style="margin: 5px 0;"><strong>Time:</strong> ${time || "N/A"}</p>
-          </div>
-
-          <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-            <h3 style="margin-top: 0; color: #92400e;">Cancellation Reason</h3>
-            <p style="color: #78350f; line-height: 1.6;">${reason}</p>
-          </div>
-
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-          
-          <p style="font-size: 0.875rem; color: #6b7280; text-align: center;">
-            This cancellation notification was automatically sent from TimeFly's appointment management system.
-          </p>
+        <div style="font-family:'Poppins',sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+          <h2 style="color:#991b1b;">⚠️ Appointment Cancelled</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email || "N/A"}</p>
+          <p><strong>Doctor:</strong> ${doctor || "N/A"}</p>
+          <p><strong>Date:</strong> ${formattedDate || "N/A"}</p>
+          <p><strong>Time:</strong> ${time || "N/A"}</p>
+          <h3>Reason:</h3>
+          <blockquote>${reason}</blockquote>
         </div>
       `,
     });
 
-    console.log(`✅ Cancellation email sent to clinic for appointment ${appointmentId}`);
+    console.log(`✅ Cancellation email sent for appointment ${appointmentId}`);
     res.json({ success: true, message: "Cancellation email sent successfully!" });
   } catch (error) {
     console.error("❌ Error sending cancellation email:", error.message);
@@ -325,9 +318,7 @@ app.post("/send-cancellation", async (req, res) => {
 // ============================
 app.use((req, res) => {
   console.warn(`⚠️ Route not found: ${req.originalUrl}`);
-  res
-    .status(404)
-    .json({ success: false, error: `Route not found: ${req.originalUrl}` });
+  res.status(404).json({ success: false, error: `Route not found: ${req.originalUrl}` });
 });
 
 // ============================

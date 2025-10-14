@@ -1,8 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/faq.css";
 
 const FAQ: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Sync with the app's theme
+  useEffect(() => {
+    const updateTheme = () => {
+      const theme = document.documentElement.getAttribute('data-theme');
+      setIsDarkMode(theme === 'dark');
+    };
+
+    // Initial check
+    updateTheme();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const toggleFAQ = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
@@ -47,13 +68,13 @@ const FAQ: React.FC = () => {
   ];
 
   return (
-    <div className="faq-page">
+    <div className={`faq-page ${isDarkMode ? 'dark-mode' : ''}`}>
       <section className="faq-section">
         <div className="faq-container">
           {/* Left Side Image */}
           <div className="faq-image">
             <img
-              src="/images/faqbg.png"
+              src="/images/faqnobg.png"
               alt="FAQ Illustration"
               className="faq-img"
             />

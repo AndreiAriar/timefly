@@ -1,40 +1,40 @@
 /* ================================
-   FAQ PAGE - ST. PAUL EYE CENTER THEME
+   FAQ PAGE - DASHBOARD-THEMED
    ================================ */
 
 /* FAQ-specific namespace to prevent conflicts */
 .faq-page {
   margin: 0;
   font-family: "Poppins", sans-serif;
-  background: var(--faq-bg-color, #ffffff);
-  color: var(--faq-text-color, #1b3e2f);
+  background: var(--faq-bg-color);
+  color: var(--faq-text-color);
   transition: background 0.3s ease, color 0.3s ease;
   min-height: 100vh;
 }
 
 /* FAQ-specific color variables */
 .faq-page {
-  /* Light mode colors */
-  --faq-bg-color: #ffffff;
-  --faq-text-color: #1e293b;
-  --faq-section-bg: #ffffff;
-  --faq-hover-bg: #f8fafc;
-  --faq-border-color: #e2e8f0;
-  --faq-question-color: #0f172a;
-  --faq-answer-color: #475569;
-  --faq-icon-color: #3b82f6;
-  --faq-heading-color: #0f172a;
-  
-  /* Dark mode colors - Matching dashboard.css */
-  --faq-dark-bg-color: #0d1117;
-  --faq-dark-text-color: #e6edf3;
-  --faq-dark-section-bg: #0d1117;
-  --faq-dark-hover-bg: #161b22;
-  --faq-dark-border-color: #30363d;
-  --faq-dark-question-color: #f0f6fc;
-  --faq-dark-answer-color: #8b949e;
-  --faq-dark-icon-color: #58a6ff;
-  --faq-dark-heading-color: #f0f6fc;
+  /* Light mode colors - Light blue theme */
+  --faq-bg-color: #dbeafe;
+  --faq-text-color: #1e3a8a;
+  --faq-section-bg: #eff6ff;
+  --faq-hover-bg: #bfdbfe;
+  --faq-border-color: #93c5fd;
+  --faq-question-color: #1e40af;
+  --faq-answer-color: #3b82f6;
+  --faq-icon-color: #2563eb;
+  --faq-heading-color: #1e3a8a;
+
+  /* Dark mode colors - COPIED EXACTLY FROM feedback.css */
+  --faq-dark-bg-color: #1e293b;
+  --faq-dark-text-color: #f1f5f9;
+  --faq-dark-section-bg: #2d3748;
+  --faq-dark-hover-bg: #374151;
+  --faq-dark-border-color: #475569;
+  --faq-dark-question-color: #f1f5f9;
+  --faq-dark-answer-color: #cbd5e1;
+  --faq-dark-icon-color: #3b82f6;
+  --faq-dark-heading-color: #f1f5f9;
 }
 
 /* Section Wrapper */
@@ -178,49 +178,48 @@
 }
 
 /* ================================
-   DARK MODE STYLES - Matching dashboard.css
+   DARK MODE STYLES - EXACT COPY FROM feedback.css
    ================================ */
 
 /* System preference detection */
 @media (prefers-color-scheme: dark) {
   .faq-page {
-    --faq-bg-color: var(--faq-dark-bg-color);
-    --faq-text-color: var(--faq-dark-text-color);
-    --faq-section-bg: var(--faq-dark-section-bg);
-    --faq-hover-bg: var(--faq-dark-hover-bg);
-    --faq-border-color: var(--faq-dark-border-color);
-    --faq-question-color: var(--faq-dark-question-color);
-    --faq-answer-color: var(--faq-dark-answer-color);
-    --faq-icon-color: var(--faq-dark-icon-color);
-    --faq-heading-color: var(--faq-dark-heading-color);
+    --faq-bg-color: #1e293b;
+    --faq-text-color: #f1f5f9;
+    --faq-section-bg: #2d3748;
+    --faq-hover-bg: #374151;
+    --faq-border-color: #475569;
+    --faq-question-color: #f1f5f9;
+    --faq-answer-color: #cbd5e1;
+    --faq-icon-color: #3b82f6;
+    --faq-heading-color: #f1f5f9;
   }
 }
 
-/* Manual dark mode class - matches dashboard.css [data-theme="dark"] */
-.faq-page.dark-mode,
-[data-theme="dark"] .faq-page {
-  --faq-bg-color: var(--faq-dark-bg-color);
-  --faq-text-color: var(--faq-dark-text-color);
-  --faq-section-bg: var(--faq-dark-section-bg);
-  --faq-hover-bg: var(--faq-dark-hover-bg);
-  --faq-border-color: var(--faq-dark-border-color);
-  --faq-question-color: var(--faq-dark-question-color);
-  --faq-answer-color: var(--faq-dark-answer-color);
-  --faq-icon-color: var(--faq-dark-icon-color);
-  --faq-heading-color: var(--faq-dark-heading-color);
+/* Manual dark mode class */
+.faq-page.dark-mode {
+  --faq-bg-color: #1e293b;
+  --faq-text-color: #f1f5f9;
+  --faq-section-bg: #2d3748;
+  --faq-hover-bg: #374151;
+  --faq-border-color: #475569;
+  --faq-question-color: #f1f5f9;
+  --faq-answer-color: #cbd5e1;
+  --faq-icon-color: #3b82f6;
+  --faq-heading-color: #f1f5f9;
 }
 
-/* If you want to support the dashboard's data-theme attribute globally */
+/* data-theme attribute support */
 [data-theme="dark"] .faq-page {
-  --faq-bg-color: var(--faq-dark-bg-color);
-  --faq-text-color: var(--faq-dark-text-color);
-  --faq-section-bg: var(--faq-dark-section-bg);
-  --faq-hover-bg: var(--faq-dark-hover-bg);
-  --faq-border-color: var(--faq-dark-border-color);
-  --faq-question-color: var(--faq-dark-question-color);
-  --faq-answer-color: var(--faq-dark-answer-color);
-  --faq-icon-color: var(--faq-dark-icon-color);
-  --faq-heading-color: var(--faq-dark-heading-color);
+  --faq-bg-color: #1e293b;
+  --faq-text-color: #f1f5f9;
+  --faq-section-bg: #2d3748;
+  --faq-hover-bg: #374151;
+  --faq-border-color: #475569;
+  --faq-question-color: #f1f5f9;
+  --faq-answer-color: #cbd5e1;
+  --faq-icon-color: #3b82f6;
+  --faq-heading-color: #f1f5f9;
 }
 
 /* Responsive Design */
@@ -259,7 +258,7 @@
   display: none !important;
 }
 
-/* Make sure FAQ styles don't leak out */
+/* Scoped FAQ visual consistency – prevents leakage */
 .faq-section,
 .faq-container,
 .faq-image,
@@ -268,5 +267,5 @@
 .faq-question,
 .faq-answer,
 .toggle-icon {
-  /* These styles are scoped to FAQ page only */
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

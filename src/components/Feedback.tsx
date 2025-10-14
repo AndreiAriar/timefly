@@ -81,7 +81,7 @@ const Feedback: React.FC = () => {
 
             <div className="image-section">
               <img
-                src="/images/feedbackbg.png"
+                src="/images/feedbacknobg.png"
                 alt="Customer Feedback Illustration"
               />
             </div>
@@ -90,7 +90,7 @@ const Feedback: React.FC = () => {
           <div className="feedback-form-section">
             {/* ✅ Modal Image Placeholder */}
             <img
-              src="/images/modal_feedback.png"
+              src="/images/feedback_modal_nobg.png"
               alt="Feedback Visual"
               className="modal-feedback-image"
             />

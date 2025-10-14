@@ -5331,14 +5331,22 @@ svg.clock,
 /* ====================================
    ACCESSIBILITY IMPROVEMENTS
    ==================================== */
-
 @media (prefers-reduced-motion: reduce) {
   .cancel-modal,
   .cancel-warning .warning-icon,
   .cancel-modal-actions button,
   .modal-overlay {
-    animation: none;
+    animation: none !important;
     transition: none;
+  }
+  
+  /* Keep emergency animations - they're critical safety alerts */
+  .emergency-blinking {
+    animation: emergencyCardPulse 3s ease-in-out infinite !important;
+  }
+  
+  .priority-pill.emergency {
+    animation: emergencyTagPulse 2.5s ease-in-out infinite !important;
   }
 }
 
@@ -5349,7 +5357,9 @@ svg.clock,
   outline-offset: 2px;
 }
 
-/* Emergency buffer slots */
+/* ====================================
+   EMERGENCY BUFFER SLOTS
+   ==================================== */
 .time-slot.emergency-slot {
   border: 2px dashed #d9534f;
   color: #d9534f;
@@ -5364,29 +5374,9 @@ svg.clock,
   transition: all 0.2s ease;
 }
 
-/* Label for emergency-only slots */
-.emergency-badge {
-  display: inline-block;
-  background: #d9534f;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 6px;
-  margin-left: 6px;
-}
-
-/* Existing Booked slot indicator */
-.booked-indicator {
-  background: #999;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 6px;
-  margin-left: 6px;
-}
-
-/* Priority pills */
+/* ====================================
+   QUEUE PRIORITY PILL STYLES
+   ==================================== */
 .priority-pill {
   display: inline-block;
   margin-left: 8px;
@@ -5405,20 +5395,127 @@ svg.clock,
   background-color: #f0ad4e;
 }
 
-.priority-pill.emergency {
-  background-color: #d9534f;
-  animation: pulseEmergency 1s infinite;
+/* ====================================
+   EMERGENCY CARD + TAG BLINK ANIMATION
+   ==================================== */
+
+/* Emergency card with pulsing background and border */
+.emergency-blinking {
+  border: 2px solid #d9534f !important;
+  background-color: #fff5f5 !important;
+  animation: emergencyCardPulse 2s ease-in-out infinite !important;
+  position: relative;
+  z-index: 1;
 }
 
-/* Emergency pulse animation */
-@keyframes pulseEmergency {
+/* Emergency priority pill with independent glow */
+.priority-pill.emergency {
+  background-color: #d9534f !important;
+  animation: emergencyTagPulse 1.5s ease-in-out infinite !important;
+  box-shadow: 0 0 10px rgba(217, 83, 79, 0.6) !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Card pulsing animation - smooth background and border glow */
+@keyframes emergencyCardPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.5);
+    background-color: #fff5f5;
+    border-color: #d9534f;
+    box-shadow: 0 0 8px rgba(217, 83, 79, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: scale(1);
   }
-  70% {
-    box-shadow: 0 0 0 10px rgba(217, 83, 79, 0);
+  50% {
+    background-color: #ffe8e8;
+    border-color: #c9302c;
+    box-shadow: 0 0 20px rgba(217, 83, 79, 0.6), 0 4px 8px rgba(217, 83, 79, 0.2);
+    transform: scale(1.01);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(217, 83, 79, 0);
+    background-color: #fff5f5;
+    border-color: #d9534f;
+    box-shadow: 0 0 8px rgba(217, 83, 79, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: scale(1);
+  }
+}
+
+/* Tag pulsing animation - independent glow effect */
+@keyframes emergencyTagPulse {
+  0% {
+    box-shadow: 0 0 10px rgba(217, 83, 79, 0.6);
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(217, 83, 79, 0.9), 0 0 30px rgba(217, 83, 79, 0.4);
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(217, 83, 79, 0.6);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Dark mode emergency styles */
+[data-theme="dark"] .emergency-blinking {
+  border-color: #f87171 !important;
+  background-color: rgba(248, 113, 113, 0.15) !important;
+}
+
+[data-theme="dark"] .priority-pill.emergency {
+  background-color: #f87171 !important;
+  box-shadow: 0 0 15px rgba(248, 113, 113, 0.7) !important;
+}
+
+/* Dark mode card animation keyframes */
+@keyframes emergencyCardPulseDark {
+  0% {
+    background-color: rgba(248, 113, 113, 0.15);
+    border-color: #f87171;
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    background-color: rgba(248, 113, 113, 0.25);
+    border-color: #ef4444;
+    box-shadow: 0 0 25px rgba(248, 113, 113, 0.7), 0 4px 8px rgba(248, 113, 113, 0.3);
+    transform: scale(1.01);
+  }
+  100% {
+    background-color: rgba(248, 113, 113, 0.15);
+    border-color: #f87171;
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
+}
+
+/* Apply dark mode animation */
+[data-theme="dark"] .emergency-blinking {
+  animation: emergencyCardPulseDark 2s ease-in-out infinite !important;
+}
+
+/* Ensure animations work on all browsers */
+.emergency-blinking,
+.priority-pill.emergency {
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+  will-change: transform, box-shadow, background-color, border-color;
+}
+
+/* Hover state - pause animation to allow interaction */
+.emergency-blinking:hover {
+  animation-play-state: paused;
+}
+
+/* Mobile optimization - slightly slower animation for better performance */
+@media (max-width: 768px) {
+  .emergency-blinking {
+    animation-duration: 2.5s !important;
+  }
+  
+  .priority-pill.emergency {
+    animation-duration: 2s !important;
   }
 }
