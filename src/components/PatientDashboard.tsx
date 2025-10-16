@@ -270,21 +270,44 @@ const PatientDashboard = () => {
     return filtered;
   };
 
-  const [doctorAvailability, setDoctorAvailability] = useState<
+ // ✅ Keep this single declaration
+const [doctorAvailability, setDoctorAvailability] = useState<
   { doctorId: string; date: string; available: boolean }[]
 >([]);
 
 useEffect(() => {
-  const q = query(collection(db, 'doctorAvailability'));
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const avail = snapshot.docs.map((doc) => ({
-      doctorId: doc.data().doctorId,
-      date: doc.data().date,
-      available: doc.data().available,
-    }));
-    setDoctorAvailability(avail);
-  }, (error) => {
-    console.error('Error loading doctor availability:', error);
+  const q = query(collection(db, "doctorAvailability"));
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const avail = snapshot.docs.map((doc) => ({
+        doctorId: doc.data().doctorId,
+        date: doc.data().date,
+        available: doc.data().available,
+      }));
+      setDoctorAvailability(avail);
+    },
+    (error) => {
+      console.error("Error loading doctor availability:", error);
+    }
+  );
+
+  return () => unsubscribe();
+}, []);
+
+// 🆕 Add this new state for blocked/unavailable time slots
+const [doctorAvailabilitySlots, setDoctorAvailabilitySlots] = useState<{ [key: string]: boolean }>({});
+
+useEffect(() => {
+  const slotsQuery = query(collection(db, "doctorAvailabilitySlots"));
+  const unsubscribe = onSnapshot(slotsQuery, (snapshot) => {
+    const slotsData: { [key: string]: boolean } = {};
+    snapshot.docs.forEach((doc) => {
+      const data: any = doc.data();
+      const key = `${data.doctorId}_${data.date}_${data.time}`;
+      slotsData[key] = typeof data.available === "boolean" ? data.available : true;
+    });
+    setDoctorAvailabilitySlots(slotsData);
   });
 
   return () => unsubscribe();
@@ -475,85 +498,108 @@ const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElem
     };
     fetchAppointments();
   }, [currentUser]);
+  
+// =============================
+// UPDATED CALENDAR SLOT LOGIC
+// =============================
+const DEFAULT_DAILY_SLOTS = 10; // fallback when no staff settings exist
 
+// 🔹 Store doctor-specific slots (availability state already declared earlier)
+const [doctorSlotSettings, setDoctorSlotSettings] = useState<{ [key: string]: number }>({});
 
-  // Calendar days logic
-  const getCalendarDays = (): DaySchedule[] => {
-    const year = calendarCurrentDate.getFullYear();
-    const month = calendarCurrentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const days: DaySchedule[] = [];
-    const today = new Date();
-    const todayDateStr = today.getFullYear() + '-' + 
-      String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(today.getDate()).padStart(2, '0');
+// 🔹 Get number of booked appointments for a specific date
+const getFilledSlotsForDate = (date: string) => {
+  return appointments.filter(
+    (apt) => apt.date === date && apt.status !== "cancelled"
+  ).length;
+};
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = date.getFullYear() + '-' + 
-        String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(date.getDate()).padStart(2, '0');
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-      const fullDayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+// ✅ Fetch doctor slot settings (shared with staff)
+useEffect(() => {
+  const fetchSlotSettings = async () => {
+    try {
+      const snap = await getDocs(collection(db, "doctorSlotSettings"));
+      const settings: { [key: string]: number } = {};
 
-      if (dateStr < todayDateStr) continue;
-
-      const dayAppointments = appointments.filter(
-        apt => apt.date === dateStr && apt.status !== 'cancelled'
-      );
-
-      const doctorSchedules = doctors.map(doctor => {
-        const scheduleForDate = doctor.scheduleSettings?.[dateStr];
-        let isAvailable = doctor.available;
-        let maxAppointmentsForDay = doctor.maxAppointments;
-        if (scheduleForDate) {
-          isAvailable = scheduleForDate.available && doctor.available;
-          maxAppointmentsForDay = scheduleForDate.maxAppointments || doctor.maxAppointments;
-        } else {
-          const isOffDay = doctor.offDays?.includes(dateStr) || false;
-          const isWorkingDay = doctor.workingDays ? 
-            doctor.workingDays.includes(fullDayName) : true;
-          const isSpecificallyAvailable = doctor.availableDates ? 
-            doctor.availableDates.includes(dateStr) : true;
-          const isSpecificallyUnavailable = doctor.unavailableDates ? 
-            doctor.unavailableDates.includes(dateStr) : false;
-          isAvailable = doctor.available && !isOffDay && isWorkingDay && isSpecificallyAvailable && !isSpecificallyUnavailable;
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.doctorId && data.date && typeof data.maxSlots === "number") {
+          settings[`${data.doctorId}_${data.date}`] = data.maxSlots;
         }
-        const doctorAppointments = dayAppointments.filter(apt => apt.doctorId === doctor.id);
-        return {
-          id: doctor.id,
-          name: doctor.name,
-          specialty: doctor.specialty,
-          available: isAvailable,
-          appointmentsBooked: doctorAppointments.length,
-          maxAppointments: maxAppointmentsForDay
-        };
       });
 
-      const totalPossible = doctorSchedules
-        .filter(doc => doc.available)
-        .reduce((sum, doc) => sum + doc.maxAppointments, 0);
-
-      days.push({
-        date: dateStr,
-        dayName,
-        dayNumber: day,
-        appointments: {
-          booked: dayAppointments.length,
-          total: totalPossible
-        },
-        doctors: doctorSchedules
-      });
+      setDoctorSlotSettings(settings);
+    } catch (error) {
+      console.error("Error fetching doctor slot settings:", error);
     }
-    return days;
   };
 
+  fetchSlotSettings();
+}, []);
+
+// ✅ Listen for staff manually blocked/unblocked time slots
+useEffect(() => {
+  const q = query(collection(db, "doctorAvailabilitySlots"));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const slotData: { [key: string]: boolean } = {};
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const key = `${data.doctorId}_${data.date}_${data.time}`;
+      slotData[key] = data.available !== false; // true = available, false = blocked
+    });
+    setDoctorAvailabilitySlots(slotData);
+  });
+
+  return () => unsubscribe();
+}, []);
+
+// ✅ Utility: get total slots for date (sum of all doctors)
+const getTotalSlotsForDate = (date: string): number => {
+  if (!date) return DEFAULT_DAILY_SLOTS;
+
+  const total = Object.entries(doctorSlotSettings)
+    .filter(([key]) => key.endsWith(`_${date}`))
+    .reduce((sum, [, val]) => sum + (val || 0), 0);
+
+  return total > 0 ? total : DEFAULT_DAILY_SLOTS;
+};
+
+// ✅ Generate calendar day data
+const getCalendarDays = (): DaySchedule[] => {
+  const end = new Date(
+    calendarCurrentDate.getFullYear(),
+    calendarCurrentDate.getMonth() + 1,
+    0
+  );
+  const days: DaySchedule[] = [];
+
+  for (let d = 1; d <= end.getDate(); d++) {
+    const date = `${calendarCurrentDate.getFullYear()}-${String(
+      calendarCurrentDate.getMonth() + 1
+    ).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+    const booked = getFilledSlotsForDate(date);
+    const total = getTotalSlotsForDate(date);
+
+    days.push({
+      date,
+      dayName: new Date(date).toLocaleDateString("en-US", { weekday: "short" }),
+      dayNumber: d,
+      appointments: { booked, total },
+      doctors: [],
+    });
+  }
+
+  return days;
+};
+
+// ✅ Generate time slots (with block + emergency logic)
 const generateTimeSlots = () => {
   const slots: TimeSlot[] = [];
 
   const doctorId = selectedCalendarDoctor?.id || formData.doctor;
   const dateToUse = selectedCalendarDate || formData.date;
-  const selectedDoctor = doctors.find(doc => doc.id === doctorId);
+  const selectedDoctor = doctors.find((doc) => doc.id === doctorId);
 
   if (!selectedDoctor || !dateToUse) {
     console.log("Missing doctor or date");
@@ -577,7 +623,7 @@ const generateTimeSlots = () => {
   const currentDateStr = philippinesNow.toISOString().split("T")[0];
   const currentTotalMinutes = philippinesNow.getHours() * 60 + philippinesNow.getMinutes();
 
-  // Each cycle = 15 active mins + 15 buffer
+  // Each cycle = 15 active mins + buffer time
   const activeDuration = 15;
   const slotDuration = activeDuration + bufferTime;
 
@@ -586,7 +632,6 @@ const generateTimeSlots = () => {
     const appointmentEnd = appointmentStart + activeDuration;
     const bufferStart = appointmentEnd;
 
-    // Convert appointment start to readable format
     const time24 = `${Math.floor(appointmentStart / 60)
       .toString()
       .padStart(2, "0")}:${(appointmentStart % 60).toString().padStart(2, "0")}`;
@@ -603,31 +648,39 @@ const generateTimeSlots = () => {
         (editingAppointment ? apt.id !== editingAppointment.id : true)
     );
 
+    // 🆕 Check if this slot is blocked by staff
+    const slotKey = `${doctorId}_${dateToUse}_${time12}`;
+    const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+
     // Add normal slot
     slots.push({
       time: time12,
-      available: !isBooked,
+      available: !isBooked && !isBlocked,
       booked: isBooked,
-      emergency: false
+      emergency: false,
     });
 
-    // Add emergency buffer slot (only available if emergency priority is selected)
+    // Add emergency buffer slot
     const bufferTime24 = `${Math.floor(bufferStart / 60)
       .toString()
       .padStart(2, "0")}:${(bufferStart % 60).toString().padStart(2, "0")}`;
     const bufferTime12 = convertTo12Hour(bufferTime24);
 
+    const bufferKey = `${doctorId}_${dateToUse}_${bufferTime12}`;
+    const bufferBlocked = doctorAvailabilitySlots?.[bufferKey] === false;
+
     slots.push({
       time: bufferTime12,
-      available: formData.priority === "emergency" && !isBooked,
+      available: formData.priority === "emergency" && !isBooked && !bufferBlocked,
       booked: isBooked,
-      emergency: true
+      emergency: true,
     });
   }
 
-  console.log("Generated slots with emergency buffer:", slots.length);
+  console.log("Generated slots with block + emergency buffer:", slots.length);
   return slots;
 };
+
 
   const convertTo12Hour = (time24: string): string => {
     const [hours, minutes] = time24.split(':');
@@ -1522,7 +1575,6 @@ const handleCancelAppointment = async (id: string, reason: string) => {
   </div>
 )}
 
-
 {/* ===== CALENDAR VIEW MODAL (3-Step Wizard - Full Update) ===== */}
 {showCalendarView && (
   <div
@@ -1668,7 +1720,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           </div>
         </div>
 
-        {/* === STEP 2: DOCTOR SELECTION (UPDATED) === */}
+        {/* === STEP 2: DOCTOR SELECTION (UPDATED DEFAULT AVAILABLE) === */}
         <div className="wizard-step step-doctors">
           <button
             className="wizard-back-btn"
@@ -1689,31 +1741,32 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           <div className="doctors-grid-wizard">
             {doctors
               .filter(doctor => {
-                // Only show available doctors
-                if (!doctor.available) return false;
-                
-                // Check if doctor is available on this specific date
-                const isAvailableOnDate = isDoctorAvailableOnDate(doctor.id, selectedCalendarDate);
-                if (!isAvailableOnDate) return false;
+                // ✅ Default: doctor is available unless staff marked them unavailable
+                const manuallyUnavailable = doctorAvailability.find(
+                  entry =>
+                    entry.doctorId === doctor.id &&
+                    entry.date === selectedCalendarDate &&
+                    entry.available === false
+                );
+                if (manuallyUnavailable) return false;
 
-                // Check if doctor has any time slots available
-                // We need to temporarily check slots for this doctor
+                // Check if doctor has schedule for this date
                 const daySchedule = calendarDays.find(d => d.date === selectedCalendarDate);
-                if (!daySchedule) return false;
+                if (!daySchedule) return true;
 
                 const doctorSchedule = daySchedule.doctors.find(d => d.id === doctor.id);
-                if (!doctorSchedule) return false;
+                if (!doctorSchedule) return true;
 
-                // Show doctor if they have capacity
+                // Show doctor if not fully booked
                 return doctorSchedule.available && doctorSchedule.appointmentsBooked < doctorSchedule.maxAppointments;
               })
               .map((doctor: DoctorWithPhoto) => {
-                // Calculate available slots for this doctor on selected date
+                // Calculate available slots for this doctor
                 const daySchedule = calendarDays.find(d => d.date === selectedCalendarDate);
                 const doctorSchedule = daySchedule?.doctors.find(d => d.id === doctor.id);
-                const availableSlots = doctorSchedule 
-                  ? doctorSchedule.maxAppointments - doctorSchedule.appointmentsBooked 
-                  : 0;
+                const availableSlots = doctorSchedule
+                  ? doctorSchedule.maxAppointments - doctorSchedule.appointmentsBooked
+                  : doctor.maxAppointments || 0;
 
                 return (
                   <button
@@ -1721,7 +1774,6 @@ const handleCancelAppointment = async (id: string, reason: string) => {
                     className="doctor-card-wizard"
                     onClick={() => {
                       setSelectedCalendarDoctor(doctor);
-                      // Pre-populate form data for time slot generation
                       setFormData(prev => ({
                         ...prev,
                         date: selectedCalendarDate,
@@ -1758,20 +1810,27 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           </div>
 
           {doctors.filter(doctor => {
-            if (!doctor.available) return false;
-            const isAvailableOnDate = isDoctorAvailableOnDate(doctor.id, selectedCalendarDate);
-            if (!isAvailableOnDate) return false;
+            const manuallyUnavailable = doctorAvailability.find(
+              entry =>
+                entry.doctorId === doctor.id &&
+                entry.date === selectedCalendarDate &&
+                entry.available === false
+            );
+            if (manuallyUnavailable) return false;
+
             const daySchedule = calendarDays.find(d => d.date === selectedCalendarDate);
-            if (!daySchedule) return false;
+            if (!daySchedule) return true;
+
             const doctorSchedule = daySchedule.doctors.find(d => d.id === doctor.id);
-            if (!doctorSchedule) return false;
+            if (!doctorSchedule) return true;
+
             return doctorSchedule.available && doctorSchedule.appointmentsBooked < doctorSchedule.maxAppointments;
           }).length === 0 && (
             <div className="no-doctors-available">
               <Users size={48} />
               <p>No doctors available on {selectedCalendarDate}</p>
               <div className="no-doctors-suggestions">
-                <p>All doctors may be fully booked or unavailable on this date.</p>
+                <p>All doctors may be fully booked or manually marked unavailable on this date.</p>
                 <button
                   className="btn-secondary"
                   onClick={() => {
@@ -1786,14 +1845,13 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           )}
         </div>
 
-        {/* === STEP 3: TIME SLOT SELECTION (UPDATED) === */}
+        {/* === STEP 3: TIME SLOT SELECTION (UNCHANGED) === */}
         <div className="wizard-step step-timeslots">
           <button
             className="wizard-back-btn"
             onClick={() => {
               setCalendarWizardStep(2);
               setSelectedCalendarDoctor(null);
-              // Clear pre-populated form data
               setFormData(prev => ({
                 ...prev,
                 doctor: '',
@@ -1830,7 +1888,6 @@ const handleCancelAppointment = async (id: string, reason: string) => {
 
               <div className="timeslots-grid-wizard">
                 {(() => {
-                  // Generate time slots using the current formData (which has doctor and date set)
                   const slots = generateTimeSlots();
 
                   if (slots.length === 0) {
@@ -1899,6 +1956,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   </div>
 )}
+
 
 {/* Profile Modal */}
 {showProfileModal && userProfile && (
@@ -1977,20 +2035,21 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   </div>
 )}
-
 {/* Booking Form Modal */}
 {showBookingForm && (
   <div className="modal-overlay" onClick={() => setShowBookingForm(false)}>
     <div
       className="modal-content booking-modal"
-      onClick={e => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       role="dialog"
       aria-labelledby="modal-title"
       aria-modal="true"
     >
       <div className="modal-header">
         <h3 id="modal-title">
-          {editingAppointment ? 'Reschedule Appointment' : 'Book New Appointment'}
+          {editingAppointment
+            ? "Reschedule Appointment"
+            : "Book New Appointment"}
         </h3>
         <button
           className="modal-close"
@@ -2004,6 +2063,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           <XCircle size={20} />
         </button>
       </div>
+
       <div className="booking-form">
         <div className="form-row">
           <div className="form-group">
@@ -2033,66 +2093,67 @@ const handleCancelAppointment = async (id: string, reason: string) => {
             />
           </div>
         </div>
-        
-{/* UPDATED: Modern Photo Upload with Drag & Drop Glow */}
-<div className="form-group">
-  <label htmlFor="photo">Upload Photo (Optional)</label>
-  <div
-    className={`photo-upload-modern ${isDragOver ? "drag-over" : ""}`}
-    onDrop={(e) => {
-      e.preventDefault();
-      setIsDragOver(false);
-      handlePhotoDrop(e);
-    }}
-    onDragOver={(e) => {
-      e.preventDefault();
-      setIsDragOver(true);
-    }}
-    onDragLeave={() => setIsDragOver(false)}
-  >
-    <input
-      type="file"
-      id="photo"
-      accept="image/*"
-      onChange={handlePhotoUpload}
-      className="photo-input"
-    />
 
-    {!formData.photo ? (
-      <label htmlFor="photo" className="photo-upload-box">
-        <div className="upload-icon">
-          <Camera size={32} strokeWidth={1.5} />
-        </div>
-        <div className="upload-text">
-          <span className="upload-title">Click to upload</span>
-          <span className="upload-subtitle">or drag and drop</span>
-        </div>
-        <div className="upload-hint">PNG, JPG up to 5MB</div>
-      </label>
-    ) : (
-      <div className="photo-preview-box">
-        <img
-          src={formData.photo}
-          alt="Preview"
-          className="photo-preview-large"
-        />
-        <button
-          type="button"
-          className="remove-photo-btn-modern"
-          onClick={() => setFormData((prev) => ({ ...prev, photo: "" }))}
-          aria-label="Remove photo"
-        >
-          <X size={18} />
-        </button>
-        <label htmlFor="photo" className="change-photo-btn">
-          <Camera size={16} />
-          Change Photo
-        </label>
-      </div>
-    )}
-  </div>
-</div>
+        {/* Photo Upload Section */}
+        <div className="form-group">
+          <label htmlFor="photo">Upload Photo (Optional)</label>
+          <div
+            className={`photo-upload-modern ${isDragOver ? "drag-over" : ""}`}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragOver(false);
+              handlePhotoDrop(e);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+          >
+            <input
+              type="file"
+              id="photo"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="photo-input"
+            />
 
+            {!formData.photo ? (
+              <label htmlFor="photo" className="photo-upload-box">
+                <div className="upload-icon">
+                  <Camera size={32} strokeWidth={1.5} />
+                </div>
+                <div className="upload-text">
+                  <span className="upload-title">Click to upload</span>
+                  <span className="upload-subtitle">or drag and drop</span>
+                </div>
+                <div className="upload-hint">PNG, JPG up to 5MB</div>
+              </label>
+            ) : (
+              <div className="photo-preview-box">
+                <img
+                  src={formData.photo}
+                  alt="Preview"
+                  className="photo-preview-large"
+                />
+                <button
+                  type="button"
+                  className="remove-photo-btn-modern"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, photo: "" }))
+                  }
+                  aria-label="Remove photo"
+                >
+                  <X size={18} />
+                </button>
+                <label htmlFor="photo" className="change-photo-btn">
+                  <Camera size={16} />
+                  Change Photo
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="form-group">
           <label htmlFor="doctor">Doctor *</label>
@@ -2174,60 +2235,81 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           </div>
         </div>
 
-        {/* UPDATED: Time Slots Section with Emergency Buffer Visibility */}
-{formData.date && formData.doctor && (
-  <div className="time-slots-section">
-    <label>Available Time Slots *</label>
-    {timeSlots.length === 0 ? (
-      <div className="no-slots-message">
-        No available time slots for this date. Please select another date.
-      </div>
-    ) : (
-      <div className="time-slots-grid">
-        {timeSlots
-          // Only show emergency buffer slots if priority is set to "emergency"
-          .filter((slot) =>
-            formData.priority === "emergency" ? true : !slot.emergency
-          )
-          .map((slot) => (
-            <button
-              key={slot.time}
-              type="button"
-              className={`time-slot 
-                ${!slot.available ? "booked" : ""} 
-                ${slot.emergency ? "emergency-slot" : ""} 
-                ${formData.time === slot.time ? "selected" : ""}`}
-              onClick={() =>
-                slot.available &&
-                setFormData((prev) => ({ ...prev, time: slot.time }))
-              }
-              disabled={
-                !slot.available ||
-                (slot.emergency && formData.priority !== "emergency")
-              }
-              aria-label={`${slot.time} ${
-                slot.available ? "available" : "booked"
-              }`}
-              title={
-                slot.emergency
-                  ? "Emergency Only"
-                  : `${slot.time} ${slot.available ? "available" : "booked"}`
-              }
-            >
-              {slot.time}
-              {slot.emergency && (
-                <span className="emergency-badge">Emergency Only</span>
-              )}
-              {!slot.available && !slot.emergency && (
-                <span className="booked-indicator">Booked</span>
-              )}
-            </button>
-          ))}
-      </div>
-    )}
-  </div>
-)}
+        {/* UPDATED: Time Slots Section with Blocked Slot Logic */}
+        {formData.date && formData.doctor && (
+          <div className="time-slots-section">
+            <label>Available Time Slots *</label>
+            {timeSlots.length === 0 ? (
+              <div className="no-slots-message">
+                No available time slots for this date. Please select another date.
+              </div>
+            ) : (
+              <div className="time-slots-grid">
+                {timeSlots
+                  .filter((slot) =>
+                    formData.priority === "emergency" ? true : !slot.emergency
+                  )
+                  .map((slot) => {
+                    const slotKey = `${formData.doctor}_${formData.date}_${slot.time}`;
+                    const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
+                    return (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        className={`time-slot 
+                          ${!slot.available ? "booked" : ""} 
+                          ${isBlocked ? "blocked" : ""} 
+                          ${slot.emergency ? "emergency-slot" : ""} 
+                          ${formData.time === slot.time ? "selected" : ""}`}
+                        onClick={() => {
+                          if (!slot.available || isBlocked) return;
+                          setFormData((prev) => ({
+                            ...prev,
+                            time: slot.time,
+                          }));
+                        }}
+                        disabled={
+                          !slot.available ||
+                          isBlocked ||
+                          (slot.emergency && formData.priority !== "emergency")
+                        }
+                        aria-label={`${slot.time} ${
+                          isBlocked
+                            ? "Blocked"
+                            : slot.available
+                            ? "available"
+                            : "booked"
+                        }`}
+                        title={
+                          isBlocked
+                            ? "Unavailable — set by staff"
+                            : slot.emergency
+                            ? "Emergency Only"
+                            : `${slot.time} ${
+                                slot.available ? "available" : "booked"
+                              }`
+                        }
+                      >
+                        {slot.time}
+                        {isBlocked && (
+                          <span className="blocked-indicator">Blocked</span>
+                        )}
+                        {slot.emergency && (
+                          <span className="emergency-badge">
+                            Emergency Only
+                          </span>
+                        )}
+                        {!slot.available && !slot.emergency && !isBlocked && (
+                          <span className="booked-indicator">Booked</span>
+                        )}
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
 
         {!formData.date && !formData.doctor && (
           <div className="form-hint-box">
@@ -2245,16 +2327,28 @@ const handleCancelAppointment = async (id: string, reason: string) => {
             required
           >
             <option value="">Select condition</option>
-            <option value="Myopia (Nearsightedness)">Myopia (Nearsightedness)</option>
-            <option value="Hyperopia (Farsightedness)">Hyperopia (Farsightedness)</option>
+            <option value="Myopia (Nearsightedness)">
+              Myopia (Nearsightedness)
+            </option>
+            <option value="Hyperopia (Farsightedness)">
+              Hyperopia (Farsightedness)
+            </option>
             <option value="Astigmatism">Astigmatism</option>
             <option value="Presbyopia">Presbyopia</option>
             <option value="Cataracts">Cataracts</option>
             <option value="Glaucoma">Glaucoma</option>
-            <option value="Macular Degeneration">Macular Degeneration</option>
-            <option value="Diabetic Retinopathy">Diabetic Retinopathy</option>
-            <option value="Amblyopia (Lazy Eye)">Amblyopia (Lazy Eye)</option>
-            <option value="Conjunctivitis (Pink Eye)">Conjunctivitis (Pink Eye)</option>
+            <option value="Macular Degeneration">
+              Macular Degeneration
+            </option>
+            <option value="Diabetic Retinopathy">
+              Diabetic Retinopathy
+            </option>
+            <option value="Amblyopia (Lazy Eye)">
+              Amblyopia (Lazy Eye)
+            </option>
+            <option value="Conjunctivitis (Pink Eye)">
+              Conjunctivitis (Pink Eye)
+            </option>
             <option value="custom">Other (Specify)</option>
           </select>
         </div>
@@ -2287,12 +2381,10 @@ const handleCancelAppointment = async (id: string, reason: string) => {
               value={formData.phone}
               onChange={(e) => {
                 let value = e.target.value.replace(/[^0-9+]/g, "");
-                if (!value.startsWith("+63")) {
-                  value = "+63";
-                }
+                if (!value.startsWith("+63")) value = "+63";
                 setFormData((prev) => ({ ...prev, phone: value }));
               }}
-              pattern="^\+63\d{10}$"
+              pattern="^\\+63\\d{10}$"
               maxLength={13}
               required
             />

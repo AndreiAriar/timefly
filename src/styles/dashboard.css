@@ -1937,59 +1937,45 @@ border-radius: var(--radius-xl);
   background: var(--bg-primary);
 }
 
+/* ====== UPDATED HEADER SECTION ====== */
 .calendar-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: center; /* Center header content */
+  align-items: center;
   padding: var(--space-xl);
   border-bottom: 1px solid var(--border-light);
   background: var(--bg-secondary);
 }
 
-.calendar-title-section h2 {
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
-  margin-bottom: var(--space-xs);
-  color: var(--text-primary);
-}
-
-.calendar-title-section p {
-  color: var(--text-muted);
-}
-
 .calendar-navigation {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--space-lg) var(--space-xl);
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-light);
+  justify-content: center;
+  gap: var(--space-md);
 }
 
-.month-title {
+/* Centered Month Title < October > */
+.month-display {
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  text-align: center;
 }
 
-.nav-buttons {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-.nav-btn {
-  padding: var(--space-sm);
-  border: 1px solid var(--border-light);
-  border-radius: var(--border-radius);
-  background: var(--bg-primary);
+/* Navigation Buttons */
+.calendar-navigation .btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-primary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: color var(--transition-fast);
 }
 
-.nav-btn:hover {
-  border-color: var(--primary);
-  background: var(--bg-secondary);
+.calendar-navigation .btn-icon:hover {
+  color: var(--primary);
 }
+
+/* ====== CALENDAR GRID ====== */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -2002,7 +1988,7 @@ border-radius: var(--radius-xl);
 .calendar-day-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg); /* UPDATED: iOS style */
+  border-radius: var(--radius-lg); /* iOS-style soft corners */
   padding: var(--space-lg);
   transition: var(--transition-fast);
 }
@@ -2047,15 +2033,22 @@ border-radius: var(--radius-xl);
   font-weight: 700;
 }
 
-.availability-available { color: var(--success); }
-.availability-busy { color: var(--warning); }
-.availability-full { color: var(--error); }
+.availability-available {
+  color: var(--success);
+}
+.availability-busy {
+  color: var(--warning);
+}
+.availability-full {
+  color: var(--error);
+}
 
 .count-label {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
+/* ====== DOCTOR LISTS ====== */
 .doctors-section {
   margin-bottom: var(--space-lg);
 }
@@ -2097,11 +2090,6 @@ border-radius: var(--radius-xl);
   gap: var(--space-sm);
 }
 
-[data-theme="dark"] .status-icon.clock {
-  color: #ffffff !important; /* Ensures clock icon is white in dark mode */
-}
-
-
 .doctor-name {
   font-weight: 500;
 }
@@ -2112,15 +2100,16 @@ border-radius: var(--radius-xl);
   font-style: italic;
 }
 
+/* ====== DISABLED BUTTON STATES ====== */
 .btn-primary:disabled {
   background: var(--bg-tertiary);
   color: var(--text-tertiary);
-  border-color: #ccc; /* Fallback gray border */
+  border-color: #ccc;
   cursor: not-allowed;
   opacity: 0.8;
 }
 
-/* ===== DARK MODE ADAPTATIONS ===== */
+/* ====== DARK MODE ADAPTATIONS ====== */
 [data-theme="dark"] .calendar-day-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-medium);
@@ -2173,23 +2162,20 @@ border-radius: var(--radius-xl);
 }
 
 /* Dark mode status colors with better contrast */
-[data-theme="dark"] .availability-available { 
-  color: #34d399; /* Brighter green for dark mode */
+[data-theme="dark"] .availability-available {
+  color: #34d399;
 }
 
-[data-theme="dark"] .availability-busy { 
-  color: #fbbf24; /* Brighter yellow for dark mode */
+[data-theme="dark"] .availability-busy {
+  color: #fbbf24;
 }
 
-[data-theme="dark"] .availability-full { 
-  color: #f87171; /* Brighter red for dark mode */
+[data-theme="dark"] .availability-full {
+  color: #f87171;
 }
 
-/* Additional dark mode enhancements for better readability */
-[data-theme="dark"] .calendar-grid {
-  background: transparent;
-}
-
+/* Dark mode enhancements */
+[data-theme="dark"] .calendar-grid,
 [data-theme="dark"] .doctors-section {
   background: transparent;
 }
@@ -2198,13 +2184,18 @@ border-radius: var(--radius-xl);
   color: var(--text-secondary);
 }
 
-/* Ensure proper contrast in dark mode for disabled states */
+/* Disabled hover fix */
 [data-theme="dark"] .btn-primary:disabled:hover {
   background: var(--bg-tertiary);
   color: var(--text-tertiary);
   transform: none;
   box-shadow: none;
   cursor: not-allowed;
+}
+
+/* ====== CLOCK ICON FIX ====== */
+[data-theme="dark"] .status-icon.clock {
+  color: #ffffff !important;
 }
 
 /* Profile Modal */
@@ -2607,7 +2598,6 @@ border-radius: var(--radius-xl);
   }
 }
 
-
 /* ===== TIME SLOTS (Booking Modal) — Updated for iOS Look ===== */
 .time-slots-section {
   margin: var(--space-lg) 0;
@@ -2633,14 +2623,14 @@ border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm); /* ✅ subtle shadow for depth */
 }
 
-.time-slot:hover:not(.booked):not(:disabled) {
+.time-slot:hover:not(.booked):not(:disabled):not(.blocked) {
   border-color: var(--primary);
   background: var(--bg-secondary);
   transform: translateY(-3px); /* ✅ lift effect */
   box-shadow: var(--shadow-md); /* ✅ stronger shadow on hover */
 }
 
-.time-slot:active:not(.booked):not(:disabled) {
+.time-slot:active:not(.booked):not(:disabled):not(.blocked) {
   transform: scale(0.97); /* ✅ subtle press-down effect */
   box-shadow: var(--shadow-sm);
 }
@@ -2661,6 +2651,26 @@ border-radius: var(--radius-xl);
   box-shadow: none;
 }
 
+/* 🆕 ===== BLOCKED SLOT (Staff Unavailable) ===== */
+.time-slot.blocked {
+  background: #f0f0f0;
+  border-color: #ccc;
+  color: #888;
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+  position: relative;
+}
+
+.blocked-indicator {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: #b91c1c; /* red tone */
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* ===== BOOKED INDICATOR ===== */
 .booked-indicator {
   display: block;
   font-size: var(--font-size-xs);
@@ -2675,7 +2685,7 @@ border-radius: var(--radius-xl);
   border: 1px solid var(--border-medium);
 }
 
-[data-theme="dark"] .time-slot:hover:not(.booked):not(:disabled) {
+[data-theme="dark"] .time-slot:hover:not(.booked):not(:disabled):not(.blocked) {
   background: var(--bg-tertiary); /* Dark theme tertiary background on hover */
   border-color: var(--primary-light);
   color: var(--text-primary);
@@ -2683,7 +2693,7 @@ border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
 }
 
-[data-theme="dark"] .time-slot:active:not(.booked):not(:disabled) {
+[data-theme="dark"] .time-slot:active:not(.booked):not(:disabled):not(.blocked) {
   transform: scale(0.97);
   box-shadow: var(--shadow-sm);
 }
@@ -2702,6 +2712,18 @@ border-radius: var(--radius-xl);
   opacity: 0.7;
 }
 
+/* 🆕 Dark Mode for Blocked Slots */
+[data-theme="dark"] .time-slot.blocked {
+  background: var(--bg-primary);
+  border-color: var(--border-medium);
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .blocked-indicator {
+  color: #f87171; /* lighter red for dark mode */
+}
+
 [data-theme="dark"] .booked-indicator {
   color: #f87171; /* Brighter red for dark mode from your theme */
 }
@@ -2715,7 +2737,7 @@ border-radius: var(--radius-xl);
     max-height: 100vh;
     border-radius: 0; /* No rounded corners on mobile */
   }
-  
+
   .booking-modal .modal-header {
     border-radius: 0;
   }
@@ -2725,11 +2747,12 @@ border-radius: var(--radius-xl);
   .booking-modal {
     border-radius: var(--radius-xl); /* Rounded on desktop */
   }
-  
+
   .booking-modal .modal-header {
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   }
 }
+
 
 /* ===== MODERN PHOTO UPLOAD STYLES - UPDATED (Centered iOS + Drag Glow) ===== */
 .photo-upload-modern {
