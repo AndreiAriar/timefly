@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -18,7 +18,6 @@ import {
   Activity,
   TrendingUp,
   History,
-  Upload,
 } from 'lucide-react';
 
 // Firebase imports
@@ -126,10 +125,10 @@ interface Notification {
 const DoctorDashboard = () => {
   const [showCalendarView, setShowCalendarView] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [calendarCurrentDate, setCalendarCurrentDate] = useState(new Date());
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -139,10 +138,8 @@ const DoctorDashboard = () => {
   const [currentDoctor, setCurrentDoctor] = useState<Doctor | null>(null);
   const [viewMode, setViewMode] = useState<'today' | 'upcoming' | 'completed'>('today');
   const [_doctors, setDoctors] = useState<Doctor[]>([]);
-  const [editPhoto, setEditPhoto] = useState<File | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  
   // Add notification function
   const addNotification = (
     type: 'success' | 'error' | 'info' | 'warning',
@@ -226,7 +223,6 @@ const DoctorDashboard = () => {
       };
 
       setUserProfile(profile);
-      setPreviewPhoto(uData.photo || null);
 
       // Set currentDoctor if found
       if (resolvedDoctorId) {
@@ -326,53 +322,30 @@ useEffect(() => {
   return () => unsubscribe();
 }, [currentUser, userProfile]); // ✅ Correct dependencies
 
-  // Handle photo upload
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setEditPhoto(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreviewPhoto(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
+  // Add click outside handler for profile dropdown
 
-  // Save profile changes (including photo)
-const handleSaveProfile = async () => {
-  if (!userProfile || !currentUser) return;
+  useEffect(() => {
 
-  try {
-    let photoURL = userProfile.photo;
+    const handleClickOutside = (event: MouseEvent) => {
 
-    // If a new photo was selected, use Base64 preview
-    if (editPhoto && previewPhoto) {
-      // ✅ Use Base64 only in Firestore — DO NOT update Firebase Auth
-      photoURL = previewPhoto;
-    }
+      const target = event.target as HTMLElement;
 
-    // ✅ Update Firestore with Base64 photo
-    const userQuery = query(collection(db, 'users'), where('uid', '==', currentUser.uid));
-    const userDocs = await getDocs(userQuery);
-    if (!userDocs.empty) {
-      const userDocRef = doc(db, 'users', userDocs.docs[0].id);
-      await updateDoc(userDocRef, {
-        photo: photoURL,
-        phone: userProfile.phone,
-        name: userProfile.name,
-        specialty: userProfile.specialty,
-        updatedAt: serverTimestamp()
-      });
-    }
+      if (showProfileDropdown && !target.closest('.profile-dropdown-container')) {
 
-    // ✅ Update local state (so UI updates)
-    setUserProfile({ ...userProfile, photo: photoURL });
-    setIsEditingProfile(false);
-    addNotification('success', 'Profile updated successfully!');
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    addNotification('error', 'Failed to update profile');
-  }
-};
+        setShowProfileDropdown(false);
+
+      }
+
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+  }, [showProfileDropdown]);
+
+  
+ 
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -582,59 +555,173 @@ const handleSaveProfile = async () => {
           </div>
         ))}
       </div>
+ {/* NEW HEADER (Clean + Search integrated inside header) */}
+<header className="doctor-header">
+  <div className="header-left">
+    <div className="logo-container">
+      <img
+        src="/images/bird.png"
+        alt="TimeFly Logo"
+        className="logo-image"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
+      />
+      <h1 className="logo-title">TimeFly</h1>
+    </div>
+  </div>
 
-      {/* Header */}
-      <header className="doctor-header">
-        <div className="header-left">
-          <div className="doctor-info">
-            <h1 className="doctor-title">Dr. {userProfile.name}</h1>
-            <p className="doctor-specialty">{userProfile.specialty || userProfile.department}</p>
-          </div>
-          <div className="search-container">
-            <Search className="search-icon" size={20} aria-hidden="true" />
-            <input
-              type="text"
-              placeholder="Search patients, appointments..."
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              aria-label="Search patients and appointments"
+  <div className="header-right">
+    {/* Inline Search */}
+    <div className={`header-search ${showSearch ? 'expanded' : ''}`}>
+      <div className="search-wrapper">
+        {/* Only show icon inside input when search is active */}
+        {showSearch && <Search className="search-icon-left" size={18} />}
+
+        <label htmlFor="headerSearch" className="visually-hidden">
+          Search patients and appointments
+        </label>
+        <input
+          id="headerSearch"
+          type="text"
+          placeholder="Search patients, appointments..."
+          className="search-input"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Search patients and appointments"
+        />
+
+        {showSearch && (
+          <button
+            className="search-close-btn"
+            onClick={() => {
+              setShowSearch(false);
+              setSearchTerm('');
+            }}
+            title="Close search"
+            aria-label="Close search"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* Search Toggle Button (only visible when collapsed) */}
+    {!showSearch && (
+      <button
+        className="search-toggle-btn"
+        onClick={() => setShowSearch(true)}
+        title="Search"
+        aria-label="Open search"
+      >
+        <Search size={20} />
+      </button>
+    )}
+
+    {/* Profile Dropdown */}
+    <div className="profile-dropdown-container">
+      <button
+        className="profile-button"
+        onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+        title="Profile menu"
+        aria-label="Open profile menu"
+      >
+        <div className="user-avatar">
+          {userProfile?.photo ? (
+            <img
+              src={userProfile.photo}
+              alt={userProfile.name || "Profile photo"}
+              className="avatar-image"
             />
-          </div>
+          ) : (
+            <User size={20} />
+          )}
         </div>
-        <div className="header-right">
-          <button
-            className="calendar-btn"
-            onClick={() => setShowCalendarView(true)}
-            title="View calendar"
-          >
-            <CalendarDays size={20} />
-            <span>Calendar</span>
-          </button>
-          <button
-            className="profile-button"
-            onClick={() => setShowProfileModal(true)}
-            title="View profile"
-          >
-            <div className="user-profile">
-              <div className="user-avatar">
-                {userProfile.photo ? (
-                  <img src={userProfile.photo} alt={userProfile.name} className="avatar-image" />
-                ) : (
-                  <User size={16} />
-                )}
-              </div>
-            </div>
-          </button>
-          <button
-            className="logout-button"
-            onClick={handleLogout}
-            title="Log out"
-          >
-            <LogOut size={20} />
-          </button>
+      </button>
+
+      {/* Dropdown Menu */}
+      <div className={`profile-dropdown ${showProfileDropdown ? 'show' : ''}`}>
+        <div className="dropdown-header">
+          <p className="dropdown-email">{userProfile?.email}</p>
         </div>
-      </header>
+
+        <label htmlFor="photoUpload" className="hidden-file-label">
+          Upload Profile Photo
+        </label>
+        <input
+          type="file"
+          id="photoUpload"
+          accept="image/*"
+          className="hidden-file-input"
+          title="Upload profile photo"
+          aria-label="Upload profile photo"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setUserProfile((prev: any) => ({
+                  ...prev,
+                  photo: reader.result as string,
+                }));
+              };
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
+
+        <button
+          className="dropdown-item"
+          onClick={() => {
+            const input = document.getElementById("photoUpload") as HTMLInputElement;
+            input?.click();
+            setShowProfileDropdown(false);
+          }}
+          title="Change profile photo"
+          aria-label="Change profile photo"
+        >
+          <User size={16} />
+          Change Photo
+        </button>
+
+        <button
+          className="dropdown-item logout"
+          onClick={handleLogout}
+          title="Logout"
+          aria-label="Logout"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+{/* NEW HERO SECTION */}
+<section className="hero-section">
+  <div className="hero-overlay"></div>
+  <div className="hero-content">
+    <p className="hero-greeting">Welcome back,</p>
+    <h2 className="hero-title">Dr. {userProfile?.name || "Doctor"}</h2>
+    <p className="hero-subtitle">
+      Manage your eye care appointments and checkups with real-time queue updates
+    </p>
+    <div className="hero-actions">
+      <button
+        className="hero-btn hero-btn-primary"
+        onClick={() => setShowCalendarView(true)}
+        title="View calendar"
+        aria-label="View calendar"
+      >
+        <CalendarDays size={20} />
+        View Calendar
+      </button>
+    </div>
+  </div>
+</section>
+
 
       {/* Stats Cards */}
       <section className="stats-section">
@@ -973,252 +1060,93 @@ const handleSaveProfile = async () => {
   </div>
 </section>
 
-      {/* Calendar View Modal */}
-      {showCalendarView && (
-        <div className="modal-overlay" onClick={() => setShowCalendarView(false)}>
-          <div className="calendar-modal doctor-calendar" onClick={e => e.stopPropagation()}>
-            <div className="calendar-header">
-              <div className="calendar-title-section">
-                <h2>My Schedule Calendar</h2>
-                <p>View your appointment schedule and availability</p>
-              </div>
-              <button
-                className="modal-close"
-                onClick={() => setShowCalendarView(false)}
-                aria-label="Close calendar view"
-              >
-                <XCircle size={20} />
-              </button>
-            </div>
-            <div className="calendar-navigation">
-              <h3 className="month-title">{getMonthName(calendarCurrentDate)}</h3>
-              <div className="nav-buttons">
-                <button
-                  className="nav-btn"
-                  onClick={() => navigateMonth('prev')}
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  className="nav-btn"
-                  onClick={() => navigateMonth('next')}
-                  aria-label="Next month"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="calendar-grid">
-              {calendarDays.map((day) => (
-                <div key={day.date} className="calendar-day-card doctor-day">
-                  <div className="day-header">
-                    <div className="day-info">
-                      <span className="day-name">{day.dayName}</span>
-                      <span className="day-number">{day.dayNumber}</span>
-                    </div>
-                    <div className="appointments-count">
-                      <span className={`count-display ${getAvailabilityColor(day.appointments.booked, day.appointments.total)}`}>
-                        {day.appointments.booked}/{day.appointments.total}
-                      </span>
-                      <span className="count-label">appointments</span>
-                    </div>
-                  </div>
-                  <div className="day-appointments">
-                    {day.doctorAppointments.length > 0 ? (
-                      day.doctorAppointments.map((apt) => (
-                        <div key={apt.id} className="mini-appointment">
-                          <div className="mini-time">{apt.time}</div>
-                          <div className="mini-patient">
-                            <span className="mini-name">{apt.name}</span>
-                            {apt.age && <span className="mini-age">({apt.age})</span>}
-                          </div>
-                          <div className={`mini-priority ${getPriorityColor(apt.priority)}`}>
-                            {getPriorityIcon(apt.priority)}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="no-appointments">
-                        <span>No appointments</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+     {/* Calendar View Modal */}
+{showCalendarView && (
+  <div className="modal-overlay" onClick={() => setShowCalendarView(false)}>
+    <div className="calendar-modal doctor-calendar" onClick={e => e.stopPropagation()}>
+      <div className="calendar-header">
+        <div className="calendar-title-section">
+          <h2>My Schedule Calendar</h2>
+          <p>View your appointment schedule and availability</p>
         </div>
-      )}
-
-      {/* Profile Modal */}
-{showProfileModal && userProfile && (
-  <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
-    <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
-      <div className="modal-header">
-        <h3>{isEditingProfile ? 'Edit Profile' : 'Doctor Profile'}</h3>
         <button
           className="modal-close"
-          onClick={() => {
-            if (isEditingProfile) {
-              // Reset edit state and photo preview
-              setIsEditingProfile(false);
-              setEditPhoto(null);
-              setPreviewPhoto(userProfile.photo || null);
-            } else {
-              setShowProfileModal(false);
-            }
-          }}
-          aria-label="Close profile"
+          onClick={() => setShowCalendarView(false)}
+          aria-label="Close calendar view"
         >
           <XCircle size={20} />
         </button>
       </div>
 
-      <div className="profile-content">
-        {/* Profile Photo Section */}
-        <div className="profile-photo-section">
-          <div className="profile-avatar">
-            {previewPhoto ? (
-              <img src={previewPhoto} alt="Profile Preview" className="profile-image" />
-            ) : (
-              <User size={48} />
-            )}
-          </div>
+      {/* ======= Centered Month with Compact Buttons ======= */}
+      <div className="calendar-navigation">
+        <div className="calendar-month-controls">
+          <button
+            className="nav-btn"
+            onClick={() => navigateMonth('prev')}
+            aria-label="Previous month"
+          >
+            <ChevronLeft size={20} />
+          </button>
 
-          {isEditingProfile && (
-            <div className="photo-upload">
-              <input
-                type="file"
-                accept="image/*"
-                id="profile-photo-upload"
-                onChange={handlePhotoChange}
-                ref={fileInputRef}
-                className="hidden-file-input"
-                aria-label="Upload profile photo"
-              />
-              <label htmlFor="profile-photo-upload" className="upload-btn" role="button">
-                <Upload size={16} />
-                Change Photo
-              </label>
-            </div>
-          )}
+          <h3 className="month-title">{getMonthName(calendarCurrentDate)}</h3>
 
-          <div className="doctor-credentials">
-            <h4>Dr. {userProfile.name}</h4>
-            <p>{userProfile.specialty || userProfile.department}</p>
-          </div>
+          <button
+            className="nav-btn"
+            onClick={() => navigateMonth('next')}
+            aria-label="Next month"
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
+      </div>
 
-        {/* View Mode */}
-        {!isEditingProfile ? (
-          <div className="profile-info-grid">
-            <div className="info-item">
-              <label>Full Name</label>
-              <span>Dr. {userProfile.name}</span>
+      {/* ======= Calendar Grid ======= */}
+      <div className="calendar-grid">
+        {calendarDays.map((day) => (
+          <div key={day.date} className="calendar-day-card doctor-day">
+            <div className="day-header">
+              <div className="day-info">
+                <span className="day-name">{day.dayName}</span>
+                <span className="day-number">{day.dayNumber}</span>
+              </div>
+              <div className="appointments-count">
+                <span
+                  className={`count-display ${getAvailabilityColor(
+                    day.appointments.booked,
+                    day.appointments.total
+                  )}`}
+                >
+                  {day.appointments.booked}/{day.appointments.total}
+                </span>
+                <span className="count-label">appointments</span>
+              </div>
             </div>
-            <div className="info-item">
-              <label>Email</label>
-              <span>{userProfile.email}</span>
-            </div>
-            <div className="info-item">
-              <label>Phone</label>
-              <span>{userProfile.phone || 'Not provided'}</span>
-            </div>
-            <div className="info-item">
-              <label>Specialty</label>
-              <span>{userProfile.specialty || userProfile.department}</span>
-            </div>
-            <div className="info-item">
-              <label>Role</label>
-              <span>{userProfile.role}</span>
-            </div>
-            {currentDoctor && (
-              <>
-                <div className="info-item">
-                  <label>Working Hours</label>
-                  <span>{currentDoctor.workingHours.start} - {currentDoctor.workingHours.end}</span>
-                </div>
-                <div className="info-item">
-                  <label>Max Appointments/Day</label>
-                  <span>{currentDoctor.maxAppointments}</span>
-                </div>
-                <div className="info-item">
-                  <label>Buffer Time</label>
-                  <span>{currentDoctor.bufferTime} minutes</span>
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
-          /* Edit Mode */
-          <div className="profile-edit-form">
-            <div className="form-group">
-              <label htmlFor="edit-name">Full Name</label>
-              <input
-                id="edit-name"
-                type="text"
-                value={userProfile.name}
-                onChange={(e) => setUserProfile({ ...userProfile, name: e.target.value })}
-                placeholder="Enter full name"
-                aria-required="true"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="edit-phone">Phone</label>
-              <input
-                id="edit-phone"
-                type="tel"
-                value={userProfile.phone}
-                onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
-                placeholder="Enter phone number"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="edit-specialty">Specialty</label>
-              <input
-                id="edit-specialty"
-                type="text"
-                value={userProfile.specialty || ''}
-                onChange={(e) => setUserProfile({ ...userProfile, specialty: e.target.value })}
-                placeholder="Enter specialty"
-              />
-            </div>
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={() => {
-                  setIsEditingProfile(false);
-                  setEditPhoto(null);
-                  setPreviewPhoto(userProfile.photo || null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn-save"
-                onClick={handleSaveProfile}
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Edit Profile Button (only shown when not editing) */}
-        {!isEditingProfile && (
-          <div className="edit-profile-footer">
-            <button
-              className="edit-profile-btn"
-              onClick={() => setIsEditingProfile(true)}
-              type="button"
-            >
-              Edit Profile
-            </button>
+            <div className="day-appointments">
+              {day.doctorAppointments.length > 0 ? (
+                day.doctorAppointments.map((apt) => (
+                  <div key={apt.id} className="mini-appointment">
+                    <div className="mini-time">{apt.time}</div>
+                    <div className="mini-patient">
+                      <span className="mini-name">{apt.name}</span>
+                      {apt.age && <span className="mini-age">({apt.age})</span>}
+                    </div>
+                    <div
+                      className={`mini-priority ${getPriorityColor(apt.priority)}`}
+                    >
+                      {getPriorityIcon(apt.priority)}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-appointments">
+                  <span>No appointments</span>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   </div>
@@ -1305,8 +1233,33 @@ const handleSaveProfile = async () => {
           </div>
         </div>
       )}
+
+{/* FOOTER - ADD THIS SECTION */}
+<footer className="dashboard-footer">
+  <div className="footer-content">
+    <div className="footer-logo">
+      <img 
+        src="/images/bird.png" 
+        alt="TimeFly Logo" 
+        className="footer-logo-image"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
+      />
+      <h3 className="footer-logo-text">TimeFly</h3>
     </div>
-  );
+
+    <p className="footer-tagline">
+      Making your time for care smoother and faster.
+    </p>
+
+    <p className="footer-copyright">
+      © {new Date().getFullYear()} TimeFly. All rights reserved.
+    </p>
+  </div>
+</footer>
+</div>
+);
 };
 
 export default DoctorDashboard;

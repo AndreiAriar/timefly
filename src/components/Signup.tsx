@@ -6,7 +6,6 @@ import { auth, googleProvider } from "../../firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
-  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,6 +19,7 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
 
   const [verificationStep, setVerificationStep] = useState(false);
   const [inputCode, setInputCode] = useState("");
@@ -33,11 +33,48 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
       return;
     }
 
+    if (!password) {
+      toast.error("👉 Please enter your password first", { autoClose: 10000, closeButton: true });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("⚠️ Password must be at least 6 characters", { autoClose: 10000, closeButton: true });
+      return;
+    }
+
+    setIsSendingCode(true);
+
     try {
+      // ✅ STEP 1: Check if email exists using backend (more reliable)
+      const checkResponse = await fetch("http://localhost:5000/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      const checkData = await checkResponse.json();
+      console.log("🔍 check-email response:", checkData);
+
+      if (!checkResponse.ok || !checkData.success) {
+        throw new Error(checkData.error || "Failed to check email");
+      }
+
+      if (checkData.exists) {
+        toast.error("❌ This email is already registered. Please log in instead.", { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
+        setIsSendingCode(false);
+        setTimeout(() => navigate("/login", { replace: true }), 2000);
+        return;
+      }
+
+      // ✅ STEP 2: Email is available, send verification code
       const response = await fetch("http://localhost:5000/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
 
       const data = await response.json();
@@ -47,11 +84,19 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
         throw new Error(data.error || "Failed to send email");
       }
 
-      toast.success("📩 A 6-digit verification code has been sent to your email.", { autoClose: 10000, closeButton: true });
+      toast.success("📩 A 6-digit verification code has been sent to your email.", { 
+        autoClose: 10000, 
+        closeButton: true 
+      });
       setVerificationStep(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Email sending failed:", error);
-      toast.error("❌ Failed to send verification email.", { autoClose: 10000, closeButton: true });
+      toast.error(`❌ ${error.message || "Failed to send verification email"}`, { 
+        autoClose: 10000, 
+        closeButton: true 
+      });
+    } finally {
+      setIsSendingCode(false);
     }
   };
 
@@ -61,8 +106,14 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
       return;
     }
 
+    if (inputCode.trim().length !== 6) {
+      toast.error("⚠️ Code must be 6 digits", { autoClose: 10000, closeButton: true });
+      return;
+    }
+
     setIsVerifying(true);
     try {
+      // ✅ STEP 1: Verify the code with backend
       const response = await fetch("http://localhost:5000/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,16 +130,16 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
         throw new Error(data.error || "Verification failed");
       }
 
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-      if (methods.length > 0) {
-        toast.error("❌ This email is already registered. Please log in instead.", { autoClose: 10000, closeButton: true });
-        navigate("/login", { replace: true });
-        return;
-      }
+      // ✅ STEP 2: Code verified successfully, create Firebase account
+      console.log("🔥 Creating Firebase account...");
+      await createUserWithEmailAndPassword(auth, email.trim(), password);
+      
+      toast.success("🎉 Account created successfully!", { 
+        autoClose: 10000, 
+        closeButton: true 
+      });
 
-      await createUserWithEmailAndPassword(auth, email, password);
-      toast.success("🎉 Account created successfully!", { autoClose: 10000, closeButton: true });
-
+      // ✅ STEP 3: Navigate to login or dashboard
       setTimeout(() => {
         if (onSuccess) {
           onSuccess();
@@ -96,12 +147,37 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
           navigate("/login", { replace: true });
         }
       }, 2000);
+      
     } catch (err: any) {
-      console.error("Verification error:", err);
+      console.error("❌ Verification error:", err);
+      
       if (err.code === "auth/weak-password") {
-        toast.error("❌ Password should be at least 6 characters.", { autoClose: 10000, closeButton: true });
+        toast.error("❌ Password should be at least 6 characters.", { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
+      } else if (err.code === "auth/email-already-in-use") {
+        // This shouldn't happen since we check before, but just in case
+        toast.error("❌ This email is already registered. Redirecting to login...", { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
+        setTimeout(() => navigate("/login", { replace: true }), 2000);
+      } else if (err.code === "auth/invalid-email") {
+        toast.error("❌ Invalid email format.", { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
+      } else if (err.code === "auth/network-request-failed") {
+        toast.error("❌ Network error. Please check your connection.", { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
       } else {
-        toast.error(`❌ ${err.message || "Failed to verify code"}`, { autoClose: 10000, closeButton: true });
+        toast.error(`❌ ${err.message || "Failed to create account"}`, { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
       }
     } finally {
       setIsVerifying(false);
@@ -113,18 +189,35 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
     setIsGoogleLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success("🎉 Signed up with Google successfully!", { autoClose: 10000, closeButton: true });
+      toast.success("🎉 Signed up with Google successfully!", { 
+        autoClose: 10000, 
+        closeButton: true 
+      });
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       setIsGoogleLoading(false);
-      toast.error(`❌ ${err.message || "Google sign-up failed"}`, { autoClose: 10000, closeButton: true });
+      console.error("❌ Google sign-up error:", err);
+      
+      if (err.code === "auth/popup-closed-by-user") {
+        toast.info("ℹ️ Sign-up cancelled", { autoClose: 5000, closeButton: true });
+      } else if (err.code === "auth/popup-blocked") {
+        toast.error("❌ Popup blocked. Please allow popups for this site.", { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
+      } else {
+        toast.error(`❌ ${err.message || "Google sign-up failed"}`, { 
+          autoClose: 10000, 
+          closeButton: true 
+        });
+      }
     }
   };
 
   return (
     <div className="signup-container">
       <div className="signup-card">
-        {/* Added Logo at the top */}
+        {/* Logo */}
         <img src="../images/logo.jpg" alt="TimeFly Logo" className="signup-logo" />
         
         <h1>Create Your Account</h1>
@@ -143,29 +236,35 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               required
-              disabled={isGoogleLoading}
+              disabled={isGoogleLoading || isSendingCode}
             />
 
             <div className="password-field">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder="Password (min 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
                 required
-                disabled={isGoogleLoading}
+                disabled={isGoogleLoading || isSendingCode}
               />
               <span
-                className={`toggle-password ${isGoogleLoading ? "disabled" : ""}`}
-                onClick={() => !isGoogleLoading && setShowPassword(!showPassword)}
+                className={`toggle-password ${(isGoogleLoading || isSendingCode) ? "disabled" : ""}`}
+                onClick={() => !(isGoogleLoading || isSendingCode) && setShowPassword(!showPassword)}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
             </div>
 
-            <button type="submit" disabled={isGoogleLoading}>
-              Sign Up
+            <button type="submit" disabled={isGoogleLoading || isSendingCode}>
+              {isSendingCode ? (
+                <>
+                  <FaSpinner className="spinner" /> Checking...
+                </>
+              ) : (
+                "Sign Up"
+              )}
             </button>
 
             <div className="divider"><span>or</span></div>
@@ -174,7 +273,7 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
               type="button"
               className="google-btn"
               onClick={handleGoogleSignUp}
-              disabled={isGoogleLoading}
+              disabled={isGoogleLoading || isSendingCode}
             >
               {isGoogleLoading ? (
                 <>
@@ -210,15 +309,26 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
                 maxLength={6}
                 placeholder="Enter 6-digit code"
                 value={inputCode}
-                onChange={(e) => setInputCode(e.target.value)}
+                onChange={(e) => setInputCode(e.target.value.replace(/\D/g, ""))}
+                disabled={isVerifying}
               />
 
               <button onClick={verifyCodeAndCreate} disabled={isVerifying}>
-                {isVerifying ? <><FaSpinner className="spinner" /> Verifying...</> : "Verify & Create Account"}
+                {isVerifying ? (
+                  <>
+                    <FaSpinner className="spinner" /> Verifying...
+                  </>
+                ) : (
+                  "Verify & Create Account"
+                )}
               </button>
 
-              <button className="resend-btn" onClick={sendVerificationCode}>
-                Resend Code
+              <button 
+                className="resend-btn" 
+                onClick={sendVerificationCode}
+                disabled={isVerifying || isSendingCode}
+              >
+                {isSendingCode ? "Sending..." : "Resend Code"}
               </button>
             </div>
           </div>

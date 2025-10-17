@@ -53,7 +53,7 @@ import {
 import { db, auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import '../styles/staffdashboard.css';
-
+import '../styles/reports.css';
 
 interface Appointment {
   id: string;
@@ -326,6 +326,34 @@ useEffect(() => {
 
   return () => unsubscribe();
 }, []);
+
+
+// Dynamic chart styling
+useEffect(() => {
+  // Weekly bar chart
+  document.querySelectorAll('.bar[data-height-percentage]').forEach((bar) => {
+    const percentage = bar.getAttribute('data-height-percentage');
+    if (percentage) {
+      (bar as HTMLElement).style.height = `${parseFloat(percentage) * 2}px`;
+    }
+  });
+
+  // Condition bars
+  document.querySelectorAll('.condition-bar[data-width-percentage]').forEach((bar) => {
+    const percentage = bar.getAttribute('data-width-percentage');
+    if (percentage) {
+      (bar as HTMLElement).style.width = `${percentage}%`;
+    }
+  });
+
+  // Monthly trend bars
+  document.querySelectorAll('.line-chart-bar[data-height-percentage]').forEach((bar) => {
+    const percentage = bar.getAttribute('data-height-percentage');
+    if (percentage) {
+      (bar as HTMLElement).style.height = `${parseFloat(percentage) * 1.5}px`;
+    }
+  });
+}, [appointments, activeTab]); // Re-run when appointments change or tab switches
 
 // Clear search term when switching tabs
 useEffect(() => {
@@ -881,6 +909,93 @@ const checkAppointmentConflict = async (
     };
   };
   
+    // =============================
+  // REPORTS ANALYTICS FUNCTIONS
+  // =============================
+  
+  const getWeeklyPatientData = () => {
+    const weeks = [];
+    const today = new Date();
+    
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - (i * 7) - today.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      
+      const weekAppointments = appointments.filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate >= weekStart && aptDate <= weekEnd && apt.status !== 'cancelled';
+      });
+      
+      weeks.push({
+        label: `Week ${4 - i}`,
+        dateRange: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+        count: weekAppointments.length,
+        appointments: weekAppointments
+      });
+    }
+    
+    return weeks;
+  };
+
+  const getConditionStats = () => {
+    const conditionMap: { [key: string]: number } = {};
+    
+    appointments.forEach(apt => {
+      if (apt.status !== 'cancelled') {
+        const condition = apt.type || 'Unspecified';
+        conditionMap[condition] = (conditionMap[condition] || 0) + 1;
+      }
+    });
+    
+    return Object.entries(conditionMap)
+      .map(([condition, count]) => ({ condition, count }))
+      .sort((a, b) => b.count - a.count);
+  };
+
+  const getMonthlyTrend = () => {
+    const months = [];
+    const today = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+      const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+      
+      const monthAppointments = appointments.filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate >= monthStart && aptDate <= monthEnd && apt.status !== 'cancelled';
+      });
+      
+      months.push({
+        month: monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        count: monthAppointments.length
+      });
+    }
+    
+    return months;
+  };
+
+  const getDoctorPerformance = () => {
+    return doctors.map(doctor => {
+      const doctorAppointments = appointments.filter(apt => 
+        apt.doctorId === doctor.id && apt.status !== 'cancelled'
+      );
+      
+      const completed = doctorAppointments.filter(apt => apt.status === 'completed').length;
+      
+      return {
+        name: doctor.name,
+        specialty: doctor.specialty,
+        totalPatients: doctorAppointments.length,
+        completed,
+        pending: doctorAppointments.filter(apt => apt.status === 'pending').length,
+        confirmed: doctorAppointments.filter(apt => apt.status === 'confirmed').length
+      };
+    }).sort((a, b) => b.totalPatients - a.totalPatients);
+  };
+  
   // Queue Management
   const getCurrentQueue = (): QueueItem[] => {
     const today = getTodayDate();
@@ -1224,6 +1339,8 @@ const handleCreateAppointment = async () => {
       setAppointmentForm(prev => ({ ...prev, time: '' }));
       return;
     }
+
+   
     
     // Additional real-time check by querying current appointments state
     const localConflicts = appointments.filter(apt => 
@@ -1437,15 +1554,16 @@ const handleCreateAppointment = async () => {
       addNotification('error', 'Failed to delete appointment');
     }
   };
-  
-  // CRUD Operations - Doctors
-  const handleCreateDoctor = async () => {
+
+ const handleCreateDoctor = async () => {
   if (!doctorForm.name || !doctorForm.specialty || !doctorForm.email) {
     addNotification('error', 'Please fill all required fields');
     return;
   }
 
   try {
+    addNotification('info', 'Creating doctor account...');
+
     const doctorData = {
       name: doctorForm.name,
       specialty: doctorForm.specialty,
@@ -1460,7 +1578,7 @@ const handleCreateAppointment = async () => {
       consultationDuration: parseInt(doctorForm.consultationDuration),
       bufferTime: parseInt(doctorForm.bufferTime),
       offDays: doctorForm.offDays,
-      photo: doctorForm.photo,
+      photo: doctorForm.photo, // Stored in Firestore only
       available: doctorForm.available,
       isActive: doctorForm.isActive,
       createdAt: serverTimestamp(),
@@ -1468,43 +1586,68 @@ const handleCreateAppointment = async () => {
 
     // 🔥 Step 1: Add doctor to 'doctors' collection
     const doctorDocRef = await addDoc(collection(db, 'doctors'), doctorData);
-
-    // 🔗 Step 2: Find user by email in 'users' collection
-    const userQuery = query(
-      collection(db, 'users'),
-      where('email', '==', doctorForm.email)
-    );
-    const userSnapshot = await getDocs(userQuery);
-
-    if (!userSnapshot.empty) {
-      // 🔁 User exists → update their profile with doctorId
-      const userDoc = userSnapshot.docs[0];
-      const userDocRef = doc(db, 'users', userDoc.id);
-      await updateDoc(userDocRef, {
-        doctorId: doctorDocRef.id,  // ✅ Link user to doctor
-        role: 'Doctor',            // Ensure correct role
-        name: doctorForm.name,     // Keep in sync
-        specialty: doctorForm.specialty,
-        department: doctorForm.specialty, // Optional: sync department
+    
+    // 🔗 Step 2: Create Firebase Auth account + User document via backend
+    // Note: Photo is NOT sent in API call to avoid payload size issues
+    try {
+      const response = await fetch('http://localhost:5000/create-doctor-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: doctorForm.email,
+          name: doctorForm.name,
+          specialty: doctorForm.specialty,
+          doctorId: doctorDocRef.id,
+          phone: doctorForm.phone,
+          // Photo excluded from API call - stored in Firestore doctors collection only
+        }),
       });
-      addNotification('success', 'Doctor created and linked to user!');
-    } else {
-      // ⚠️ No user found → warn staff
-      addNotification(
-        'warning',
-        `Doctor created, but no user found with email "${doctorForm.email}". They must sign up first to access their dashboard.`
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        addNotification('success', `✅ Doctor account created! Password setup email sent to ${doctorForm.email}`);
+        
+        // ✅ Update doctor document with userId
+        await updateDoc(doc(db, 'doctors', doctorDocRef.id), {
+          userId: result.uid
+        });
+        
+        // ✅ If photo exists, update user document in Firestore directly
+        if (doctorForm.photo) {
+          try {
+            const userDocRef = doc(db, 'users', result.uid);
+            await updateDoc(userDocRef, {
+              photo: doctorForm.photo
+            });
+            console.log('Photo added to user profile');
+          } catch (photoError) {
+            console.warn('Failed to add photo to user profile:', photoError);
+            // Non-critical error - doctor account still works
+          }
+        }
+        
+      } else {
+        // Account creation failed, but doctor document exists
+        addNotification('warning', 
+          `Doctor profile created, but failed to create login account: ${result.error || 'Unknown error'}. Please try creating the account manually.`
+        );
+      }
+    } catch (emailError) {
+      console.error('Error creating auth account:', emailError);
+      addNotification('warning', 
+        'Doctor profile created, but failed to send setup email. The doctor may need to use password reset to access their account.'
       );
     }
 
-    // Close form
     setShowDoctorForm(false);
     resetDoctorForm();
+    
   } catch (error) {
     console.error('Error creating doctor:', error);
-    addNotification('error', 'Failed to create doctor');
+    addNotification('error', 'Failed to create doctor profile');
   }
 };
-  
   const handleUpdateDoctor = async () => {
   if (!editingDoctor) return;
 
@@ -1931,8 +2074,7 @@ const handleLogout = async () => {
             </div>
           ))}
         </div>
-      
-     {/* Sidebar */}
+   {/* Sidebar */}
 <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
   <div className="sidebar-header">
     <div className="logo">
@@ -2005,6 +2147,16 @@ const handleLogout = async () => {
       <CalendarDays size={20} aria-hidden="true" />
       {!sidebarCollapsed && <span>Calendar</span>}
     </button>
+
+    <button
+      className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
+      onClick={() => setActiveTab('reports')}
+      aria-current={activeTab === 'reports' ? 'page' : undefined}
+      title="Reports"
+    >
+      <MessageSquare size={20} aria-hidden="true" />
+      {!sidebarCollapsed && <span>Reports</span>}
+    </button>
   </nav>
 
   <div className="sidebar-footer">
@@ -2053,6 +2205,7 @@ const handleLogout = async () => {
       {activeTab === 'queue' && 'Queue Management'}
       {activeTab === 'doctors' && 'Doctor Management'}
       {activeTab === 'calendar' && 'Appointment Calendar'}
+       {activeTab === 'reports' && 'Patient Reports'}
     </h1>
     <p className="page-subtitle">
       {activeTab === 'dashboard' && 'Overview of clinic operations'}
@@ -2060,6 +2213,7 @@ const handleLogout = async () => {
       {activeTab === 'queue' && 'Real-time queue management'}
       {activeTab === 'doctors' && 'Manage doctor profiles and availability'}
       {activeTab === 'calendar' && 'Monthly view of all appointments'}
+      {activeTab === 'reports' && 'Analytics and patient statistics'}
     </p>
   </div>
   <div className="header-right">
@@ -2954,8 +3108,213 @@ const handleLogout = async () => {
     )}
   </div>
 )}
-</main>
 
+{/* Reports Tab */}
+{activeTab === 'reports' && (
+  <div className="reports-content">
+    {/* Summary Cards */}
+    <div className="report-summary-grid">
+      <div className="report-card summary-card">
+        <div className="report-card-header">
+          <Users size={24} className="report-icon" />
+          <span>Total Patients</span>
+        </div>
+        <div className="report-value">
+          {appointments.filter(apt => apt.status !== 'cancelled').length}
+        </div>
+        <div className="report-subtitle">All time</div>
+      </div>
+
+      <div className="report-card summary-card">
+        <div className="report-card-header">
+          <CheckCircle size={24} className="report-icon success" />
+          <span>Completed</span>
+        </div>
+        <div className="report-value">
+          {appointments.filter(apt => apt.status === 'completed').length}
+        </div>
+        <div className="report-subtitle">Total completed visits</div>
+      </div>
+
+      <div className="report-card summary-card">
+        <div className="report-card-header">
+          <Clock size={24} className="report-icon warning" />
+          <span>This Month</span>
+        </div>
+        <div className="report-value">
+          {appointments.filter(apt => {
+            const aptDate = new Date(apt.date);
+            const now = new Date();
+            return (
+              aptDate.getMonth() === now.getMonth() &&
+              aptDate.getFullYear() === now.getFullYear() &&
+              apt.status !== 'cancelled'
+            );
+          }).length}
+        </div>
+        <div className="report-subtitle">Current month patients</div>
+      </div>
+
+      <div className="report-card summary-card">
+        <div className="report-card-header">
+          <AlertTriangle size={24} className="report-icon error" />
+          <span>Emergency Cases</span>
+        </div>
+        <div className="report-value">
+          {appointments.filter(apt => apt.priority === 'emergency').length}
+        </div>
+        <div className="report-subtitle">All priority cases</div>
+      </div>
+    </div>
+
+    {/* Weekly Patients Chart */}
+    <div className="report-section">
+      <div className="report-section-header">
+        <h3>Weekly Patient Volume</h3>
+        <p>Last 4 weeks patient distribution</p>
+      </div>
+      <div className="report-card chart-card">
+        <div className="bar-chart">
+          {(() => {
+            const weeklyData = getWeeklyPatientData();
+            const maxCount = Math.max(...weeklyData.map(w => w.count), 1);
+            
+            return weeklyData.map((week, index) => (
+              <div key={index} className="bar-chart-item">
+                <div className="bar-chart-label">{week.label}</div>
+                <div className="bar-wrapper">
+                  <div
+                    className={`bar bar-${index}`}
+                    data-height-percentage={(week.count / maxCount) * 100}
+                  >
+                    <span className="bar-value">{week.count}</span>
+                  </div>
+                </div>
+                <div className="bar-chart-date">{week.dateRange}</div>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+    </div>
+
+    {/* Conditions Stats */}
+    <div className="report-section">
+      <div className="report-section-header">
+        <h3>Patient Conditions Distribution</h3>
+        <p>Most common medical conditions</p>
+      </div>
+      <div className="report-card">
+        <div className="condition-stats">
+          {(() => {
+            const conditionStats = getConditionStats();
+            const totalNonCancelled = appointments.filter(apt => apt.status !== 'cancelled').length;
+            const maxConditionCount = conditionStats[0]?.count || 1;
+            
+            return conditionStats.slice(0, 10).map((stat, index) => (
+              <div key={index} className="condition-stat-item">
+                <div className="condition-stat-header">
+                  <span className="condition-name">{stat.condition}</span>
+                  <span className="condition-count">{stat.count} patients</span>
+                </div>
+                <div className="condition-bar-wrapper">
+                  <div
+                    className="condition-bar"
+                    data-width-percentage={(stat.count / maxConditionCount) * 100}
+                  />
+                </div>
+                <div className="condition-percentage">
+                  {((stat.count / totalNonCancelled) * 100).toFixed(1)}%
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+    </div>
+
+    {/* Monthly Trend */}
+    <div className="report-section">
+      <div className="report-section-header">
+        <h3>6-Month Patient Trend</h3>
+        <p>Patient volume over the last 6 months</p>
+      </div>
+      <div className="report-card chart-card">
+        <div className="line-chart">
+          {(() => {
+            const monthlyTrend = getMonthlyTrend();
+            const maxMonthCount = Math.max(...monthlyTrend.map(m => m.count), 1);
+            
+            return monthlyTrend.map((month, index) => (
+              <div key={index} className="line-chart-point">
+                <div className="line-chart-label">{month.month}</div>
+                <div
+                  className="line-chart-bar"
+                  data-height-percentage={(month.count / maxMonthCount) * 100}
+                >
+                  <span className="line-chart-value">{month.count}</span>
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+    </div>
+
+    {/* Doctor Performance */}
+    <div className="report-section">
+      <div className="report-section-header">
+        <h3>Doctor Performance</h3>
+        <p>Patient distribution by doctor</p>
+      </div>
+      <div className="report-card">
+        <div className="doctor-performance-list">
+          {getDoctorPerformance().map((doctor, index) => (
+            <div key={index} className="doctor-performance-item">
+              <div className="doctor-performance-header">
+                <div className="doctor-performance-info">
+                  <Stethoscope size={20} />
+                  <div>
+                    <div className="doctor-performance-name">
+                      {doctor.name}
+                    </div>
+                    <div className="doctor-performance-specialty">
+                      {doctor.specialty}
+                    </div>
+                  </div>
+                </div>
+                <div className="doctor-performance-total">
+                  {doctor.totalPatients} patients
+                </div>
+              </div>
+              <div className="doctor-performance-stats">
+                <div className="doctor-stat">
+                  <span className="stat-label">Completed:</span>
+                  <span className="stat-value success">
+                    {doctor.completed}
+                  </span>
+                </div>
+                <div className="doctor-stat">
+                  <span className="stat-label">Confirmed:</span>
+                  <span className="stat-value info">
+                    {doctor.confirmed}
+                  </span>
+                </div>
+                <div className="doctor-stat">
+                  <span className="stat-label">Pending:</span>
+                  <span className="stat-value warning">
+                    {doctor.pending}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+</main>
 {/* Appointment Form Modal */}
 {showBookingForm && (
   <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -3109,6 +3468,61 @@ const handleLogout = async () => {
             </select>
           </div>
 
+          {/* Medical Condition */}
+          <div className="form-group">
+            <label htmlFor="condition">Medical Condition *</label>
+            <select
+              id="condition"
+              name="condition"
+              value={appointmentForm.condition}
+              onChange={handleAppointmentFormChange}
+              required
+            >
+              <option value="">Select condition</option>
+              <option value="Myopia (Nearsightedness)">
+                Myopia (Nearsightedness)
+              </option>
+              <option value="Hyperopia (Farsightedness)">
+                Hyperopia (Farsightedness)
+              </option>
+              <option value="Astigmatism">Astigmatism</option>
+              <option value="Presbyopia">Presbyopia</option>
+              <option value="Cataracts">Cataracts</option>
+              <option value="Glaucoma">Glaucoma</option>
+              <option value="Macular Degeneration">
+                Macular Degeneration
+              </option>
+              <option value="Diabetic Retinopathy">
+                Diabetic Retinopathy
+              </option>
+              <option value="Amblyopia (Lazy Eye)">
+                Amblyopia (Lazy Eye)
+              </option>
+              <option value="Conjunctivitis (Pink Eye)">
+                Conjunctivitis (Pink Eye)
+              </option>
+              <option value="custom">Other (Specify)</option>
+            </select>
+          </div>
+
+          {/* Custom Condition (appears only when "custom" is selected) */}
+          {appointmentForm.condition === "custom" && (
+            <div className="form-group">
+              <label htmlFor="customCondition">
+                Please specify your condition *
+              </label>
+              <input
+                type="text"
+                id="customCondition"
+                name="customCondition"
+                placeholder="Describe your condition"
+                value={appointmentForm.customCondition}
+                onChange={handleAppointmentFormChange}
+                required
+              />
+            </div>
+          )}
+
           {/* Priority */}
           <div className="form-group">
             <label htmlFor="priority">Priority</label>
@@ -3203,6 +3617,19 @@ const handleLogout = async () => {
               </div>
             </div>
           )}
+
+          {/* Notes (Optional) */}
+          <div className="form-group full-width">
+            <label htmlFor="appointment-notes">Additional Notes</label>
+            <textarea
+              id="appointment-notes"
+              name="notes"
+              value={appointmentForm.notes}
+              onChange={handleAppointmentFormChange}
+              placeholder="Any additional information..."
+              rows={3}
+            />
+          </div>
         </div>
       </div>
 
@@ -3223,6 +3650,8 @@ const handleLogout = async () => {
             !appointmentForm.name ||
             !appointmentForm.emailVerified ||
             !appointmentForm.phone ||
+            !appointmentForm.condition ||
+            (appointmentForm.condition === "custom" && !appointmentForm.customCondition) ||
             !appointmentForm.doctorId ||
             !appointmentForm.date ||
             !appointmentForm.time
@@ -3238,6 +3667,8 @@ const handleLogout = async () => {
             !appointmentForm.name ||
             !appointmentForm.emailVerified ||
             !appointmentForm.phone ||
+            !appointmentForm.condition ||
+            (appointmentForm.condition === "custom" && !appointmentForm.customCondition) ||
             !appointmentForm.doctorId ||
             !appointmentForm.date ||
             !appointmentForm.time
