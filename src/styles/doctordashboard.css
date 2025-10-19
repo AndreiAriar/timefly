@@ -2012,3 +2012,505 @@
     padding: 24px 16px;
   }
 }
+
+/* ============================================
+   DOCTOR DASHBOARD - FULL RESPONSIVE DESIGN
+   ============================================ */
+
+/* ===== Hero Section - Mobile ===== */
+@media (max-width: 768px) {
+  .hero-section-doctor {
+    min-height: 70vh;
+    background-attachment: scroll; /* Fix for mobile */
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .hero-content-doctor {
+    padding: 30px 16px;
+    gap: 20px;
+  }
+
+  .hero-greeting {
+    font-size: 14px;
+  }
+
+  .hero-title-doctor {
+    font-size: 32px;
+  }
+
+  .hero-subtitle-doctor {
+    font-size: 16px;
+  }
+
+  .hero-actions-doctor {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-btn-doctor {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section-doctor {
+    min-height: 60vh;
+  }
+
+  .hero-title-doctor {
+    font-size: 28px;
+  }
+
+  .hero-subtitle-doctor {
+    font-size: 14px;
+  }
+
+  .hero-btn-doctor {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+
+/* ===== Stats Section - Already Responsive (Keep Existing) ===== */
+/* Your existing mobile stats code at lines 311-391 is good */
+
+/* ===== Queue Status Section - Mobile ===== */
+@media (max-width: 768px) {
+  .doctor-dashboard-page .queue-status-section {
+    padding: 30px 20px;
+  }
+
+  .doctor-dashboard-page .section-title {
+    font-size: 22px;
+    gap: 10px;
+  }
+
+  .doctor-dashboard-page .section-subtitle {
+    font-size: 14px;
+  }
+
+  .doctor-dashboard-page .queue-summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .doctor-dashboard-page .current-patient-card,
+  .doctor-dashboard-page .next-patient-card {
+    padding: 20px;
+  }
+
+  .doctor-dashboard-page .patient-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .doctor-dashboard-page .patient-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .doctor-dashboard-page .patient-details {
+    align-items: center;
+  }
+
+  .doctor-dashboard-page .queue-actions-bottom {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 0;
+  }
+
+  .doctor-dashboard-page .todays-queue-item {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .doctor-dashboard-page .todays-queue-item .patient-avatar {
+    margin: 0 auto 12px;
+  }
+
+  .doctor-dashboard-page .todays-queue-item .patient-details {
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .doctor-dashboard-page .queue-status-section {
+    padding: 20px 16px;
+  }
+
+  .doctor-dashboard-page .section-title {
+    font-size: 20px;
+  }
+
+  .doctor-dashboard-page .current-patient-card,
+  .doctor-dashboard-page .next-patient-card {
+    padding: 16px;
+  }
+
+  .doctor-dashboard-page .patient-avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .doctor-dashboard-page .action-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+}
+
+/* ===== Appointments Section - Mobile ===== */
+@media (max-width: 768px) {
+  .doctor-dashboard-page .appointments-section {
+    padding: 30px 20px;
+  }
+
+  .doctor-dashboard-page .appointment-card {
+    flex-direction: column;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .doctor-dashboard-page .patient-avatar-section {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .doctor-dashboard-page .appointment-avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .doctor-dashboard-page .appointment-details {
+    gap: 8px;
+  }
+
+  .doctor-dashboard-page .appointment-meta-actions {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .doctor-dashboard-page .appointment-name-line {
+    font-size: 16px;
+  }
+
+  .doctor-dashboard-page .appointment-info-line {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .doctor-dashboard-page .appointments-section {
+    padding: 20px 16px;
+  }
+
+  .doctor-dashboard-page .appointment-card {
+    padding: 16px;
+  }
+
+  .doctor-dashboard-page .appointment-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .doctor-dashboard-page .appointment-name-line {
+    font-size: 15px;
+  }
+
+  .doctor-dashboard-page .appointment-info-line {
+    font-size: 13px;
+  }
+
+  .doctor-dashboard-page .appointment-meta-actions {
+    gap: 8px;
+  }
+}
+
+/* ===== Calendar Modal - Mobile ===== */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .calendar-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 16px;
+  }
+
+  .calendar-header {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .calendar-title-section h2 {
+    font-size: 22px;
+  }
+
+  .calendar-title-section p {
+    font-size: 13px;
+  }
+
+  .calendar-navigation {
+    padding: 16px 20px;
+  }
+
+  .month-title {
+    font-size: 20px;
+    min-width: 200px;
+  }
+
+  .calendar-month-controls {
+    gap: 20px;
+  }
+
+  .calendar-grid {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .calendar-day-card {
+    padding: 14px;
+  }
+
+  .day-number {
+    font-size: 24px;
+  }
+
+  .count-display {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-modal {
+    border-radius: 14px;
+  }
+
+  .calendar-header {
+    padding: 16px;
+  }
+
+  .calendar-title-section h2 {
+    font-size: 20px;
+  }
+
+  .calendar-navigation {
+    padding: 14px 16px;
+  }
+
+  .month-title {
+    font-size: 18px;
+    min-width: 180px;
+  }
+
+  .calendar-grid {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .calendar-day-card {
+    padding: 12px;
+  }
+
+  .day-name {
+    font-size: 11px;
+  }
+
+  .day-number {
+    font-size: 22px;
+  }
+
+  .mini-appointment {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+
+/* ===== Details Modal - Mobile ===== */
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 95%;
+    border-radius: 16px;
+  }
+
+  .modal-header {
+    padding: 20px;
+  }
+
+  .modal-header h3 {
+    font-size: 20px;
+  }
+
+  .details-content {
+    padding: 20px;
+  }
+
+  .detail-photo img {
+    width: 120px;
+    height: 120px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .detail-item {
+    padding: 12px;
+  }
+
+  .detail-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    max-width: 100%;
+    border-radius: 14px;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 18px;
+  }
+
+  .details-content {
+    padding: 16px;
+  }
+
+  .detail-photo img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .detail-item {
+    padding: 10px;
+  }
+
+  .detail-text {
+    font-size: 12px;
+  }
+}
+
+/* ===== Footer - Mobile ===== */
+@media (max-width: 768px) {
+  .dashboard-footer {
+    padding: 24px 16px;
+  }
+
+  .footer-logo-text {
+    font-size: 20px;
+  }
+
+  .footer-tagline {
+    font-size: 13px;
+  }
+
+  .footer-copyright {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-footer {
+    padding: 20px 12px;
+  }
+
+  .footer-logo-image {
+    width: 28px;
+    height: 28px;
+  }
+
+  .footer-logo-text {
+    font-size: 18px;
+  }
+
+  .footer-tagline {
+    font-size: 12px;
+  }
+
+  .footer-copyright {
+    font-size: 10px;
+  }
+}
+
+/* ===== Notifications - Mobile ===== */
+@media (max-width: 768px) {
+  .notifications-container {
+    top: 70px;
+    right: 10px;
+    max-width: 90%;
+  }
+
+  .notification {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .notification-message {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notifications-container {
+    top: 60px;
+    right: 5px;
+    left: 5px;
+    max-width: none;
+  }
+
+  .notification {
+    padding: 10px;
+  }
+
+  .notification-message {
+    font-size: 12px;
+  }
+}
+
+/* ===== Touch Device Improvements ===== */
+@media (hover: none) and (pointer: coarse) {
+  .hero-btn-doctor,
+  .action-btn,
+  .nav-btn,
+  .modal-close,
+  .patient-avatar.clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .doctor-dashboard-page .appointment-card:hover,
+  .doctor-dashboard-page .calendar-day-card:hover {
+    transform: none;
+  }
+}
+
+/* ===== Landscape Mobile ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero-section-doctor {
+    min-height: 50vh;
+  }
+
+  .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}

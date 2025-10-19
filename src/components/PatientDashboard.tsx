@@ -600,10 +600,10 @@ const generateTimeSlots = () => {
   const dateToUse = selectedCalendarDate || formData.date;
   const selectedDoctor = doctors.find((doc) => doc.id === doctorId);
 
-  if (!selectedDoctor || !dateToUse) {
-    console.warn("⚠️ Missing doctor or date");
-    return slots;
-  }
+if (!selectedDoctor || !dateToUse) {
+  // Return empty slots silently to avoid console spam
+  return [];
+}
 
   // 🩺 Use custom schedule if available
   const scheduleForDate = selectedDoctor.scheduleSettings?.[dateToUse];

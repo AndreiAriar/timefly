@@ -1,4 +1,4 @@
-import React, { useEffect, useState, createContext, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -33,6 +33,9 @@ import { db } from "../firebase";
 // ✅ Import Search Context
 import { SearchProvider, useSearch } from "./components/SearchContext";
 
+// ✅ Import Theme Context (fixes missing provider errors)
+import { ThemeProvider } from "./components/ThemeContext";
+
 // ------------------------
 // TYPES
 // ------------------------
@@ -40,49 +43,6 @@ interface UserData {
   role: "Patient" | "Doctor" | "Staff" | "Admin";
   uid: string;
 }
-
-// ------------------------
-// THEME CONTEXT
-// ------------------------
-const ThemeContext = createContext<any>(null);
-export const useTheme = () => useContext(ThemeContext);
-
-const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const getInitialTheme = (): boolean => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) return savedTheme === "dark";
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  };
-
-  const [darkMode, setDarkMode] = useState<boolean>(getInitialTheme());
-
-  useEffect(() => {
-    const theme = darkMode ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", theme);
-    document.body.setAttribute("data-theme", theme);
-    document.body.classList.toggle("dark-mode", darkMode);
-    localStorage.setItem("theme", theme);
-  }, [darkMode]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem("theme")) {
-        setDarkMode(e.matches);
-      }
-    };
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
-
-  const toggleTheme = () => setDarkMode((prev) => !prev);
-
-  return (
-    <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
 
 // ------------------------
 // MAIN LAYOUTS
