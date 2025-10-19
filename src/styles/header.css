@@ -834,3 +834,25 @@
     display: none;
   }
 }
+
+/* Fix dropdown clipping in Patient Dashboard */
+.header-right,
+.header-container,
+.dashboard-container {
+  overflow: visible !important;
+}
+
+/* Make sure dropdown shows above hero and stats cards */
+.profile-dropdown {
+  position: absolute !important;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  min-width: 250px;
+  z-index: 9999 !important;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}

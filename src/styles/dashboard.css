@@ -4627,12 +4627,11 @@ border-radius: var(--radius-xl);
     width: 30px;
   }
 }
-
-/* ===== CALENDAR & TIME ICONS ===== */
-.clock-icon,
-.time-icon,
-.calendar-icon,
-.dashboard-calendar-icon {
+/* ===== CALENDAR & TIME ICONS (Exclusive to Patient Dashboard) ===== */
+.patient-dashboard-page .clock-icon,
+.patient-dashboard-page .time-icon,
+.patient-dashboard-page .calendar-icon,
+.patient-dashboard-page .dashboard-calendar-icon {
   color: var(--text-secondary);
   transition: color var(--transition-fast);
 }
@@ -4641,59 +4640,58 @@ border-radius: var(--radius-xl);
    CLOCK / TIME / CALENDAR ICONS - DARK MODE FIX
    ============================ */
 
-[data-theme="dark"] .clock-icon,
-[data-theme="dark"] .time-icon,
-[data-theme="dark"] .calendar-icon,
-[data-theme="dark"] .dashboard-calendar-icon {
+[data-theme="dark"] .patient-dashboard-page .clock-icon,
+[data-theme="dark"] .patient-dashboard-page .time-icon,
+[data-theme="dark"] .patient-dashboard-page .calendar-icon,
+[data-theme="dark"] .patient-dashboard-page .dashboard-calendar-icon {
   color: #ffffff !important; /* Bright white for dark mode */
 }
 
-
 /* Specific styles for calendar wizard icons */
-.calendar-wizard .clock-icon,
-.calendar-wizard .time-icon,
-.calendar-wizard .calendar-icon {
+.patient-dashboard-page .calendar-wizard .clock-icon,
+.patient-dashboard-page .calendar-wizard .time-icon,
+.patient-dashboard-page .calendar-wizard .calendar-icon {
   color: var(--text-secondary);
 }
 
-[data-theme="dark"] .calendar-wizard .clock-icon,
-[data-theme="dark"] .calendar-wizard .time-icon,
-[data-theme="dark"] .calendar-wizard .calendar-icon {
+[data-theme="dark"] .patient-dashboard-page .calendar-wizard .clock-icon,
+[data-theme="dark"] .patient-dashboard-page .calendar-wizard .time-icon,
+[data-theme="dark"] .patient-dashboard-page .calendar-wizard .calendar-icon {
   color: var(--text-primary);
 }
 
 /* Time slot icons */
-.timeslot-btn-wizard .clock-icon,
-.timeslot-btn-wizard .time-icon {
+.patient-dashboard-page .timeslot-btn-wizard .clock-icon,
+.patient-dashboard-page .timeslot-btn-wizard .time-icon {
   color: var(--text-secondary);
 }
 
-[data-theme="dark"] .timeslot-btn-wizard .clock-icon,
-[data-theme="dark"] .timeslot-btn-wizard .time-icon {
+[data-theme="dark"] .patient-dashboard-page .timeslot-btn-wizard .clock-icon,
+[data-theme="dark"] .patient-dashboard-page .timeslot-btn-wizard .time-icon {
   color: var(--text-primary);
 }
 
 /* Selected time slot icons */
-.timeslot-btn-wizard.selected .clock-icon,
-.timeslot-btn-wizard.selected .time-icon {
+.patient-dashboard-page .timeslot-btn-wizard.selected .clock-icon,
+.patient-dashboard-page .timeslot-btn-wizard.selected .time-icon {
   color: var(--primary);
 }
 
-[data-theme="dark"] .timeslot-btn-wizard.selected .clock-icon,
-[data-theme="dark"] .timeslot-btn-wizard.selected .time-icon {
+[data-theme="dark"] .patient-dashboard-page .timeslot-btn-wizard.selected .clock-icon,
+[data-theme="dark"] .patient-dashboard-page .timeslot-btn-wizard.selected .time-icon {
   color: var(--primary-light);
 }
 
 /* Hover states for interactive icons */
-.clock-icon:hover,
-.time-icon:hover,
-.calendar-icon:hover {
+.patient-dashboard-page .clock-icon:hover,
+.patient-dashboard-page .time-icon:hover,
+.patient-dashboard-page .calendar-icon:hover {
   color: var(--primary);
 }
 
-[data-theme="dark"] .clock-icon:hover,
-[data-theme="dark"] .time-icon:hover,
-[data-theme="dark"] .calendar-icon:hover {
+[data-theme="dark"] .patient-dashboard-page .clock-icon:hover,
+[data-theme="dark"] .patient-dashboard-page .time-icon:hover,
+[data-theme="dark"] .patient-dashboard-page .calendar-icon:hover {
   color: var(--primary-light);
 }
 
@@ -5541,4 +5539,31 @@ svg.clock,
   .priority-pill.emergency {
     animation-duration: 2s !important;
   }
+}
+
+/* ===== Fix for Patient Dashboard Profile Dropdown Visibility ===== */
+.patient-navbar,
+.dashboard-header {
+  position: relative;
+  z-index: 3000 !important; /* keeps navbar above hero and other elements */
+}
+
+.patient-navbar .profile-dropdown,
+.dashboard-header .profile-dropdown {
+  z-index: 3100 !important; /* ensures dropdown appears above everything */
+  position: absolute;
+}
+
+.patient-navbar .profile-dropdown.show,
+.dashboard-header .profile-dropdown.show {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+}
+
+/* Prevent clipping of dropdown by overflow containers */
+.dashboard-header,
+.header-right,
+.header-left {
+  overflow: visible !important;
 }

@@ -592,8 +592,7 @@ const getCalendarDays = (): DaySchedule[] => {
 
   return days;
 };
-
-// ✅ Generate time slots (with block + emergency logic)
+// ✅ Generate time slots (with block + emergency logic + fallback for new doctors)
 const generateTimeSlots = () => {
   const slots: TimeSlot[] = [];
 
@@ -602,32 +601,62 @@ const generateTimeSlots = () => {
   const selectedDoctor = doctors.find((doc) => doc.id === doctorId);
 
   if (!selectedDoctor || !dateToUse) {
-    console.log("Missing doctor or date");
+    console.warn("⚠️ Missing doctor or date");
     return slots;
   }
 
+  // 🩺 Use custom schedule if available
   const scheduleForDate = selectedDoctor.scheduleSettings?.[dateToUse];
   let workingHours = selectedDoctor.workingHours;
+
+  // ✅ Fallback for new doctors (no working hours yet)
+  if (!workingHours || !workingHours.start || !workingHours.end) {
+    workingHours = { start: "09:00", end: "17:00" }; // default 9 AM – 5 PM
+  }
+
+  // ✅ Apply custom hours override if any
   if (scheduleForDate?.customHours) {
     workingHours = scheduleForDate.customHours;
   }
 
-  const bufferTime = selectedDoctor.bufferTime || 15; // Default 15-minute buffer
-  const [startHour, startMinute] = workingHours.start.split(":").map(Number);
-  const [endHour, endMinute] = workingHours.end.split(":").map(Number);
-  const startTotalMinutes = startHour * 60 + startMinute;
-  const endTotalMinutes = endHour * 60 + endMinute;
+  // ✅ Default buffer if missing
+  const bufferTime = selectedDoctor.bufferTime ?? 15; // Default 15-minute buffer
+
+  // Safely parse hours (supports both 24h "09:00" and "9:00 AM" formats)
+  const parseTimeToMinutes = (timeStr: string) => {
+    const hasPeriod = /AM|PM/i.test(timeStr);
+    if (hasPeriod) {
+      const [time, period] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+      if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
+      if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
+      return hours * 60 + (minutes || 0);
+    } else {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      return hours * 60 + (minutes || 0);
+    }
+  };
+
+  const startTotalMinutes = parseTimeToMinutes(workingHours.start);
+  const endTotalMinutes = parseTimeToMinutes(workingHours.end);
 
   const now = new Date();
-  const philippinesNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const philippinesNow = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
+  );
   const currentDateStr = philippinesNow.toISOString().split("T")[0];
-  const currentTotalMinutes = philippinesNow.getHours() * 60 + philippinesNow.getMinutes();
+  const currentTotalMinutes =
+    philippinesNow.getHours() * 60 + philippinesNow.getMinutes();
 
   // Each cycle = 15 active mins + buffer time
   const activeDuration = 15;
   const slotDuration = activeDuration + bufferTime;
 
-  for (let totalMinutes = startTotalMinutes; totalMinutes + slotDuration <= endTotalMinutes; totalMinutes += slotDuration) {
+  for (
+    let totalMinutes = startTotalMinutes;
+    totalMinutes + slotDuration <= endTotalMinutes;
+    totalMinutes += slotDuration
+  ) {
     const appointmentStart = totalMinutes;
     const appointmentEnd = appointmentStart + activeDuration;
     const bufferStart = appointmentEnd;
@@ -637,7 +666,9 @@ const generateTimeSlots = () => {
       .padStart(2, "0")}:${(appointmentStart % 60).toString().padStart(2, "0")}`;
     const time12 = convertTo12Hour(time24);
 
-    if (dateToUse === currentDateStr && appointmentStart < currentTotalMinutes) continue;
+    // Skip past times if date is today
+    if (dateToUse === currentDateStr && appointmentStart < currentTotalMinutes)
+      continue;
 
     const isBooked = appointments.some(
       (apt) =>
@@ -648,11 +679,11 @@ const generateTimeSlots = () => {
         (editingAppointment ? apt.id !== editingAppointment.id : true)
     );
 
-    // 🆕 Check if this slot is blocked by staff
+    // 🧱 Check if slot is blocked
     const slotKey = `${doctorId}_${dateToUse}_${time12}`;
     const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
-    // Add normal slot
+    // Normal slot
     slots.push({
       time: time12,
       available: !isBooked && !isBlocked,
@@ -660,7 +691,7 @@ const generateTimeSlots = () => {
       emergency: false,
     });
 
-    // Add emergency buffer slot
+    // Emergency buffer slot
     const bufferTime24 = `${Math.floor(bufferStart / 60)
       .toString()
       .padStart(2, "0")}:${(bufferStart % 60).toString().padStart(2, "0")}`;
@@ -671,13 +702,16 @@ const generateTimeSlots = () => {
 
     slots.push({
       time: bufferTime12,
-      available: formData.priority === "emergency" && !isBooked && !bufferBlocked,
+      available:
+        formData.priority === "emergency" && !isBooked && !bufferBlocked,
       booked: isBooked,
       emergency: true,
     });
   }
 
-  console.log("Generated slots with block + emergency buffer:", slots.length);
+  console.log(
+    `✅ Generated ${slots.length} slots for ${selectedDoctor.name || "Doctor"}`
+  );
   return slots;
 };
 

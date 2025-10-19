@@ -1,0 +1,555 @@
+/* Doctor Navbar Styles - Exclusive Scoped */
+.doctor-dashboard-page .doctor-dashboard-navbar {
+  background: #ffffff;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 5000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.doctor-dashboard-page .doctor-dashboard-navbar.doctor-navbar-scrolled {
+  background: #ffffff;
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.doctor-dashboard-page .doctor-navbar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  gap: 30px;
+}
+
+/* Left Section - Logo and Navigation Links */
+.doctor-dashboard-page .doctor-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex: 1;
+}
+
+/* Logo Section */
+.doctor-dashboard-page .doctor-navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.doctor-dashboard-page .doctor-navbar-logo:hover {
+  transform: scale(1.05);
+}
+
+.doctor-dashboard-page .doctor-navbar-logo-image {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.doctor-dashboard-page .doctor-navbar-logo-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Navigation Links - Now closer to logo */
+.doctor-dashboard-page .doctor-navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.doctor-dashboard-page .doctor-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.doctor-dashboard-page .doctor-nav-link:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+}
+
+
+.doctor-dashboard-page .doctor-nav-link.doctor-nav-active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.doctor-dashboard-page .doctor-nav-link.doctor-nav-active:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Right Section */
+.doctor-dashboard-page .doctor-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 5001;
+}
+/* Search - Collapsed State (Icon Only) */
+.doctor-dashboard-page .doctor-search-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.doctor-dashboard-page .doctor-search-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+  transform: scale(1.05);
+}
+
+/* Search - Expanded State */
+.doctor-dashboard-page .doctor-navbar-search-expanded {
+  animation: doctor-expandSearch 0.3s ease-out forwards;
+  position: relative;
+  z-index: 10;
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes doctor-expandSearch {
+  from {
+    width: 40px;
+  }
+  to {
+    width: 350px;
+  }
+}
+
+.doctor-dashboard-page .doctor-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  z-index: 11;
+  opacity: 1;
+  visibility: visible;
+}
+
+.doctor-dashboard-page .doctor-search-icon-left {
+  position: absolute;
+  left: 12px;
+  color: #1e293b;
+  pointer-events: none;
+  z-index: 12;
+  opacity: 1;
+  visibility: visible;
+}
+
+.doctor-dashboard-page .doctor-search-input {
+  width: 100%;
+  padding: 10px 40px 10px 40px;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+  background: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 11;
+  opacity: 1;
+  visibility: visible;
+}
+
+.doctor-dashboard-page .doctor-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.doctor-dashboard-page .doctor-search-input:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.doctor-dashboard-page .doctor-search-input:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.doctor-dashboard-page .doctor-search-close-btn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  z-index: 12;
+  opacity: 1;
+  visibility: visible;
+}
+
+.doctor-dashboard-page .doctor-search-close-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+}
+
+/* Profile Dropdown */
+.doctor-dashboard-page .doctor-profile-dropdown-container {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 5000;
+}
+
+/* Profile Button */
+.doctor-dashboard-page .doctor-profile-button {
+  background: #ffffff; /* ✅ White background */
+  border: 2px solid #3b82f6; /* ✅ Blue ring like Facebook story */
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.doctor-dashboard-page .doctor-profile-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); /* ✅ Blue glow on hover */
+}
+
+/* Avatar inside button */
+.doctor-dashboard-page .doctor-user-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000; /* ✅ Black text/icon */
+  background: #ffffff;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #ffffff; /* ✅ Inner white border for contrast */
+}
+
+.doctor-dashboard-page .doctor-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Hidden by default */
+.doctor-dashboard-page .doctor-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: #ffffff; /* ✅ White background */
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* ✅ Soft gray shadow */
+  min-width: 250px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.25s ease;
+  border: 1px solid #d1d5db; /* ✅ Light gray border */
+  z-index: 4999;
+}
+
+/* Shown only when toggled */
+.doctor-dashboard-page .doctor-profile-dropdown.doctor-dropdown-show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Header */
+.doctor-dashboard-page .doctor-dropdown-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb; /* ✅ Light gray divider */
+  background: #f9fafb; /* ✅ Subtle gray bg for header */
+  border-radius: 12px 12px 0 0;
+}
+
+.doctor-dashboard-page .doctor-dropdown-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000; /* ✅ Black text */
+  margin: 0 0 4px 0;
+}
+
+.doctor-dashboard-page .doctor-dropdown-email {
+  font-size: 13px;
+  color: #555555; /* ✅ Medium gray */
+  margin: 0;
+}
+
+/* Items */
+.doctor-dashboard-page .doctor-dropdown-item {
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #000000; /* ✅ Black text */
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.doctor-dashboard-page .doctor-dropdown-item:hover {
+  background: #f3f4f6; /* ✅ Light hover effect */
+}
+
+/* Logout Item */
+.doctor-dashboard-page .doctor-dropdown-item.doctor-dropdown-logout {
+  color: #dc2626; /* ✅ Red text for logout */
+  border-top: 1px solid #e5e7eb; /* ✅ Light divider */
+}
+
+.doctor-dashboard-page .doctor-dropdown-item.doctor-dropdown-logout:hover {
+  background: #fee2e2; /* ✅ Light red hover */
+}
+
+/* Hidden File Input */
+.doctor-dashboard-page .doctor-hidden-file-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.doctor-dashboard-page .doctor-hidden-file-input {
+  display: none;
+}
+
+/* Add padding to body to prevent content from going under fixed navbar */
+.doctor-dashboard-page {
+  padding-top: 70px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .doctor-dashboard-page .doctor-navbar-left {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .doctor-dashboard-page .doctor-navbar-left {
+    gap: 20px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-links {
+    gap: 8px;
+  }
+
+  .doctor-dashboard-page .doctor-nav-link {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-search-expanded {
+    animation: doctor-expandSearchTablet 0.3s ease-out forwards;
+  }
+
+  @keyframes doctor-expandSearchTablet {
+    from {
+      width: 40px;
+      opacity: 0;
+    }
+    to {
+      width: 250px;
+      opacity: 1;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .doctor-dashboard-page .doctor-navbar-left {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .doctor-dashboard-page {
+    padding-top: 60px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-container {
+    padding: 0 20px;
+    height: 60px;
+    gap: 15px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-logo-text {
+    font-size: 20px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-logo-image {
+    width: 32px;
+    height: 32px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-left {
+    gap: 12px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-links {
+    gap: 4px;
+  }
+
+  .doctor-dashboard-page .doctor-nav-link {
+    padding: 6px 12px;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .doctor-dashboard-page .doctor-nav-link span {
+    font-size: 12px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-search-expanded {
+    animation: doctor-expandSearchMobile 0.3s ease-out forwards;
+  }
+
+ @keyframes doctor-expandSearchSmallMobile {
+  from {
+    width: 40px;
+  }
+  to {
+    width: 150px;
+  }
+}
+
+  .doctor-dashboard-page .doctor-search-input {
+    padding: 8px 36px 8px 36px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 640px) {
+  .doctor-dashboard-page .doctor-navbar-container {
+    padding: 0 15px;
+    gap: 10px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-logo-text {
+    display: none;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-left {
+    gap: 8px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-links {
+    gap: 2px;
+  }
+
+  .doctor-dashboard-page .doctor-nav-link {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .doctor-dashboard-page .doctor-nav-link span {
+    font-size: 11px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-search-expanded {
+    animation: doctor-expandSearchSmallMobile 0.3s ease-out forwards;
+  }
+
+  @keyframes doctor-expandSearchSmallMobile {
+    from {
+      width: 40px;
+      opacity: 0;
+    }
+    to {
+      width: 150px;
+      opacity: 1;
+    }
+  }
+
+  .doctor-dashboard-page .doctor-search-input {
+    padding: 6px 32px 6px 32px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .doctor-dashboard-page .doctor-navbar-right {
+    gap: 12px;
+  }
+
+  .doctor-dashboard-page .doctor-navbar-search-expanded {
+    animation: doctor-expandSearchXSmall 0.3s ease-out forwards;
+  }
+
+ @keyframes doctor-expandSearchXSmall {
+  from {
+    width: 40px;
+  }
+  to {
+    width: 120px;
+  }
+}
+
+  .doctor-dashboard-page .doctor-nav-link span {
+    display: none;
+  }
+
+  .doctor-dashboard-page .doctor-nav-link {
+    padding: 8px;
+  }
+}

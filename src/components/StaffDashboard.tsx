@@ -1555,7 +1555,8 @@ const handleCreateAppointment = async () => {
     }
   };
 
- const handleCreateDoctor = async () => {
+ // ✅ Create Doctor
+const handleCreateDoctor = async () => {
   if (!doctorForm.name || !doctorForm.specialty || !doctorForm.email) {
     addNotification('error', 'Please fill all required fields');
     return;
@@ -1570,25 +1571,31 @@ const handleCreateAppointment = async () => {
       email: doctorForm.email,
       phone: doctorForm.phone,
       room: doctorForm.room,
+
+      // ✅ Default working hours if missing
       workingHours: {
-        start: doctorForm.startTime,
-        end: doctorForm.endTime,
+        start: doctorForm.startTime || "9:00 AM",
+        end: doctorForm.endTime || "5:00 PM",
       },
-      maxAppointments: parseInt(doctorForm.maxAppointments),
-      consultationDuration: parseInt(doctorForm.consultationDuration),
-      bufferTime: parseInt(doctorForm.bufferTime),
-      offDays: doctorForm.offDays,
-      photo: doctorForm.photo, // Stored in Firestore only
-      available: doctorForm.available,
-      isActive: doctorForm.isActive,
+
+      maxAppointments: parseInt(doctorForm.maxAppointments) || 10,
+
+      // ✅ Default durations if missing
+      consultationDuration: parseInt(doctorForm.consultationDuration) || 30,
+      bufferTime: parseInt(doctorForm.bufferTime) || 15,
+
+      offDays: doctorForm.offDays || [],
+      photo: doctorForm.photo || "", // Stored in Firestore only
+      available: doctorForm.available ?? true,
+      isActive: doctorForm.isActive ?? true,
       createdAt: serverTimestamp(),
     };
 
     // 🔥 Step 1: Add doctor to 'doctors' collection
     const doctorDocRef = await addDoc(collection(db, 'doctors'), doctorData);
-    
+
     // 🔗 Step 2: Create Firebase Auth account + User document via backend
-    // Note: Photo is NOT sent in API call to avoid payload size issues
+    // (Photo excluded to reduce payload size)
     try {
       const response = await fetch('http://localhost:5000/create-doctor-account', {
         method: 'POST',
@@ -1599,56 +1606,58 @@ const handleCreateAppointment = async () => {
           specialty: doctorForm.specialty,
           doctorId: doctorDocRef.id,
           phone: doctorForm.phone,
-          // Photo excluded from API call - stored in Firestore doctors collection only
         }),
       });
 
       const result = await response.json();
 
       if (response.ok && result.success) {
-        addNotification('success', `✅ Doctor account created! Password setup email sent to ${doctorForm.email}`);
-        
+        addNotification(
+          'success',
+          `✅ Doctor account created! Password setup email sent to ${doctorForm.email}`
+        );
+
         // ✅ Update doctor document with userId
         await updateDoc(doc(db, 'doctors', doctorDocRef.id), {
-          userId: result.uid
+          userId: result.uid,
         });
-        
-        // ✅ If photo exists, update user document in Firestore directly
+
+        // ✅ If photo exists, update user document
         if (doctorForm.photo) {
           try {
             const userDocRef = doc(db, 'users', result.uid);
-            await updateDoc(userDocRef, {
-              photo: doctorForm.photo
-            });
+            await updateDoc(userDocRef, { photo: doctorForm.photo });
             console.log('Photo added to user profile');
           } catch (photoError) {
             console.warn('Failed to add photo to user profile:', photoError);
-            // Non-critical error - doctor account still works
           }
         }
-        
       } else {
-        // Account creation failed, but doctor document exists
-        addNotification('warning', 
-          `Doctor profile created, but failed to create login account: ${result.error || 'Unknown error'}. Please try creating the account manually.`
+        addNotification(
+          'warning',
+          `Doctor profile created, but failed to create login account: ${
+            result.error || 'Unknown error'
+          }. Please try creating the account manually.`
         );
       }
     } catch (emailError) {
       console.error('Error creating auth account:', emailError);
-      addNotification('warning', 
+      addNotification(
+        'warning',
         'Doctor profile created, but failed to send setup email. The doctor may need to use password reset to access their account.'
       );
     }
 
     setShowDoctorForm(false);
     resetDoctorForm();
-    
   } catch (error) {
     console.error('Error creating doctor:', error);
     addNotification('error', 'Failed to create doctor profile');
   }
 };
-  const handleUpdateDoctor = async () => {
+
+// ✅ Update Doctor
+const handleUpdateDoctor = async () => {
   if (!editingDoctor) return;
 
   try {
@@ -1659,17 +1668,21 @@ const handleCreateAppointment = async () => {
       email: doctorForm.email,
       phone: doctorForm.phone,
       room: doctorForm.room,
+
+      // ✅ Keep safe defaults even when updating
       workingHours: {
-        start: doctorForm.startTime,
-        end: doctorForm.endTime,
+        start: doctorForm.startTime || "9:00 AM",
+        end: doctorForm.endTime || "5:00 PM",
       },
-      maxAppointments: parseInt(doctorForm.maxAppointments),
-      consultationDuration: parseInt(doctorForm.consultationDuration),
-      bufferTime: parseInt(doctorForm.bufferTime),
-      offDays: doctorForm.offDays,
-      photo: doctorForm.photo,
-      available: doctorForm.available,
-      isActive: doctorForm.isActive,
+
+      maxAppointments: parseInt(doctorForm.maxAppointments) || 10,
+      consultationDuration: parseInt(doctorForm.consultationDuration) || 30,
+      bufferTime: parseInt(doctorForm.bufferTime) || 15,
+
+      offDays: doctorForm.offDays || [],
+      photo: doctorForm.photo || "",
+      available: doctorForm.available ?? true,
+      isActive: doctorForm.isActive ?? true,
       updatedAt: serverTimestamp(),
     });
 
@@ -1698,7 +1711,7 @@ const handleCreateAppointment = async () => {
     addNotification('error', 'Failed to update doctor');
   }
 };
-  
+
   
   // Profile Management
   const handleUpdateProfile = async () => {
