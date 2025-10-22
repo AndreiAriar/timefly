@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Calendar,
   Clock,
@@ -25,7 +25,6 @@ import {
   SkipForward,
   UserPlus,
   Stethoscope,
-  Home,
   Save,
   Clock3,
   MapPin,
@@ -144,6 +143,24 @@ interface DoctorAvailability {
   reason?: string;
 }
 
+interface DaySchedule {
+  date: string;
+  dayName: string;
+  dayNumber: number;
+  appointments: {
+    booked: number;
+    total: number;
+  };
+  doctors: {
+    id: string;
+    name: string;
+    specialty: string;
+    available: boolean;
+    appointmentsBooked: number;
+    maxAppointments: number;
+  }[];
+}
+
 
 const StaffDashboard = () => {
   // UI State
@@ -152,8 +169,13 @@ const StaffDashboard = () => {
   const [showDoctorForm, setShowDoctorForm] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+
+
+
+  const profileDropdownRef = useRef<HTMLDivElement | null>(null);
+
+
   // Data State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -224,6 +246,22 @@ const [appointmentForm, setAppointmentForm] = useState({
   const [doctorAvailability, setDoctorAvailability] = useState<DoctorAvailability[]>([]);
   const [doctorAvailabilitySlots, setDoctorAvailabilitySlots] = useState<{[key: string]: boolean}>({});
   
+
+
+
+// Close profile dropdown when clicking outside
+useEffect(() => {
+  const handleOutsideClick = (e: MouseEvent) => {
+    if (!profileDropdownRef.current) return;
+    // If click is outside the dropdown wrapper, close it
+    if (showProfileDropdown && !profileDropdownRef.current.contains(e.target as Node)) {
+      setShowProfileDropdown(false);
+    }
+  };
+  document.addEventListener('mousedown', handleOutsideClick);
+  return () => document.removeEventListener('mousedown', handleOutsideClick);
+}, [showProfileDropdown]);
+
   // Notification System
   const addNotification = (
     type: 'success' | 'error' | 'info' | 'warning',
@@ -327,6 +365,12 @@ useEffect(() => {
   return () => unsubscribe();
 }, []);
 
+useEffect(() => {
+  console.log('📋 Doctors list updated:', doctors.length, 'doctors');
+  doctors.forEach(doc => {
+    console.log(`  - ${doc.name}: ${doc.workingHours?.start || 'NO START'} to ${doc.workingHours?.end || 'NO END'}`);
+  });
+}, [doctors]);
 
 // Dynamic chart styling
 useEffect(() => {
@@ -406,6 +450,19 @@ useEffect(() => {
     fetchDoctors();
   }, [staffProfile]);
   
+ 
+// ✅ properly type the ref
+const profileButtonRef = useRef<HTMLButtonElement | null>(null);
+
+useEffect(() => {
+  if (profileButtonRef.current) {
+    profileButtonRef.current.setAttribute(
+      "aria-expanded",
+      showProfileDropdown ? "true" : "false"
+    );
+  }
+}, [showProfileDropdown]);
+
   // Fetch Appointments
   useEffect(() => {
     if (!staffProfile) return;
@@ -713,45 +770,117 @@ const navigateMonth = (direction: "prev" | "next") => {
 const getMonthName = (date: Date) =>
   date.toLocaleString("default", { month: "long", year: "numeric" });
 
-// === Calendar Days Generator ===
-const getCalendarDays = () => {
-  const year = calendarCurrentDate.getFullYear();
-  const month = calendarCurrentDate.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const days = [];
+// 🧩 Calendar Helper Functions — Single Correct Versions
 
-  for (let i = 1; i <= daysInMonth; i++) {
-    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
-    
-    // ✅ Count actual appointments for this date
-    const appointmentsOnDate = appointments.filter(apt => 
-      apt.date === date && apt.status !== 'cancelled'
-    );
+// Count filled appointment slots for a specific date
+const getFilledSlotsForDate = (date: string): number => {
+  return appointments.filter(
+    (apt) => apt.date === date && apt.status !== "cancelled"
+  ).length;
+};
+
+// === Calendar Days Generator ===
+const getCalendarDays = (): DaySchedule[] => {
+  const end = new Date(
+    calendarCurrentDate.getFullYear(),
+    calendarCurrentDate.getMonth() + 1,
+    0
+  );
+  const days: DaySchedule[] = [];
+
+  for (let d = 1; d <= end.getDate(); d++) {
+    const date = `${calendarCurrentDate.getFullYear()}-${String(
+      calendarCurrentDate.getMonth() + 1
+    ).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+    const booked = getFilledSlotsForDate(date);
+    const total = getTotalSlotsForDate(date); // ✅ Now shows actual calculated slots
     
     days.push({
       date,
-      dayNumber: i,
-      dayName: new Date(year, month, i).toLocaleString("default", { weekday: "short" }),
-      appointments: { 
-        booked: appointmentsOnDate.length, 
-        total: getMaxSlotsForDate(date) // ✅ NOW USING getMaxSlotsForDate
-      },
-      doctors,
+      dayName: new Date(date).toLocaleDateString("en-US", { weekday: "short" }),
+      dayNumber: d,
+      appointments: { booked, total },
+      doctors: [],
     });
   }
+
   return days;
+};
+
+// ✅ Calculate how many appointment slots a doctor has based on working hours
+const calculateDoctorDailySlots = (doctor: Doctor): number => {
+  // Provide defaults if working hours are missing
+  let workingHours = doctor.workingHours;
+  if (!workingHours || !workingHours.start || !workingHours.end) {
+    workingHours = { start: "9:00 AM", end: "5:00 PM" };
+  }
+
+  const parseTime = (timeStr: string): number => {
+    const [time, period] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    return hours * 60 + (minutes || 0);
+  };
+
+  const startMinutes = parseTime(workingHours.start);
+  const endMinutes = parseTime(workingHours.end);
+  
+  // Each slot = consultation duration (default 30 min) + buffer time (default 15 min)
+  const consultationDuration = doctor.consultationDuration || 30;
+  const bufferTime = doctor.bufferTime || 15;
+  const slotDuration = consultationDuration + bufferTime;
+  
+  // Calculate total slots
+  const totalWorkMinutes = endMinutes - startMinutes;
+  const slots = Math.floor(totalWorkMinutes / slotDuration);
+  
+  return slots > 0 ? slots : 10; // Fallback to 10 if calculation fails
 };
 
 // === Generate Doctor-Specific Time Slots ===
 const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeSlotSimple[] => {
   const slots: TimeSlotSimple[] = [];
-  if (!doctor.workingHours) return slots;
+  
+  // ✅ Enhanced safety check
+  if (!doctor.workingHours || !doctor.workingHours.start || !doctor.workingHours.end) {
+    console.warn(`⚠️ Doctor ${doctor.name} has no working hours defined`);
+    return slots;
+  }
 
-  const [startHour, startMin] = doctor.workingHours.start.split(":").map(Number);
-  const [endHour, endMin] = doctor.workingHours.end.split(":").map(Number);
+  // ✅ Parse 12-hour format (e.g., "9:00 AM", "5:00 PM")
+  const parseTime12Hour = (timeStr: string): { hour: number; minute: number } => {
+    const [time, period] = timeStr.trim().split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    return { hour: hours, minute: minutes || 0 };
+  };
+
+  // ✅ Handle both 12-hour format ("9:00 AM") and 24-hour format ("09:00")
+  let startHour: number, startMin: number, endHour: number, endMin: number;
+
+  if (doctor.workingHours.start.includes('AM') || doctor.workingHours.start.includes('PM')) {
+    // 12-hour format
+    const start = parseTime12Hour(doctor.workingHours.start);
+    const end = parseTime12Hour(doctor.workingHours.end);
+    startHour = start.hour;
+    startMin = start.minute;
+    endHour = end.hour;
+    endMin = end.minute;
+  } else {
+    // 24-hour format fallback
+    [startHour, startMin] = doctor.workingHours.start.split(":").map(Number);
+    [endHour, endMin] = doctor.workingHours.end.split(":").map(Number);
+  }
 
   const buffer = doctor.bufferTime || 15;
-  const active = 15;
+  const active = doctor.consultationDuration || 30; // ✅ Use consultation duration
 
   // Get existing appointments for this doctor on this date
   const existingAppointments = appointments.filter(
@@ -786,6 +915,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
     });
   }
 
+  console.log(`🕐 Generated ${slots.length} time slots for ${doctor.name} on ${selectedDate}`);
   return slots;
 };
 // === Toggle Doctor Availability for the Day ===
@@ -1245,22 +1375,56 @@ const verifyEmailCode = async (email: string, code: string): Promise<boolean> =>
 // Store per-doctor per-day slot counts (key format: doctorId_date)
 const [doctorSlotSettings, setDoctorSlotSettings] = useState<{ [key: string]: number }>({});
 
-// Utility: Get total max slots for a specific date (sum of all doctors)
+// ✅ Get total max slots for a specific date (sum of all doctors' actual slots)
 const getTotalSlotsForDate = (date: string): number => {
   if (!date) return 0;
-  return Object.entries(doctorSlotSettings)
+
+  // First check if staff has set custom slot counts for this date
+  const customTotal = Object.entries(doctorSlotSettings)
     .filter(([key]) => key.endsWith(`_${date}`))
     .reduce((sum, [, count]) => sum + (count || 0), 0);
+  
+  if (customTotal > 0) {
+    return customTotal;
+  }
+
+  // Otherwise, calculate based on each doctor's working hours
+  let total = 0;
+  doctors.forEach(doctor => {
+    // Check if doctor is available on this date
+    const availability = doctorAvailability.find(
+      av => av.doctorId === doctor.id && av.date === date
+    );
+    
+    const isAvailable = availability ? availability.available : doctor.available;
+    
+    if (isAvailable) {
+      total += calculateDoctorDailySlots(doctor);
+    }
+  });
+
+  return total;
 };
 
 // Utility: Get a single doctor's slot count for a date
+// ✅ Get a single doctor's slot count for a date
 const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
   const key = `${doctorId}_${date}`;
-  return doctorSlotSettings[key] ?? 10; // default 10 if not yet set
+  
+  // Check if staff has set a custom value
+  if (doctorSlotSettings[key]) {
+    return doctorSlotSettings[key];
+  }
+  
+  // Otherwise calculate from working hours
+  const doctor = doctors.find(d => d.id === doctorId);
+  if (doctor) {
+    return calculateDoctorDailySlots(doctor);
+  }
+  
+  return 10; // Ultimate fallback
 };
 
-// ✅ Backward compatibility: if other parts of code still call getMaxSlotsForDate
-const getMaxSlotsForDate = (date: string): number => getTotalSlotsForDate(date);
 
 // Update slot count for a specific doctor and date
 const handleDoctorSlotChange = async (doctorId: string, date: string, newCount: number) => {
@@ -1585,7 +1749,7 @@ const handleCreateDoctor = async () => {
       bufferTime: parseInt(doctorForm.bufferTime) || 15,
 
       offDays: doctorForm.offDays || [],
-      photo: doctorForm.photo || "", // Stored in Firestore only
+      photo: doctorForm.photo || "",
       available: doctorForm.available ?? true,
       isActive: doctorForm.isActive ?? true,
       createdAt: serverTimestamp(),
@@ -1594,8 +1758,16 @@ const handleCreateDoctor = async () => {
     // 🔥 Step 1: Add doctor to 'doctors' collection
     const doctorDocRef = await addDoc(collection(db, 'doctors'), doctorData);
 
+    // ✅ IMPORTANT: Update local state immediately so slots can be generated
+    const newDoctor: Doctor = {
+      id: doctorDocRef.id,
+      ...doctorData,
+      createdAt: Timestamp.now(), // Use current timestamp for immediate display
+    } as Doctor;
+
+    setDoctors(prev => [...prev, newDoctor]);
+
     // 🔗 Step 2: Create Firebase Auth account + User document via backend
-    // (Photo excluded to reduce payload size)
     try {
       const response = await fetch('http://localhost:5000/create-doctor-account', {
         method: 'POST',
@@ -1621,6 +1793,15 @@ const handleCreateDoctor = async () => {
         await updateDoc(doc(db, 'doctors', doctorDocRef.id), {
           userId: result.uid,
         });
+
+        // ✅ Update local state with userId
+        setDoctors(prev => 
+          prev.map(d => 
+            d.id === doctorDocRef.id 
+              ? { ...d, userId: result.uid } 
+              : d
+          )
+        );
 
         // ✅ If photo exists, update user document
         if (doctorForm.photo) {
@@ -2087,641 +2268,659 @@ const handleLogout = async () => {
             </div>
           ))}
         </div>
-   {/* Sidebar */}
-<aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
-  <div className="sidebar-header">
-    <div className="logo">
-      {/* 🐦 Replaced Activity icon with TimeFly logo */}
-      <img
-        src="/images/bird.png"
-        alt="TimeFly Logo"
-        className="logo-icon"
-      />
-      {!sidebarCollapsed && <span>TimeFly Staff</span>}
-    </div>
-
-    <button
-      className="sidebar-toggle"
-      onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-      aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-    >
-      {sidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-    </button>
-  </div>
-
-  <nav className="sidebar-nav">
-    <button
-      className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-      onClick={() => setActiveTab('dashboard')}
-      aria-current={activeTab === 'dashboard' ? 'page' : undefined}
-      title="Dashboard"
-    >
-      <Home size={20} aria-hidden="true" />
-      {!sidebarCollapsed && <span>Dashboard</span>}
-    </button>
-
-    <button
-      className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`}
-      onClick={() => setActiveTab('appointments')}
-      aria-current={activeTab === 'appointments' ? 'page' : undefined}
-      title="Appointments"
-    >
-      <Calendar size={20} aria-hidden="true" />
-      {!sidebarCollapsed && <span>Appointments</span>}
-    </button>
-
-    <button
-      className={`nav-item ${activeTab === 'queue' ? 'active' : ''}`}
-      onClick={() => setActiveTab('queue')}
-      aria-current={activeTab === 'queue' ? 'page' : undefined}
-      title="Queue"
-    >
-      <Clock size={20} aria-hidden="true" />
-      {!sidebarCollapsed && <span>Queue</span>}
-    </button>
-
-    <button
-      className={`nav-item ${activeTab === 'doctors' ? 'active' : ''}`}
-      onClick={() => setActiveTab('doctors')}
-      aria-current={activeTab === 'doctors' ? 'page' : undefined}
-      title="Doctors"
-    >
-      <Stethoscope size={20} aria-hidden="true" />
-      {!sidebarCollapsed && <span>Doctors</span>}
-    </button>
-
-    <button
-      className={`nav-item ${activeTab === 'calendar' ? 'active' : ''}`}
-      onClick={() => setActiveTab('calendar')}
-      aria-current={activeTab === 'calendar' ? 'page' : undefined}
-      title="Calendar"
-    >
-      <CalendarDays size={20} aria-hidden="true" />
-      {!sidebarCollapsed && <span>Calendar</span>}
-    </button>
-
-    <button
-      className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
-      onClick={() => setActiveTab('reports')}
-      aria-current={activeTab === 'reports' ? 'page' : undefined}
-      title="Reports"
-    >
-      <MessageSquare size={20} aria-hidden="true" />
-      {!sidebarCollapsed && <span>Reports</span>}
-    </button>
-  </nav>
-
-  <div className="sidebar-footer">
+        
+{/* Main Content */}
+<main className={`main-content-full ${activeTab === 'dashboard' ? 'dashboard-active' : ''}`}>
+  {/* Header with Navbar */}
+ {/* ✅ UPDATED - Fixed Header with Profile Dropdown */}
+<header className="staff-main-header">
+  <div className="staff-header-container">
+    {/* Logo - Left */}
     <button 
-      className="staff-profile-button"
-      onClick={() => setShowProfileModal(true)}
-      title="Edit Profile"
+      className="staff-header-logo" 
+      onClick={() => setActiveTab('dashboard')}
+      aria-label="Go to Dashboard"
     >
-      <div className="staff-profile">
-        <div className="staff-avatar">
+      <img src="/images/bird.png" alt="TimeFly Logo" className="staff-logo-icon" />
+      <span className="staff-logo-text">TimeFly</span>
+    </button>
+
+    {/* Navigation Links - Center */}
+    <nav className="staff-header-nav">
+      <button
+        className={`staff-nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
+        onClick={() => setActiveTab('appointments')}
+      >
+        <Calendar size={18} aria-hidden="true" />
+        Appointments
+      </button>
+      <button
+        className={`staff-nav-link ${activeTab === 'queue' ? 'active' : ''}`}
+        onClick={() => setActiveTab('queue')}
+      >
+        <Clock size={18} aria-hidden="true" />
+        Current Queue
+      </button>
+      <button
+        className={`staff-nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
+        onClick={() => setActiveTab('doctors')}
+      >
+        <Stethoscope size={18} aria-hidden="true" />
+        Doctors
+      </button>
+      <button
+        className={`staff-nav-link ${activeTab === 'calendar' ? 'active' : ''}`}
+        onClick={() => setActiveTab('calendar')}
+      >
+        <CalendarDays size={18} aria-hidden="true" />
+        Calendar
+      </button>
+      <button
+        className={`staff-nav-link ${activeTab === 'reports' ? 'active' : ''}`}
+        onClick={() => setActiveTab('reports')}
+      >
+        <MessageSquare size={18} aria-hidden="true" />
+        Reports
+      </button>
+    </nav>
+
+    {/* Right Side - Search and Profile */}
+    <div className="staff-header-right">
+      {/* Search - visible in appointments and doctors tabs */}
+      {(activeTab === 'appointments' || activeTab === 'doctors') && (
+        <div className="staff-search-container">
+          <Search size={18} className="staff-search-icon" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder={activeTab === 'appointments' ? "Search appointments..." : "Search doctors..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label={activeTab === 'appointments' ? "Search appointments" : "Search doctors"}
+          />
+        </div>
+      )}
+
+{/* ✅ FIXED Profile Dropdown (no ARIA warnings) */}
+<div className="staff-profile-dropdown-wrapper" ref={profileDropdownRef}>
+  <button
+    ref={profileButtonRef} // ✅ added ref to control aria-expanded via JS
+    className="staff-profile-button"
+    onClick={() => setShowProfileDropdown(prev => !prev)}
+    aria-label="Profile menu"
+  >
+    <div className="staff-user-avatar">
+      {staffProfile?.photo ? (
+        <img 
+          src={staffProfile.photo} 
+          alt={staffProfile.name}
+          className="staff-avatar-image"
+        />
+      ) : (
+        <User size={20} aria-hidden="true" />
+      )}
+    </div>
+  </button>
+
+  {showProfileDropdown && (
+    <div className="staff-profile-dropdown">
+      <div className="staff-profile-header">
+        <div className="staff-profile-avatar-lg">
           {staffProfile?.photo ? (
-            <img src={staffProfile.photo} alt={staffProfile.name} />
+            <img 
+              src={staffProfile.photo} 
+              alt={staffProfile.name}
+              className="staff-avatar-image"
+            />
           ) : (
-            <User size={16} aria-hidden="true" />
+            <User size={24} aria-hidden="true" />
           )}
         </div>
-        {!sidebarCollapsed && staffProfile && (
-          <div className="staff-info">
-            <span className="staff-name">{staffProfile.name}</span>
-            <span className="staff-role">{staffProfile.role}</span>
-          </div>
-        )}
+        <div className="staff-profile-info">
+          <p className="staff-profile-name">{staffProfile?.name}</p>
+          <p className="staff-profile-email">{staffProfile?.email}</p>
+        </div>
       </div>
-    </button>
 
-    <button
-      className="logout-btn"
-      onClick={handleLogout}
-      aria-label="Logout"
-      title="Logout"
-    >
-      <LogOut size={20} aria-hidden="true" />
-      {!sidebarCollapsed && <span>Logout</span>}
-    </button>
-  </div>
-</aside>
+      <button
+        className="staff-profile-action"
+        onClick={() => {
+          setShowProfileDropdown(false);
+          document.getElementById("profilePhotoUpload")?.click();
+        }}
+      >
+        <Camera size={16} aria-hidden="true" />
+        Change Photo
+      </button>
 
-  {/* Main Content */}
-<main className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
-  {/* Header */}
-<header className="main-header">
-  <div className="header-left">
-    <h1 className="page-title">
-      {activeTab === 'dashboard' && 'Dashboard'}
-      {activeTab === 'appointments' && 'Appointments'}
-      {activeTab === 'queue' && 'Queue Management'}
-      {activeTab === 'doctors' && 'Doctor Management'}
-      {activeTab === 'calendar' && 'Appointment Calendar'}
-       {activeTab === 'reports' && 'Patient Reports'}
-    </h1>
-    <p className="page-subtitle">
-      {activeTab === 'dashboard' && 'Overview of clinic operations'}
-      {activeTab === 'appointments' && 'Manage patient appointments'}
-      {activeTab === 'queue' && 'Real-time queue management'}
-      {activeTab === 'doctors' && 'Manage doctor profiles and availability'}
-      {activeTab === 'calendar' && 'Monthly view of all appointments'}
-      {activeTab === 'reports' && 'Analytics and patient statistics'}
-    </p>
-  </div>
-  <div className="header-right">
-    {/* Only show search bar in appointments and doctors tabs */}
-    {(activeTab === 'appointments' || activeTab === 'doctors') && (
-      <div className="search-container">
-        <Search size={18} className="search-icon" aria-hidden="true" />
-        <input
-          type="text"
-          placeholder={
-            activeTab === 'appointments' 
-              ? "Search appointments..." 
-              : "Search doctors..."
-          }
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          aria-label={
-            activeTab === 'appointments' 
-              ? "Search appointments" 
-              : "Search doctors"
-          }
-        />
-      </div>
-    )}
-  </div>
+      <input
+        type="file"
+        id="profilePhotoUpload"
+        accept="image/*"
+        onChange={(e) => handlePhotoUpload(e, "profile")}
+        className="hidden-file-input"
+        aria-label="Upload new profile picture"
+      />
+
+      <button
+        className="staff-logout-action"
+        onClick={() => {
+          setShowProfileDropdown(false);
+          handleLogout();
+        }}
+      >
+        <LogOut size={16} aria-hidden="true" />
+        Logout
+      </button>
+    </div>
+  )}
+</div>
+</div>
+</div>
 </header>
 
-        {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && (
-          <div className="dashboard-content">
-            {/* Stats Cards */}
-            <div className="stats-grid">
-              <div className="stat-card primary">
-                <div className="stat-header">
-                  <Calendar size={24} aria-hidden="true" />
-                  <span className="stat-title">Today's Appointments</span>
-                </div>
-                <div className="stat-value">{stats.totalToday}</div>
-                <div className="stat-detail">
-                  <span className="confirmed">{stats.confirmed} Confirmed</span>
-                  <span className="pending">{stats.pending} Pending</span>
-                </div>
-              </div>
-              <div className="stat-card success">
-                <div className="stat-header">
-                  <CheckCircle2 size={24} aria-hidden="true" />
-                  <span className="stat-title">Completed</span>
-                </div>
-                <div className="stat-value">{stats.completed}</div>
-                <div className="stat-detail">Today's completed appointments</div>
-              </div>
-              <div className="stat-card warning">
-                <div className="stat-header">
-                  <AlertTriangle size={24} aria-hidden="true" />
-                  <span className="stat-title">Emergency</span>
-                </div>
-                <div className="stat-value">{stats.emergencyToday}</div>
-                <div className="stat-detail">Priority cases today</div>
-              </div>
-              <div className="stat-card info">
-                <div className="stat-header">
-                  <Users size={24} aria-hidden="true" />
-                  <span className="stat-title">Active Doctors</span>
-                </div>
-                <div className="stat-value">{stats.activeDoctors}</div>
-                <div className="stat-detail">Currently available</div>
-              </div>
-            </div>
-            
-            {/* Quick Actions */}
-            <div className="quick-actions">
-              <h3>Quick Actions</h3>
-              <div className="action-buttons">
-                <button
-                  className="action-btn primary"
-                  onClick={() => setShowBookingForm(true)}
-                  title="Book Appointment"
-                >
-                  <Plus size={20} aria-hidden="true" />
-                  Book Appointment
-                </button>
-                <button
-                  className="action-btn secondary"
-                  onClick={() => setActiveTab('queue')}
-                  title="Manage Queue"
-                >
-                  <Clock size={20} aria-hidden="true" />
-                  Manage Queue
-                </button>
-                <button
-                  className="action-btn secondary"
-                  onClick={() => setShowDoctorForm(true)}
-                  title="Add Doctor"
-                >
-                  <UserPlus size={20} aria-hidden="true" />
-                  Add Doctor
-                </button>
-              </div>
-            </div>
-            
-            {/* Recent Appointments */}
-            <div className="recent-appointments">
-              <h3>Recent Appointments</h3>
-              <div className="appointments-table">
-                <div className="table-header">
-                  <div>Patient</div>
-                  <div>Doctor</div>
-                  <div>Time</div>
-                  <div>Status</div>
-                  <div>Actions</div>
-                </div>
-                {appointments.slice(0, 5).map((appointment) => (
-                  <div key={appointment.id} className="table-row">
-                    <div className="patient-info">
-                      <div className="patient-avatar">
-                        {appointment.photo ? (
-                          <img src={appointment.photo} alt={appointment.name} />
-                        ) : (
-                          <User size={16} aria-hidden="true" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="patient-name">{appointment.name}</div>
-                        <div className="patient-type">{appointment.type}</div>
-                      </div>
-                    </div>
-                    <div>{appointment.doctor}</div>
-                    <div>
-                      <div>{appointment.time}</div>
-                      <div className="appointment-date">{appointment.date}</div>
-                    </div>
-                    <div>
-                      <span className={`status-badge ${getStatusColor(appointment.status)}`}>
-                        {appointment.status}
-                      </span>
-                    </div>
-                    <div className="table-actions">
-                      <button
-                        className="action-btn-sm"
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setShowDetailsModal(true);
-                        }}
-                        aria-label={`View details for ${appointment.name}`}
-                        title={`View details for ${appointment.name}`}
-                      >
-                        <Eye size={16} aria-hidden="true" />
-                      </button>
-                      <button
-                        className="action-btn-sm"
-                        onClick={() => handleEditAppointment(appointment)}
-                        aria-label={`Edit appointment for ${appointment.name}`}
-                        title={`Edit appointment for ${appointment.name}`}
-                      >
-                        <Edit size={16} aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Appointments Tab */}
-        {activeTab === 'appointments' && (
-          <div className="appointments-content">
-            {/* Filters */}
-            <div className="filters-section">
-              <div className="filters-row">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  aria-label="Filter by status"
-                  title="Filter by status"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <select
-                  value={filterDoctor}
-                  onChange={(e) => setFilterDoctor(e.target.value)}
-                  aria-label="Filter by doctor"
-                  title="Filter by doctor"
-                >
-                  <option value="all">All Doctors</option>
-                  {doctors.map(doctor => (
-                    <option key={doctor.id} value={doctor.id}>
-                      {doctor.name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="date"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                  aria-label="Filter by date"
-                  title="Filter by date"
-                />
-                <select
-                  value={filterPriority}
-                  onChange={(e) => setFilterPriority(e.target.value)}
-                  aria-label="Filter by priority"
-                  title="Filter by priority"
-                >
-                  <option value="all">All Priorities</option>
-                  <option value="normal">Normal</option>
-                  <option value="urgent">Urgent</option>
-                  <option value="emergency">Emergency</option>
-                </select>
-                <button
-                  className="btn-primary"
-                  onClick={() => setShowBookingForm(true)}
-                  title="New Appointment"
-                >
-                  <Plus size={16} aria-hidden="true" />
-                  New Appointment
-                </button>
-              </div>
-            </div>
-            
-            {/* Appointments List */}
-            <div className="appointments-list">
-              {filteredAppointments.length === 0 ? (
-                <div className="no-appointments">
-                  <Search size={48} aria-hidden="true" />
-                  <p>No appointments found matching your criteria</p>
-                </div>
-              ) : (
-                filteredAppointments.map((appointment) => (
-                  <div key={appointment.id} className="appointment-card">
-                    <div className="appointment-main">
-                      <div className="patient-section">
-                        <div className="patient-avatar">
-                          {appointment.photo ? (
-                            <img src={appointment.photo} alt={appointment.name} />
-                          ) : (
-                            <User size={24} aria-hidden="true" />
-                          )}
-                        </div>
-                        <div className="patient-details">
-                          <h4>{appointment.name}</h4>
-                          <p>{appointment.type}</p>
-                          <div className="patient-contact">
-                            <span><Mail size={14} aria-hidden="true" /> {appointment.email}</span>
-                            <span><Phone size={14} aria-hidden="true" /> {appointment.phone}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="appointment-info">
-                        <div className="info-item">
-                          <CalendarDays size={16} aria-hidden="true" />
-                          <span>{appointment.date}</span>
-                        </div>
-                        <div className="info-item">
-                          <Clock size={16} aria-hidden="true" />
-                          <span>{appointment.time}</span>
-                        </div>
-                        <div className="info-item">
-                          <Stethoscope size={16} aria-hidden="true" />
-                          <span>{appointment.doctor}</span>
-                        </div>
-                        <div className="info-item">
-                          <Badge size={16} aria-hidden="true" />
-                          <span>#{appointment.queueNumber}</span>
-                        </div>
-                      </div>
-                      <div className="appointment-status">
-                        <span className={`priority-badge ${getPriorityColor(appointment.priority)}`}>
-                          {appointment.priority}
-                        </span>
-                        <span className={`status-badge ${getStatusColor(appointment.status)}`}>
-                          {appointment.status}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="appointment-actions">
-                      <button
-                        className="action-btn view"
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setShowDetailsModal(true);
-                        }}
-                        aria-label={`View details for ${appointment.name}`}
-                        title={`View details for ${appointment.name}`}
-                      >
-                        <Eye size={16} aria-hidden="true" />
-                      </button>
-                      <button
-                        className="action-btn edit"
-                        onClick={() => handleEditAppointment(appointment)}
-                        aria-label={`Edit appointment for ${appointment.name}`}
-                        title={`Edit appointment for ${appointment.name}`}
-                      >
-                        <Edit size={16} aria-hidden="true" />
-                      </button>
-                      <button
-                        className="action-btn notification"
-                        onClick={() => sendNotificationToPatientById(appointment.id, 'both')}
-                        aria-label={`Send notification to ${appointment.name}`}
-                        title={`Send notification to ${appointment.name}`}
-                      >
-                        <Send size={16} aria-hidden="true" />
-                      </button>
-                      {appointment.status === 'pending' && (
-                        <button
-                          className="action-btn confirm"
-                          onClick={() => handleAppointmentStatusChange(appointment.id, 'confirmed')}
-                          aria-label={`Confirm appointment for ${appointment.name}`}
-                          title={`Confirm appointment for ${appointment.name}`}
-                        >
-                          <CheckCircle2 size={16} aria-hidden="true" />
-                        </button>
-                      )}
-                      {appointment.status === 'confirmed' && (
-                        <button
-                          className="action-btn complete"
-                          onClick={() => handleAppointmentStatusChange(appointment.id, 'completed')}
-                          aria-label={`Mark appointment as completed for ${appointment.name}`}
-                          title={`Mark appointment as completed for ${appointment.name}`}
-                        >
-                          <CheckCircle2 size={16} aria-hidden="true" />
-                        </button>
-                      )}
-                      <button
-                        className="action-btn cancel"
-                        onClick={() => handleAppointmentStatusChange(appointment.id, 'cancelled')}
-                        aria-label={`Cancel appointment for ${appointment.name}`}
-                        title={`Cancel appointment for ${appointment.name}`}
-                      >
-                        <X size={16} aria-hidden="true" />
-                      </button>
-                      <button
-                        className="action-btn delete"
-                        onClick={() => handleDeleteAppointment(appointment.id)}
-                        aria-label={`Delete appointment for ${appointment.name}`}
-                        title={`Delete appointment for ${appointment.name}`}
-                      >
-                        <Trash2 size={16} aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-        
-        {/* Queue Tab */}
-        {activeTab === 'queue' && (
-          <div className="queue-content">
-            <div className="queue-header">
-              <div className="current-serving">
-                <h3>Now Serving</h3>
-                <div className="serving-display">
-                  {queue.length > 0 && queue[0].status === 'confirmed' ? (
-                    <div className="current-patient">
-                      <div className="queue-number">#{queue[0].queueNumber}</div>
-                      <div className="patient-info">
-                        <div className="patient-name">{queue[0].name}</div>
-                        <div className="patient-doctor">{queue[0].doctor}</div>
-                        <div className="serving-status">Currently Being Served</div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="no-patients">
-                      {queue.length > 0 ? 'Waiting for confirmation...' : 'No patients in queue'}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="queue-stats">
-                <div className="stat">
-                  <span className="label">Total in Queue</span>
-                  <span className="value">{queue.length}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Confirmed</span>
-                  <span className="value">{queue.filter(q => q.status === 'confirmed').length}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Average Wait</span>
-                  <span className="value">30 min</span>
-                </div>
-              </div>
-            </div>
-            <div className="queue-list">
-              {queue.length === 0 ? (
-                <div className="empty-queue">
-                  <Clock size={48} aria-hidden="true" />
-                  <p>No patients in queue</p>
-                </div>
-              ) : (
-                queue.map((patient, index) => (
-                  <div 
-                    key={patient.id} 
-                    className={`queue-item ${
-                      index === 0 && patient.status === 'confirmed' ? 'current' : ''
-                    } ${patient.status === 'pending' ? 'pending' : ''}`}
-                  >
-                    <div className="queue-position">#{patient.queueNumber}</div>
-                    <div className="patient-avatar">
-                      {patient.photo ? (
-                        <img src={patient.photo} alt={patient.name} />
-                      ) : (
-                        <User size={20} aria-hidden="true" />
-                      )}
-                    </div>
-                    <div className="patient-details">
-                      <div className="patient-name">{patient.name}</div>
-                      <div className="patient-type">{patient.type}</div>
-                      <div className="patient-doctor">{patient.doctor}</div>
-                      <div className="patient-status">
-                        <span className={`status-badge ${getStatusColor(patient.status)}`}>
-                          {patient.status}
-                        </span>
-                        {index === 0 && patient.status === 'confirmed' && (
-                          <span className="now-serving-badge">Now Serving</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="queue-priority">
-                      <span className={`priority-badge ${getPriorityColor(patient.priority)}`}>
-                        {patient.priority}
-                      </span>
-                    </div>
-                    <div className="queue-time">
-                      <div className="appointment-time">{patient.time}</div>
-                      <div className="wait-time">
-                        {index === 0 && patient.status === 'confirmed' 
-                          ? 'Being Served' 
-                          : `Wait: ${patient.estimatedWaitTime}min`
-                        }
-                      </div>
-                    </div>
-                    <div className="queue-actions">
-                      {index === 0 && patient.status === 'confirmed' ? (
-                        <button
-                          className="action-btn complete"
-                          onClick={() => handleAppointmentStatusChange(patient.id, 'completed')}
-                          aria-label={`Mark ${patient.name} as completed`}
-                          title={`Mark ${patient.name} as completed`}
-                        >
-                          <CheckCircle2 size={16} aria-hidden="true" />
-                          Complete
-                        </button>
-                      ) : patient.status === 'pending' ? (
-                        <button
-                          className="action-btn confirm"
-                          onClick={() => handleAppointmentStatusChange(patient.id, 'confirmed')}
-                          aria-label={`Confirm ${patient.name}`}
-                          title={`Confirm ${patient.name}`}
-                        >
-                          <CheckCircle2 size={16} aria-hidden="true" />
-                          Confirm
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            className="action-btn hold"
-                            onClick={() => addNotification('info', `${patient.name} put on hold`)}
-                            aria-label={`Put ${patient.name} on hold`}
-                            title={`Put ${patient.name} on hold`}
-                          >
-                            <Pause size={16} aria-hidden="true" />
-                          </button>
-                          <button
-                            className="action-btn skip"
-                            onClick={() => addNotification('info', `${patient.name} skipped in queue`)}
-                            aria-label={`Skip ${patient.name} in queue`}
-                            title={`Skip ${patient.name} in queue`}
-                          >
-                            <SkipForward size={16} aria-hidden="true" />
-                          </button>
-                        </>
-                      )}
-                      <button
-                        className="action-btn notify"
-                        onClick={() => sendNotificationToPatientById(patient.id, 'sms')}
-                        aria-label={`Notify ${patient.name} via SMS`}
-                        title={`Notify ${patient.name} via SMS`}
-                      >
-                        <MessageSquare size={16} aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
 
+  {/* Dashboard Tab */}
+  {activeTab === 'dashboard' && (
+    <div className="dashboard-content-wrapper">
+      {/* Background Image */}
+      <div className="dashboard-background">
+        <img
+          src="/images/staffbg.png"
+          alt=""
+          className="dashboard-bg-image"
+        />
+        <div className="dashboard-overlay"></div>
+      </div>
+
+      {/* Content Over Background */}
+      <div className="dashboard-content">
+        {/* Welcome Section */}
+        <div className="dashboard-welcome">
+          {(() => {
+            const hour = new Date().getHours();
+            let greeting = "Good Evening";
+            if (hour < 12) greeting = "Good Morning";
+            else if (hour < 18) greeting = "Good Afternoon";
+            return (
+              <>
+                <h1>{greeting},</h1>
+                <h2>{staffProfile?.name || 'Staff'}</h2>
+                <p>Manage your eye care appointments and checkups with real-time queue updates</p>
+              </>
+            );
+          })()}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="stats-grid">
+          <div className="stat-card glass">
+            <div className="stat-icon">
+              <Calendar size={24} aria-hidden="true" />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">TODAY'S PATIENTS</div>
+              <div className="stat-value">{stats.totalToday}</div>
+              <div className="stat-detail">Scheduled appointments</div>
+            </div>
+          </div>
+
+          <div className="stat-card glass">
+            <div className="stat-icon progress">
+              <Clock size={24} aria-hidden="true" />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">IN PROGRESS</div>
+              <div className="stat-value">{stats.confirmed}</div>
+              <div className="stat-detail">Currently consulting</div>
+            </div>
+          </div>
+
+          <div className="stat-card glass">
+            <div className="stat-icon upcoming">
+              <Users size={24} aria-hidden="true" />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">UPCOMING</div>
+              <div className="stat-value">{stats.pending}</div>
+              <div className="stat-detail">Future appointments</div>
+            </div>
+          </div>
+
+          <div className="stat-card glass">
+            <div className="stat-icon completed">
+              <CheckCircle2 size={24} aria-hidden="true" />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">COMPLETED</div>
+              <div className="stat-value">{stats.completed}</div>
+              <div className="stat-detail">Total consultations</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="quick-actions-section">
+          <button
+            className="quick-action-btn primary"
+            onClick={() => setShowBookingForm(true)}
+          >
+            <Plus size={20} aria-hidden="true" />
+            Book Appointment
+          </button>
+          <button
+            className="quick-action-btn secondary"
+            onClick={() => setActiveTab('queue')}
+          >
+            <Clock size={20} aria-hidden="true" />
+            Manage Queue
+          </button>
+          <button
+            className="quick-action-btn tertiary"
+            onClick={() => setShowDoctorForm(true)}
+          >
+            <UserPlus size={20} aria-hidden="true" />
+            Add Doctor
+          </button>
+        </div>
+
+        {/* Recent Appointments */}
+        <div className="recent-appointments glass">
+          <div className="section-header">
+            <h3>Recent Appointments</h3>
+            <button
+              className="view-all-btn"
+              onClick={() => setActiveTab('appointments')}
+            >
+              View All
+            </button>
+          </div>
+          <div className="appointments-table">
+            <div className="table-header">
+              <div>Patient</div>
+              <div>Doctor</div>
+              <div>Time</div>
+              <div>Status</div>
+              <div>Actions</div>
+            </div>
+            {appointments.slice(0, 5).map((appointment) => (
+              <div key={appointment.id} className="table-row">
+                <div className="patient-info">
+                  <div className="patient-avatar">
+                    {appointment.photo ? (
+                      <img src={appointment.photo} alt={appointment.name} />
+                    ) : (
+                      <User size={16} aria-hidden="true" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="patient-name">{appointment.name}</div>
+                    <div className="patient-type">{appointment.type}</div>
+                  </div>
+                </div>
+                <div>{appointment.doctor}</div>
+                <div>
+                  <div>{appointment.time}</div>
+                  <div className="appointment-date">{appointment.date}</div>
+                </div>
+                <div>
+                  <span className={`status-badge ${getStatusColor(appointment.status)}`}>
+                    {appointment.status}
+                  </span>
+                </div>
+                <div className="table-actions">
+                  <button
+                    className="action-btn-sm"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setShowDetailsModal(true);
+                    }}
+                    aria-label={`View details for ${appointment.name}`}
+                    title={`View details for ${appointment.name}`}
+                  >
+                    <Eye size={16} aria-hidden="true" />
+                  </button>
+                  <button
+                    className="action-btn-sm"
+                    onClick={() => handleEditAppointment(appointment)}
+                    aria-label={`Edit appointment for ${appointment.name}`}
+                    title={`Edit appointment for ${appointment.name}`}
+                  >
+                    <Edit size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )}{/* Appointments Tab */}
+{activeTab === 'appointments' && (
+  <div className="appointments-content">
+    {/* Filters */}
+    <div className="filters-section">
+      <div className="filters-row">
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          aria-label="Filter by status"
+          title="Filter by status"
+        >
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select
+          value={filterDoctor}
+          onChange={(e) => setFilterDoctor(e.target.value)}
+          aria-label="Filter by doctor"
+          title="Filter by doctor"
+        >
+          <option value="all">All Doctors</option>
+          {doctors.map((doctor) => (
+            <option key={doctor.id} value={doctor.id}>
+              {doctor.name}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+          aria-label="Filter by date"
+          title="Filter by date"
+        />
+        <select
+          value={filterPriority}
+          onChange={(e) => setFilterPriority(e.target.value)}
+          aria-label="Filter by priority"
+          title="Filter by priority"
+        >
+          <option value="all">All Priorities</option>
+          <option value="normal">Normal</option>
+          <option value="urgent">Urgent</option>
+          <option value="emergency">Emergency</option>
+        </select>
+        <button
+          className="btn-primary"
+          onClick={() => setShowBookingForm(true)}
+          title="New Appointment"
+        >
+          <Plus size={16} aria-hidden="true" />
+          New Appointment
+        </button>
+      </div>
+    </div>
+
+    {/* Appointments List */}
+    <div className="appointments-list">
+      {filteredAppointments.length === 0 ? (
+        <div className="no-appointments">
+          <Search size={48} aria-hidden="true" />
+          <p>No appointments found matching your criteria</p>
+        </div>
+      ) : (
+        filteredAppointments.map((appointment) => {
+          const formattedDate = new Date(appointment.date).toLocaleDateString(
+            'en-US',
+            { year: 'numeric', month: 'long', day: 'numeric' }
+          );
+
+          return (
+            <div key={appointment.id} className="appointment-card">
+              <div className="appointment-main">
+                {/* LEFT: Patient Info */}
+                <div className="patient-section">
+                  <div className="patient-avatar">
+                    {appointment.photo ? (
+                      <img src={appointment.photo} alt={appointment.name} />
+                    ) : (
+                      <User size={24} aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className="patient-details">
+                    <h4>{appointment.name}</h4>
+                    <p>{appointment.type}</p>
+
+                    <div className="patient-contact">
+                      <span className="contact-item">
+                        <Phone size={14} aria-hidden="true" /> {appointment.phone}
+                      </span>
+                      <span className="contact-item">
+                        <Mail size={14} aria-hidden="true" /> {appointment.email}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* MIDDLE: Appointment Info */}
+                <div className="appointment-info">
+                  <div className="info-item">
+                    <Badge size={16} aria-hidden="true" />
+                    <span>#{appointment.queueNumber}</span>
+                  </div>
+                  <div className="info-item">
+                    <Stethoscope size={16} aria-hidden="true" />
+                    <span>{appointment.doctor}</span>
+                  </div>
+                  <div className="info-item">
+                    <Clock size={16} aria-hidden="true" />
+                    <span>{appointment.time}</span>
+                  </div>
+                  <div className="info-item">
+                    <CalendarDays size={16} aria-hidden="true" />
+                    <span>{formattedDate}</span>
+                  </div>
+                </div>
+
+                {/* RIGHT: Status + Actions */}
+                <div className="appointment-right">
+                  <div className="appointment-status">
+                    <span className={appointment.priority}>
+                      {appointment.priority}
+                    </span>
+                    <span className={appointment.status}>
+                      {appointment.status}
+                    </span>
+                  </div>
+
+                  <div className="appointment-actions">
+                    <button
+                      className="icon-btn"
+                      onClick={() => {
+                        setSelectedAppointment(appointment);
+                        setShowDetailsModal(true);
+                      }}
+                      title={`View details for ${appointment.name}`}
+                    >
+                      <Eye size={20} />
+                    </button>
+                    <button
+                      className="icon-btn"
+                      onClick={() => handleEditAppointment(appointment)}
+                      title={`Edit appointment for ${appointment.name}`}
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button
+                      className="icon-btn"
+                      onClick={() =>
+                        sendNotificationToPatientById(appointment.id, 'both')
+                      }
+                      title={`Send notification to ${appointment.name}`}
+                    >
+                      <Send size={20} />
+                    </button>
+                    <button
+                      className="icon-btn"
+                      onClick={() =>
+                        handleAppointmentStatusChange(appointment.id, 'cancelled')
+                      }
+                      title={`Cancel appointment for ${appointment.name}`}
+                    >
+                      <X size={20} />
+                    </button>
+                    <button
+                      className="icon-btn"
+                      onClick={() => handleDeleteAppointment(appointment.id)}
+                      title={`Delete appointment for ${appointment.name}`}
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  </div>
+)}
+{/* Queue Tab */}
+{activeTab === 'queue' && (
+  <div className="queue-content">
+    <div className="queue-header">
+      <div className="current-serving">
+        <h3>Now Serving</h3>
+        <div className="serving-display">
+          {queue.length > 0 && queue[0].status === 'confirmed' ? (
+            <div className="current-patient">
+              <div className="queue-number">#{queue[0].queueNumber}</div>
+              <div className="patient-info">
+                <div className="patient-name">{queue[0].name}</div>
+                <div className="patient-doctor">{queue[0].doctor}</div>
+                <div className="serving-status">Currently Being Served</div>
+              </div>
+            </div>
+          ) : queue.length > 0 ? (
+            <div className="no-patients-in-serving">
+              <Clock size={48} aria-hidden="true" />
+              <p>Waiting for confirmation...</p>
+            </div>
+          ) : (
+            <div className="no-patients-in-serving">
+              <Clock size={48} aria-hidden="true" />
+              <p>No patients in queue</p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="queue-stats">
+        <div className="stat">
+          <span className="label">Total in Queue</span>
+          <span className="value">{queue.length}</span>
+        </div>
+        <div className="stat">
+          <span className="label">Confirmed</span>
+          <span className="value">{queue.filter(q => q.status === 'confirmed').length}</span>
+        </div>
+        <div className="stat">
+          <span className="label">Average Wait</span>
+          <span className="value">30 min</span>
+        </div>
+      </div>
+    </div>
+    <div className="queue-list">
+      {queue.length > 0 && queue.map((patient, index) => (
+        <div 
+          key={patient.id} 
+          className={`queue-item ${
+            index === 0 && patient.status === 'confirmed' ? 'current' : ''
+          } ${patient.status === 'pending' ? 'pending' : ''}`}
+        >
+          <div className="queue-position">#{patient.queueNumber}</div>
+          <div className="patient-avatar">
+            {patient.photo ? (
+              <img src={patient.photo} alt={patient.name} />
+            ) : (
+              <User size={20} aria-hidden="true" />
+            )}
+          </div>
+          <div className="patient-details">
+            <div className="patient-name">{patient.name}</div>
+            <div className="patient-type">{patient.type}</div>
+            <div className="patient-doctor">{patient.doctor}</div>
+            <div className="patient-status">
+              <span className={`status-badge ${getStatusColor(patient.status)}`}>
+                {patient.status}
+              </span>
+              {index === 0 && patient.status === 'confirmed' && (
+                <span className="now-serving-badge">Now Serving</span>
+              )}
+            </div>
+          </div>
+          <div className="queue-priority">
+            <span className={`priority-badge ${getPriorityColor(patient.priority)}`}>
+              {patient.priority}
+            </span>
+          </div>
+          <div className="queue-time">
+            <div className="appointment-time">{patient.time}</div>
+            <div className="wait-time">
+              {index === 0 && patient.status === 'confirmed' 
+                ? 'Being Served' 
+                : `Wait: ${patient.estimatedWaitTime}min`
+              }
+            </div>
+          </div>
+          <div className="queue-actions">
+            {index === 0 && patient.status === 'confirmed' ? (
+              <button
+                className="action-btn complete"
+                onClick={() => handleAppointmentStatusChange(patient.id, 'completed')}
+                aria-label={`Mark ${patient.name} as completed`}
+                title={`Mark ${patient.name} as completed`}
+              >
+                <CheckCircle2 size={16} aria-hidden="true" />
+                Complete
+              </button>
+            ) : patient.status === 'pending' ? (
+              <button
+                className="action-btn confirm"
+                onClick={() => handleAppointmentStatusChange(patient.id, 'confirmed')}
+                aria-label={`Confirm ${patient.name}`}
+                title={`Confirm ${patient.name}`}
+              >
+                <CheckCircle2 size={16} aria-hidden="true" />
+                Confirm
+              </button>
+            ) : (
+              <>
+                <button
+                  className="action-btn hold"
+                  onClick={() => addNotification('info', `${patient.name} put on hold`)}
+                  aria-label={`Put ${patient.name} on hold`}
+                  title={`Put ${patient.name} on hold`}
+                >
+                  <Pause size={16} aria-hidden="true" />
+                </button>
+                <button
+                  className="action-btn skip"
+                  onClick={() => addNotification('info', `${patient.name} skipped in queue`)}
+                  aria-label={`Skip ${patient.name} in queue`}
+                  title={`Skip ${patient.name} in queue`}
+                >
+                  <SkipForward size={16} aria-hidden="true" />
+                </button>
+              </>
+            )}
+            <button
+              className="action-btn notify"
+              onClick={() => sendNotificationToPatientById(patient.id, 'sms')}
+              aria-label={`Notify ${patient.name} via SMS`}
+              title={`Notify ${patient.name} via SMS`}
+            >
+              <MessageSquare size={16} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 {/* Doctors Tab */}
 {activeTab === "doctors" && (
   <div className="doctors-content">
@@ -2775,7 +2974,7 @@ const handleLogout = async () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Moved Below */}
             <div className="doctor-actions">
               <button
                 className="action-btn edit"
@@ -2783,7 +2982,7 @@ const handleLogout = async () => {
                 aria-label={`Edit ${doctor.name}`}
                 title={`Edit ${doctor.name}`}
               >
-                <Edit size={16} aria-hidden="true" />
+                <Edit size={22} aria-hidden="true" />
               </button>
               <button
                 className="action-btn delete"
@@ -2791,7 +2990,7 @@ const handleLogout = async () => {
                 aria-label={`Delete ${doctor.name}`}
                 title={`Delete ${doctor.name}`}
               >
-                <Trash2 size={16} aria-hidden="true" />
+                <Trash2 size={22} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -2824,6 +3023,7 @@ const handleLogout = async () => {
     )}
   </div>
 )}
+
 {/* Calendar Tab */}
 {activeTab === "calendar" && (
   <div
@@ -3121,7 +3321,6 @@ const handleLogout = async () => {
     )}
   </div>
 )}
-
 {/* Reports Tab */}
 {activeTab === 'reports' && (
   <div className="reports-content">
@@ -3180,96 +3379,410 @@ const handleLogout = async () => {
       </div>
     </div>
 
-    {/* Weekly Patients Chart */}
+    {/* Weekly Patients Chart - Curved Line Chart */}
     <div className="report-section">
       <div className="report-section-header">
         <h3>Weekly Patient Volume</h3>
         <p>Last 4 weeks patient distribution</p>
       </div>
       <div className="report-card chart-card">
-        <div className="bar-chart">
-          {(() => {
-            const weeklyData = getWeeklyPatientData();
-            const maxCount = Math.max(...weeklyData.map(w => w.count), 1);
-            
-            return weeklyData.map((week, index) => (
-              <div key={index} className="bar-chart-item">
-                <div className="bar-chart-label">{week.label}</div>
-                <div className="bar-wrapper">
-                  <div
-                    className={`bar bar-${index}`}
-                    data-height-percentage={(week.count / maxCount) * 100}
-                  >
-                    <span className="bar-value">{week.count}</span>
-                  </div>
-                </div>
-                <div className="bar-chart-date">{week.dateRange}</div>
-              </div>
-            ));
-          })()}
+        <div className="curved-line-chart">
+          <svg className="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet">
+            {(() => {
+              const weeklyData = getWeeklyPatientData();
+              const maxCount = Math.max(...weeklyData.map(w => w.count), 1);
+              const padding = 40;
+              const chartWidth = 800 - padding * 2;
+              const chartHeight = 300 - padding * 2;
+              
+              interface ChartPoint {
+                x: number;
+                y: number;
+                count: number;
+                label: string;
+                dateRange: string;
+              }
+              
+              // Calculate points for the curve
+              const points: ChartPoint[] = weeklyData.map((week, index) => {
+                const x = padding + (index / (weeklyData.length - 1)) * chartWidth;
+                const y = padding + chartHeight - (week.count / maxCount) * chartHeight;
+                return { x, y, count: week.count, label: week.label, dateRange: week.dateRange };
+              });
+
+              // Create smooth curve path using quadratic bezier curves
+              const createSmoothPath = (points: ChartPoint[]): string => {
+                if (points.length === 0) return '';
+                let path = `M ${points[0].x} ${points[0].y}`;
+                
+                for (let i = 0; i < points.length - 1; i++) {
+                  const current = points[i];
+                  const next = points[i + 1];
+                  const controlX = (current.x + next.x) / 2;
+                  
+                  path += ` Q ${controlX} ${current.y}, ${controlX} ${(current.y + next.y) / 2}`;
+                  path += ` Q ${controlX} ${next.y}, ${next.x} ${next.y}`;
+                }
+                
+                return path;
+              };
+
+              // Create area fill path
+              const createAreaPath = (points: ChartPoint[]): string => {
+                const linePath = createSmoothPath(points);
+                const lastPoint = points[points.length - 1];
+                const firstPoint = points[0];
+                return `${linePath} L ${lastPoint.x} ${padding + chartHeight} L ${firstPoint.x} ${padding + chartHeight} Z`;
+              };
+
+              const linePath = createSmoothPath(points);
+              const areaPath = createAreaPath(points);
+
+              return (
+                <>
+                  {/* Grid lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+                    <line
+                      key={i}
+                      x1={padding}
+                      y1={padding + chartHeight * ratio}
+                      x2={padding + chartWidth}
+                      y2={padding + chartHeight * ratio}
+                      stroke="#e5e7eb"
+                      strokeWidth="1"
+                      strokeDasharray="4 4"
+                    />
+                  ))}
+
+                  {/* Area fill with gradient */}
+                  <defs>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
+                    </linearGradient>
+                  </defs>
+                  <path d={areaPath} fill="url(#areaGradient)" />
+
+                  {/* Main line */}
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Data points and labels */}
+                  {points.map((point, index) => (
+                    <g key={index}>
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r="5"
+                        fill="#fff"
+                        stroke="#3b82f6"
+                        strokeWidth="3"
+                      />
+                      <text
+                        x={point.x}
+                        y={point.y - 15}
+                        textAnchor="middle"
+                        className="chart-value-text"
+                        fill="#1f2937"
+                        fontSize="14"
+                        fontWeight="600"
+                      >
+                        {point.count}
+                      </text>
+                      <text
+                        x={point.x}
+                        y={padding + chartHeight + 25}
+                        textAnchor="middle"
+                        className="chart-label-text"
+                        fill="#6b7280"
+                        fontSize="12"
+                      >
+                        {point.label}
+                      </text>
+                    </g>
+                  ))}
+                </>
+              );
+            })()}
+          </svg>
         </div>
       </div>
     </div>
 
-    {/* Conditions Stats */}
+    {/* Conditions Stats - Pie Chart */}
     <div className="report-section">
       <div className="report-section-header">
         <h3>Patient Conditions Distribution</h3>
         <p>Most common medical conditions</p>
       </div>
       <div className="report-card">
-        <div className="condition-stats">
-          {(() => {
-            const conditionStats = getConditionStats();
-            const totalNonCancelled = appointments.filter(apt => apt.status !== 'cancelled').length;
-            const maxConditionCount = conditionStats[0]?.count || 1;
-            
-            return conditionStats.slice(0, 10).map((stat, index) => (
-              <div key={index} className="condition-stat-item">
-                <div className="condition-stat-header">
-                  <span className="condition-name">{stat.condition}</span>
-                  <span className="condition-count">{stat.count} patients</span>
+        <div className="pie-chart-container">
+          <svg className="pie-chart-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+            {(() => {
+              const conditionStats = getConditionStats();
+              const totalNonCancelled = appointments.filter(apt => apt.status !== 'cancelled').length;
+              const topConditions = conditionStats.slice(0, 5);
+              
+              const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
+              const cx = 200;
+              const cy = 200;
+              const radius = 120;
+              
+              let currentAngle = -90;
+              
+              return (
+                <>
+                  {topConditions.map((stat, index) => {
+                    const percentage = (stat.count / totalNonCancelled) * 100;
+                    const angle = (percentage / 100) * 360;
+                    const startAngle = currentAngle;
+                    const endAngle = currentAngle + angle;
+                    
+                    const startRad = (startAngle * Math.PI) / 180;
+                    const endRad = (endAngle * Math.PI) / 180;
+                    
+                    const x1 = cx + radius * Math.cos(startRad);
+                    const y1 = cy + radius * Math.sin(startRad);
+                    const x2 = cx + radius * Math.cos(endRad);
+                    const y2 = cy + radius * Math.sin(endRad);
+                    
+                    const largeArc = angle > 180 ? 1 : 0;
+                    
+                    const pathData = [
+                      `M ${cx} ${cy}`,
+                      `L ${x1} ${y1}`,
+                      `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                      'Z'
+                    ].join(' ');
+                    
+                    // Calculate label position
+                    const midAngle = (startAngle + endAngle) / 2;
+                    const midRad = (midAngle * Math.PI) / 180;
+                    const labelRadius = radius + 40;
+                    const labelX = cx + labelRadius * Math.cos(midRad);
+                    const labelY = cy + labelRadius * Math.sin(midRad);
+                    
+                    currentAngle = endAngle;
+                    
+                    return (
+                      <g key={index}>
+                        <path
+                          d={pathData}
+                          fill={colors[index]}
+                          stroke="#fff"
+                          strokeWidth="2"
+                        />
+                        <line
+                          x1={cx + (radius + 5) * Math.cos(midRad)}
+                          y1={cy + (radius + 5) * Math.sin(midRad)}
+                          x2={labelX}
+                          y2={labelY}
+                          stroke={colors[index]}
+                          strokeWidth="2"
+                        />
+                        <text
+                          x={labelX}
+                          y={labelY}
+                          textAnchor={labelX > cx ? 'start' : 'end'}
+                          className="pie-chart-label"
+                          fill="#1f2937"
+                          fontSize="13"
+                          fontWeight="600"
+                        >
+                          {percentage.toFixed(1)}%
+                        </text>
+                      </g>
+                    );
+                  })}
+                </>
+              );
+            })()}
+          </svg>
+          <div className="pie-chart-legend">
+            {(() => {
+              const conditionStats = getConditionStats();
+              const topConditions = conditionStats.slice(0, 5);
+              const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
+              
+              return topConditions.map((stat, index) => (
+                <div key={index} className="legend-item">
+                  <div 
+                    className="legend-color"
+                    data-color={colors[index]}
+                  ></div>
+                  <span className="legend-label">{stat.condition}</span>
+                  <span className="legend-count">{stat.count} patients</span>
                 </div>
-                <div className="condition-bar-wrapper">
-                  <div
-                    className="condition-bar"
-                    data-width-percentage={(stat.count / maxConditionCount) * 100}
-                  />
-                </div>
-                <div className="condition-percentage">
-                  {((stat.count / totalNonCancelled) * 100).toFixed(1)}%
-                </div>
-              </div>
-            ));
-          })()}
+              ));
+            })()}
+          </div>
         </div>
       </div>
     </div>
 
-    {/* Monthly Trend */}
+    {/* Monthly Trend - Smooth Area Line Chart */}
     <div className="report-section">
       <div className="report-section-header">
         <h3>6-Month Patient Trend</h3>
         <p>Patient volume over the last 6 months</p>
       </div>
       <div className="report-card chart-card">
-        <div className="line-chart">
-          {(() => {
-            const monthlyTrend = getMonthlyTrend();
-            const maxMonthCount = Math.max(...monthlyTrend.map(m => m.count), 1);
-            
-            return monthlyTrend.map((month, index) => (
-              <div key={index} className="line-chart-point">
-                <div className="line-chart-label">{month.month}</div>
-                <div
-                  className="line-chart-bar"
-                  data-height-percentage={(month.count / maxMonthCount) * 100}
-                >
-                  <span className="line-chart-value">{month.count}</span>
-                </div>
-              </div>
-            ));
-          })()}
+        <div className="trend-line-chart">
+          <svg className="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet">
+            {(() => {
+              const monthlyTrend = getMonthlyTrend();
+              const maxMonthCount = Math.max(...monthlyTrend.map(m => m.count), 1);
+              const padding = 40;
+              const chartWidth = 800 - padding * 2;
+              const chartHeight = 300 - padding * 2;
+              
+              interface TrendPoint {
+                x: number;
+                y: number;
+                count: number;
+                month: string;
+              }
+              
+              const points: TrendPoint[] = monthlyTrend.map((month, index) => {
+                const x = padding + (index / (monthlyTrend.length - 1)) * chartWidth;
+                const y = padding + chartHeight - (month.count / maxMonthCount) * chartHeight;
+                return { x, y, count: month.count, month: month.month };
+              });
+
+              const createSmoothPath = (points: TrendPoint[]): string => {
+                if (points.length === 0) return '';
+                let path = `M ${points[0].x} ${points[0].y}`;
+                
+                for (let i = 0; i < points.length - 1; i++) {
+                  const current = points[i];
+                  const next = points[i + 1];
+                  const controlX = (current.x + next.x) / 2;
+                  
+                  path += ` Q ${controlX} ${current.y}, ${controlX} ${(current.y + next.y) / 2}`;
+                  path += ` Q ${controlX} ${next.y}, ${next.x} ${next.y}`;
+                }
+                
+                return path;
+              };
+
+              const createAreaPath = (points: TrendPoint[]): string => {
+                const linePath = createSmoothPath(points);
+                const lastPoint = points[points.length - 1];
+                const firstPoint = points[0];
+                return `${linePath} L ${lastPoint.x} ${padding + chartHeight} L ${firstPoint.x} ${padding + chartHeight} Z`;
+              };
+
+              const linePath = createSmoothPath(points);
+              const areaPath = createAreaPath(points);
+
+              return (
+                <>
+                  {/* Grid lines */}
+                  {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => (
+                    <line
+                      key={i}
+                      x1={padding}
+                      y1={padding + chartHeight * ratio}
+                      x2={padding + chartWidth}
+                      y2={padding + chartHeight * ratio}
+                      stroke="#e5e7eb"
+                      strokeWidth="1"
+                      strokeDasharray="4 4"
+                    />
+                  ))}
+
+                  {/* Y-axis labels */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                    const value = Math.round(maxMonthCount * (1 - ratio));
+                    return (
+                      <text
+                        key={i}
+                        x={padding - 10}
+                        y={padding + chartHeight * ratio + 5}
+                        textAnchor="end"
+                        className="axis-label"
+                        fill="#6b7280"
+                        fontSize="12"
+                      >
+                        {value}
+                      </text>
+                    );
+                  })}
+
+                  {/* Area fills with gradients */}
+                  <defs>
+                    <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
+                      <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.2" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
+                    </linearGradient>
+                    <filter id="shadow">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" />
+                    </filter>
+                  </defs>
+                  <path d={areaPath} fill="url(#trendGradient)" />
+
+                  {/* Main line with shadow */}
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="#6366f1"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    filter="url(#shadow)"
+                  />
+
+                  {/* Data points */}
+                  {points.map((point, index) => (
+                    <g key={index}>
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r="6"
+                        fill="#fff"
+                        stroke="#6366f1"
+                        strokeWidth="3"
+                      />
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r="3"
+                        fill="#6366f1"
+                      />
+                      <text
+                        x={point.x}
+                        y={point.y - 15}
+                        textAnchor="middle"
+                        className="chart-value-text"
+                        fill="#1f2937"
+                        fontSize="13"
+                        fontWeight="600"
+                      >
+                        {point.count}
+                      </text>
+                      <text
+                        x={point.x}
+                        y={padding + chartHeight + 25}
+                        textAnchor="middle"
+                        className="chart-label-text"
+                        fill="#6b7280"
+                        fontSize="12"
+                      >
+                        {point.month}
+                      </text>
+                    </g>
+                  ))}
+                </>
+              );
+            })()}
+          </svg>
         </div>
       </div>
     </div>
@@ -4093,203 +4606,227 @@ const handleLogout = async () => {
           </div>
         </div>
       )}
- {/* =============================== */}
-{/* Appointment Details Modal - UPDATED */}
-{/* =============================== */}
-{showDetailsModal && selectedAppointment && (
-  <div className="modal-overlay" role="dialog" aria-modal="true">
-    <div className="modal-content details-modal">
-      <div className="modal-header">
-        <h3>Appointment Details</h3>
-        <button
-          className="modal-close"
-          onClick={() => {
-            setShowDetailsModal(false);
-            setSelectedAppointment(null);
-          }}
-          aria-label="Close details"
-          title="Close details"
-        >
-          <X size={20} />
-        </button>
-      </div>
+ 
 
-      <div className="modal-body">
-        <div className="details-content">
-          {selectedAppointment.photo && (
-            <div className="detail-photo">
-              <img src={selectedAppointment.photo} alt={selectedAppointment.name} />
+      {/* =============================== */}
+      {/* Appointment Details Modal - UPDATED */}
+      {/* =============================== */}
+      {showDetailsModal && selectedAppointment && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-content details-modal">
+            <div className="modal-header">
+              <h3>Appointment Details</h3>
+              <button
+                className="modal-close"
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedAppointment(null);
+                }}
+                aria-label="Close details"
+                title="Close details"
+              >
+                <X size={20} />
+              </button>
             </div>
-          )}
 
-          <div className="detail-grid">
-            <div className="detail-item">
-              <label>Patient Name</label>
-              <span>{selectedAppointment.name}</span>
-            </div>
-            <div className="detail-item">
-              <label>Age</label>
-              <span>{selectedAppointment.age || "Not specified"}</span>
-            </div>
-            <div className="detail-item">
-              <label>Gender</label>
-              <span>{selectedAppointment.gender || "Not specified"}</span>
-            </div>
-            <div className="detail-item">
-              <label>Email</label>
-              <span>{selectedAppointment.email}</span>
-            </div>
-            <div className="detail-item">
-              <label>Phone</label>
-              <span>{selectedAppointment.phone}</span>
-            </div>
-            <div className="detail-item">
-              <label>Condition</label>
-              <span>{selectedAppointment.type}</span>
-            </div>
-            <div className="detail-item">
-              <label>Date</label>
-              <span>
-                {new Date(selectedAppointment.date).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-            <div className="detail-item">
-              <label>Time</label>
-              <span>{selectedAppointment.time}</span>
-            </div>
-            <div className="detail-item">
-              <label>Doctor</label>
-              <span>{selectedAppointment.doctor}</span>
-            </div>
-            <div className="detail-item">
-              <label>Queue Number</label>
-              <span>#{selectedAppointment.queueNumber}</span>
-            </div>
-            <div className="detail-item">
-              <label>Priority</label>
-              <span
-                className={`priority-badge ${getPriorityColor(selectedAppointment.priority)}`}
-              >
-                {selectedAppointment.priority}
-              </span>
-            </div>
-            <div className="detail-item">
-              <label>Status</label>
-              <span
-                className={`status-badge ${getStatusColor(selectedAppointment.status)}`}
-              >
-                {selectedAppointment.status}
-              </span>
-            </div>
-            <div className="detail-item">
-              <label>Assigned By</label>
-              <span>{selectedAppointment.assignedBy || "System"}</span>
-            </div>
-            {selectedAppointment.notes && (
-              <div className="detail-item full-width">
-                <label>Notes</label>
-                <span>{selectedAppointment.notes}</span>
+            <div className="modal-body">
+              <div className="details-content">
+                {selectedAppointment.photo && (
+                  <div className="detail-photo">
+                    <img src={selectedAppointment.photo} alt={selectedAppointment.name} />
+                  </div>
+                )}
+
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <label>Patient Name</label>
+                    <span>{selectedAppointment.name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Age</label>
+                    <span>{selectedAppointment.age || "Not specified"}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Gender</label>
+                    <span>{selectedAppointment.gender || "Not specified"}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Email</label>
+                    <span>{selectedAppointment.email}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Phone</label>
+                    <span>{selectedAppointment.phone}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Condition</label>
+                    <span>{selectedAppointment.type}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Date</label>
+                    <span>
+                      {new Date(selectedAppointment.date).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Time</label>
+                    <span>{selectedAppointment.time}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Doctor</label>
+                    <span>{selectedAppointment.doctor}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Queue Number</label>
+                    <span>#{selectedAppointment.queueNumber}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Priority</label>
+                    <span
+                      className={`priority-badge ${getPriorityColor(selectedAppointment.priority)}`}
+                    >
+                      {selectedAppointment.priority}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Status</label>
+                    <span
+                      className={`status-badge ${getStatusColor(selectedAppointment.status)}`}
+                    >
+                      {selectedAppointment.status}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Assigned By</label>
+                    <span>{selectedAppointment.assignedBy || "System"}</span>
+                  </div>
+                  {selectedAppointment.notes && (
+                    <div className="detail-item full-width">
+                      <label>Notes</label>
+                      <span>{selectedAppointment.notes}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn-secondary"
+                onClick={() => handleEditAppointment(selectedAppointment)}
+                title="Edit Appointment"
+              >
+                <Edit size={16} aria-hidden="true" />
+                Edit
+              </button>
+
+              <button
+                className="btn-secondary"
+                title="Notify Patient"
+                onClick={async () => {
+                  try {
+                    const response = await fetch("http://localhost:5000/send-reminder", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        email: selectedAppointment.email,
+                        phone: selectedAppointment.phone,
+                        name: selectedAppointment.name,
+                        doctor: selectedAppointment.doctor,
+                        date: selectedAppointment.date,
+                        time: selectedAppointment.time,
+                      }),
+                    });
+
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                      addNotification(
+                        "success",
+                        `✈️ Reminder email sent to ${selectedAppointment.email}`
+                      );
+                    } else {
+                      addNotification("error", data.error || "Failed to send reminder.");
+                    }
+                  } catch (error) {
+                    console.error("Email send error:", error);
+                    addNotification("error", "Server error: Could not send email notification.");
+                  }
+                }}
+              >
+                <Send size={16} aria-hidden="true" />
+                Notify Patient
+              </button>
+
+              {selectedAppointment.status === "pending" && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    handleAppointmentStatusChange(selectedAppointment.id, "confirmed");
+                    setShowDetailsModal(false);
+                  }}
+                  title="Confirm Appointment"
+                >
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  Confirm
+                </button>
+              )}
+
+              {selectedAppointment.status === "confirmed" && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    handleAppointmentStatusChange(selectedAppointment.id, "completed");
+                    setShowDetailsModal(false);
+                  }}
+                  title="Complete Appointment"
+                >
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  Complete
+                </button>
+              )}
+
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  handleDeleteAppointment(selectedAppointment.id);
+                  setShowDetailsModal(false);
+                }}
+                title="Delete Appointment"
+              >
+                <Trash2 size={16} aria-hidden="true" />
+                Delete
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="modal-footer">
-        <button
-          className="btn-secondary"
-          onClick={() => handleEditAppointment(selectedAppointment)}
-          title="Edit Appointment"
-        >
-          <Edit size={16} aria-hidden="true" />
-          Edit
-        </button>
+     {/* ✅ FOOTER - Inside main container */}
+<footer className="staff-footer">
+  <div className="staff-footer-content">
+    <div className="staff-footer-brand">
+      <img
+        src="/images/bird.png"
+        alt="TimeFly Logo"
+        className="staff-footer-logo"
+      />
+      <h3 className="staff-footer-title">TimeFly</h3>
+    </div>
 
-        <button
-          className="btn-secondary"
-          title="Notify Patient"
-          onClick={async () => {
-            try {
-              const response = await fetch("http://localhost:5000/send-reminder", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  email: selectedAppointment.email,
-                  phone: selectedAppointment.phone,
-                  name: selectedAppointment.name,
-                  doctor: selectedAppointment.doctor,
-                  date: selectedAppointment.date,
-                  time: selectedAppointment.time,
-                }),
-              });
+    <p className="staff-footer-tagline">
+      Making your time for care smoother and faster
+    </p>
 
-              const data = await response.json();
-              if (response.ok && data.success) {
-                addNotification(
-                  "success",
-                  `✈️ Reminder email sent to ${selectedAppointment.email}`
-                );
-              } else {
-                addNotification("error", data.error || "Failed to send reminder.");
-              }
-            } catch (error) {
-              console.error("Email send error:", error);
-              addNotification("error", "Server error: Could not send email notification.");
-            }
-          }}
-        >
-          <Send size={16} aria-hidden="true" />
-          Notify Patient
-        </button>
-
-        {selectedAppointment.status === "pending" && (
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              handleAppointmentStatusChange(selectedAppointment.id, "confirmed");
-              setShowDetailsModal(false);
-            }}
-            title="Confirm Appointment"
-          >
-            <CheckCircle2 size={16} aria-hidden="true" />
-            Confirm
-          </button>
-        )}
-
-        {selectedAppointment.status === "confirmed" && (
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              handleAppointmentStatusChange(selectedAppointment.id, "completed");
-              setShowDetailsModal(false);
-            }}
-            title="Complete Appointment"
-          >
-            <CheckCircle2 size={16} aria-hidden="true" />
-            Complete
-          </button>
-        )}
-
-        <button
-          className="btn-secondary"
-          onClick={() => {
-            handleDeleteAppointment(selectedAppointment.id);
-            setShowDetailsModal(false);
-          }}
-          title="Delete Appointment"
-        >
-          <Trash2 size={16} aria-hidden="true" />
-          Delete
-        </button>
-      </div>
+    <div className="staff-footer-copyright">
+      <p>© 2025 TimeFly. All rights reserved.</p>
     </div>
   </div>
-)}
-    </div>
+</footer>
+    </div> 
   );
 };
 

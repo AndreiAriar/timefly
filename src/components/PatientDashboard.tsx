@@ -85,6 +85,7 @@ interface Doctor {
     end: string;
   };
   offDays: string[];
+  consultationDuration?: number; 
   availableDates?: string[];
   unavailableDates?: string[];
   workingDays?: string[];
@@ -499,10 +500,7 @@ const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElem
     fetchAppointments();
   }, [currentUser]);
   
-// =============================
-// UPDATED CALENDAR SLOT LOGIC
-// =============================
-const DEFAULT_DAILY_SLOTS = 10; // fallback when no staff settings exist
+
 
 // 🔹 Store doctor-specific slots (availability state already declared earlier)
 const [doctorSlotSettings, setDoctorSlotSettings] = useState<{ [key: string]: number }>({});
@@ -553,18 +551,37 @@ useEffect(() => {
   return () => unsubscribe();
 }, []);
 
-// ✅ Utility: get total slots for date (sum of all doctors)
+// ✅ Get total max slots for a specific date (sum of all doctors' actual slots)
 const getTotalSlotsForDate = (date: string): number => {
-  if (!date) return DEFAULT_DAILY_SLOTS;
+  if (!date) return 0;
 
-  const total = Object.entries(doctorSlotSettings)
+  // First check if staff has set custom slot counts for this date
+  const customTotal = Object.entries(doctorSlotSettings)
     .filter(([key]) => key.endsWith(`_${date}`))
-    .reduce((sum, [, val]) => sum + (val || 0), 0);
+    .reduce((sum, [, count]) => sum + (count || 0), 0);
+  
+  if (customTotal > 0) {
+    return customTotal;
+  }
 
-  return total > 0 ? total : DEFAULT_DAILY_SLOTS;
+  // Otherwise, calculate based on each doctor's working hours
+  let total = 0;
+  doctors.forEach(doctor => {
+    // Check if doctor is available on this date
+    const availability = doctorAvailability.find(
+      av => av.doctorId === doctor.id && av.date === date
+    );
+    
+    const isAvailable = availability ? availability.available : doctor.available;
+    
+    if (isAvailable) {
+      total += calculateDoctorDailySlots(doctor);
+    }
+  });
+
+  return total;
 };
 
-// ✅ Generate calendar day data
 const getCalendarDays = (): DaySchedule[] => {
   const end = new Date(
     calendarCurrentDate.getFullYear(),
@@ -579,8 +596,8 @@ const getCalendarDays = (): DaySchedule[] => {
     ).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
     const booked = getFilledSlotsForDate(date);
-    const total = getTotalSlotsForDate(date);
-
+    const total = getTotalSlotsForDate(date); // ✅ Now shows actual calculated slots
+    
     days.push({
       date,
       dayName: new Date(date).toLocaleDateString("en-US", { weekday: "short" }),
@@ -592,6 +609,39 @@ const getCalendarDays = (): DaySchedule[] => {
 
   return days;
 };
+// ✅ Calculate how many appointment slots a doctor has based on working hours
+const calculateDoctorDailySlots = (doctor: Doctor): number => {
+  // Provide defaults if working hours are missing
+  let workingHours = doctor.workingHours;
+  if (!workingHours || !workingHours.start || !workingHours.end) {
+    workingHours = { start: "9:00 AM", end: "5:00 PM" };
+  }
+
+  const parseTime = (timeStr: string): number => {
+    const [time, period] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    return hours * 60 + (minutes || 0);
+  };
+
+  const startMinutes = parseTime(workingHours.start);
+  const endMinutes = parseTime(workingHours.end);
+  
+  // Each slot = consultation duration (default 30 min) + buffer time (default 15 min)
+  const consultationDuration = doctor.consultationDuration || 30;
+  const bufferTime = doctor.bufferTime || 15;
+  const slotDuration = consultationDuration + bufferTime;
+  
+  // Calculate total slots
+  const totalWorkMinutes = endMinutes - startMinutes;
+  const slots = Math.floor(totalWorkMinutes / slotDuration);
+  
+  return slots > 0 ? slots : 10; // Fallback to 10 if calculation fails
+};
+
 // ✅ Generate time slots (with block + emergency logic + fallback for new doctors)
 const generateTimeSlots = () => {
   const slots: TimeSlot[] = [];
