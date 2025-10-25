@@ -902,10 +902,7 @@ border-radius: var(--radius-xl);
   background-color: var(--bg-secondary);
 }
 
-
-
-
-/* Add a dark overlay for better text visibility */
+/* 🌅 Hero Section Overlay */
 .hero-section::before {
   content: "";
   position: absolute;
@@ -913,26 +910,74 @@ border-radius: var(--radius-xl);
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.45); /* Adjust opacity for visibility */
+  background: rgba(0, 0, 0, 0.45); /* Dark overlay for readability */
   z-index: 0;
-  border-radius: var(--border-radius-lg); /* Match the rounded corners */
+  border-radius: var(--border-radius-lg);
 }
 
+/* 🌤 Hero Content */
 .hero-content {
   position: relative;
-  z-index: 1; /* Ensure text appears above overlay */
+  z-index: 1;
   max-width: 800px;
   margin: 0 auto;
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
 }
 
+/* 🌞 Greeting and Title */
 .hero-title {
   font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 700;
   margin-bottom: var(--space-md);
   line-height: 1.2;
-  color: #ffffff; /* White text for title */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
+/* 👋 Greeting Wrapper */
+.hero-greeting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 600;
+  color: #ffffff;
+  transition: color 0.3s ease;
+}
+
+/* 🌞 Greeting Icon (time-based color) */
+.greeting-icon {
+  font-size: 2rem;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+/* ☀️ Morning */
+[data-time="morning"] .greeting-icon {
+  color: #ffdf5d; /* brighter yellow for visibility */
+}
+
+/* 🌇 Afternoon */
+[data-time="afternoon"] .greeting-icon {
+  color: #ffb347; /* strong orange tone */
+}
+
+/* 🌙 Evening */
+[data-time="evening"] .greeting-icon {
+  color: #7ab8ff; /* brighter soft blue */
+}
+
+/* 🌌 Hover animation */
+.greeting-icon:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+}
+
+/* 📝 Subtitle */
 .hero-subtitle {
   font-size: clamp(1rem, 2vw, 1.25rem);
   margin-bottom: var(--space-2xl);
@@ -940,9 +985,11 @@ border-radius: var(--radius-xl);
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
-  color: #ffffff; 
+  color: #ffffff;
+  text-align: center;
 }
 
+/* 🎯 Action Buttons */
 .hero-actions {
   display: flex;
   gap: var(--space-md);
@@ -951,6 +998,7 @@ border-radius: var(--radius-xl);
   position: relative;
   z-index: 1;
 }
+
 
 /* ===== BUTTONS ===== */
 .btn-primary, .btn-secondary, .btn-danger {
@@ -1980,43 +2028,98 @@ border-radius: var(--radius-xl);
   border-radius: 0;
   background: var(--bg-primary);
 }
+/* ====== CALENDAR WIZARD - NAVIGATION FIX ====== */
 
-/* ====== UPDATED HEADER SECTION ====== */
-.calendar-header {
-  display: flex;
-  justify-content: center; /* Center header content */
-  align-items: center;
-  padding: var(--space-xl);
-  border-bottom: 1px solid var(--border-light);
-  background: var(--bg-secondary);
-}
-
+/* Remove old selectors and use direct class targeting */
 .calendar-navigation {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2rem !important;
+  margin-bottom: 1.5rem !important;
+  width: 100% !important;
 }
 
-/* Centered Month Title < October > */
-.month-display {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: var(--text-primary);
-  text-align: center;
+/* Month Title */
+.month-title {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  color: #1e40af !important;
+  letter-spacing: 0.5px !important;
+  min-width: 200px !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  order: 2 !important; /* ✅ Force middle position */
 }
 
 /* Navigation Buttons */
-.calendar-navigation .btn-icon {
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: color var(--transition-fast);
+.calendar-navigation .nav-btn {
+  background: #fff !important;
+  border: none !important;
+  padding: 0.5rem !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease, transform 0.2s ease !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-primary) !important;
+  width: 40px !important;
+  height: 40px !important;
+  flex-shrink: 0 !important;
 }
 
-.calendar-navigation .btn-icon:hover {
-  color: var(--primary);
+/* First button (Previous) */
+.calendar-navigation .nav-btn:first-child {
+  order: 1 !important; /* ✅ Force left position */
+}
+
+/* Last button (Next) */
+.calendar-navigation .nav-btn:last-child {
+  order: 3 !important; /* ✅ Force right position */
+}
+
+.calendar-navigation .nav-btn:hover {
+  background: #e8f0fe !important;
+  transform: scale(1.05) !important;
+  color: var(--primary) !important;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .calendar-navigation .nav-btn {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="dark"] .calendar-navigation .nav-btn:hover {
+  background: var(--bg-secondary) !important;
+  color: var(--primary) !important;
+}
+
+[data-theme="dark"] .month-title {
+  color: var(--text-primary) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calendar-navigation {
+    gap: 1rem !important;
+  }
+
+  .month-title {
+    font-size: 1.25rem !important;
+    min-width: 150px !important;
+  }
+
+  .calendar-navigation .nav-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
 }
 
 /* ====== CALENDAR GRID ====== */
@@ -4011,48 +4114,6 @@ border-radius: var(--radius-xl);
 
 .wizard-back-btn:hover svg {
   transform: translateX(-2px);
-}
-
-/* ===== CALENDAR NAVIGATION ===== */
-.calendar-navigation {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  animation: fadeInContent 0.3s ease 0.1s both;
-}
-
-.month-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.nav-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.nav-btn {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-light);
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-primary);
-}
-
-.nav-btn:hover {
-  background: var(--bg-secondary);
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: scale(1.05);
 }
 
 /* ===== CALENDAR GRID ===== */
@@ -6206,5 +6267,189 @@ svg.clock,
   
   .modal-content {
     padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
+  }
+}
+
+/* ===== DOCTOR UNAVAILABLE / FULLY BOOKED WARNINGS ===== */
+.doctor-unavailable-warning,
+.doctor-fully-booked-warning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  border: 2px solid;
+  animation: fadeInScale 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== UNAVAILABLE WARNING (Yellow/Orange) ===== */
+.doctor-unavailable-warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-color: #ff9800;
+}
+
+.doctor-unavailable-warning svg {
+  color: #e65100;
+  filter: drop-shadow(0 2px 4px rgba(230, 81, 0, 0.2));
+}
+
+.doctor-unavailable-warning p {
+  margin: 0;
+  font-size: 1rem;
+  color: #3e2723;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.doctor-unavailable-warning p strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #bf360c;
+  display: block;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+/* ===== FULLY BOOKED WARNING (Red) ===== */
+.doctor-fully-booked-warning {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border-color: #e53935;
+}
+
+.doctor-fully-booked-warning svg {
+  color: #c62828;
+  filter: drop-shadow(0 2px 4px rgba(198, 40, 40, 0.2));
+}
+
+.doctor-fully-booked-warning p {
+  margin: 0;
+  font-size: 1rem;
+  color: #1a1a1a;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.doctor-fully-booked-warning p strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #b71c1c;
+  display: block;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+/* ===== SUB-MESSAGE TEXT ===== */
+.sub-message {
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  color: #424242 !important;
+  opacity: 1 !important;
+  margin-top: 0.25rem !important;
+}
+
+/* ===== DARK MODE SUPPORT ===== */
+[data-theme="dark"] .doctor-unavailable-warning {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 167, 38, 0.15) 100%);
+  border-color: rgba(255, 152, 0, 0.6);
+}
+
+[data-theme="dark"] .doctor-fully-booked-warning {
+  background: linear-gradient(135deg, rgba(229, 57, 53, 0.2) 0%, rgba(239, 83, 80, 0.15) 100%);
+  border-color: rgba(229, 57, 53, 0.6);
+}
+
+[data-theme="dark"] .doctor-unavailable-warning svg {
+  color: #ffb74d;
+  filter: drop-shadow(0 2px 6px rgba(255, 183, 77, 0.3));
+}
+
+[data-theme="dark"] .doctor-fully-booked-warning svg {
+  color: #ef5350;
+  filter: drop-shadow(0 2px 6px rgba(239, 83, 80, 0.3));
+}
+
+[data-theme="dark"] .doctor-unavailable-warning p {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .doctor-fully-booked-warning p {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .doctor-unavailable-warning p strong {
+  color: #ffa726;
+}
+
+[data-theme="dark"] .doctor-fully-booked-warning p strong {
+  color: #ff6e6e;
+}
+
+[data-theme="dark"] .sub-message {
+  color: #e0e0e0 !important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .doctor-unavailable-warning,
+  .doctor-fully-booked-warning {
+    padding: 1.5rem 1rem;
+    gap: 0.5rem;
+  }
+  
+  .doctor-unavailable-warning p strong,
+  .doctor-fully-booked-warning p strong {
+    font-size: 1rem;
+  }
+  
+  .doctor-unavailable-warning p,
+  .doctor-fully-booked-warning p {
+    font-size: 0.9rem;
+  }
+  
+  .sub-message {
+    font-size: 0.85rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .doctor-unavailable-warning,
+  .doctor-fully-booked-warning {
+    padding: 1.25rem 0.875rem;
+  }
+  
+  .doctor-unavailable-warning svg,
+  .doctor-fully-booked-warning svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .doctor-unavailable-warning p strong,
+  .doctor-fully-booked-warning p strong {
+    font-size: 0.95rem;
+  }
+  
+  .doctor-unavailable-warning p,
+  .doctor-fully-booked-warning p {
+    font-size: 0.85rem;
+  }
+  
+  .sub-message {
+    font-size: 0.8rem !important;
   }
 }

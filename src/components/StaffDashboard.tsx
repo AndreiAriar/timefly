@@ -21,18 +21,22 @@ import {
   Phone,
   Mail,
   Send,
-  Pause,
-  SkipForward,
   UserPlus,
   Stethoscope,
   Save,
-  Clock3,
-  MapPin,
   Badge,
   MessageSquare,
   CheckCircle,
   Info
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+} from 'recharts';
 // Firebase imports
 import {
   collection,
@@ -170,6 +174,7 @@ const StaffDashboard = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+ const [showLogoutModal, setShowLogoutModal] = useState(false);
 
 
 
@@ -208,9 +213,7 @@ const [appointmentForm, setAppointmentForm] = useState({
   time: '',
   doctorId: '',
   notes: '',
-  photo: '',              
-  verifyCode: '',         
-  emailVerified: false    
+  photo: '',                
 });
 
   
@@ -317,7 +320,7 @@ useEffect(() => {
             email: staffData.email,
             phone: staffData.phone,
             department: staffData.department,
-            photo: staffData.photo ?? '', // ✅ guaranteed string
+            photo: staffData.photo ?? '', // Ã¢Å“â€¦ guaranteed string
           });
         } else {
           // If no user document exists, create a basic profile from auth
@@ -344,7 +347,7 @@ useEffect(() => {
             email: basicStaffData.email,
             phone: basicStaffData.phone,
             department: basicStaffData.department,
-            photo: basicStaffData.photo ?? '', // ✅ guaranteed string
+            photo: basicStaffData.photo ?? '', // Ã¢Å“â€¦ guaranteed string
           });
         }
 
@@ -366,7 +369,7 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  console.log('📋 Doctors list updated:', doctors.length, 'doctors');
+  console.log('Doctors list updated:', doctors.length, 'doctors');
   doctors.forEach(doc => {
     console.log(`  - ${doc.name}: ${doc.workingHours?.start || 'NO START'} to ${doc.workingHours?.end || 'NO END'}`);
   });
@@ -451,7 +454,7 @@ useEffect(() => {
   }, [staffProfile]);
   
  
-// ✅ properly type the ref
+// properly type the ref
 const profileButtonRef = useRef<HTMLButtonElement | null>(null);
 
 useEffect(() => {
@@ -462,46 +465,45 @@ useEffect(() => {
     );
   }
 }, [showProfileDropdown]);
+// âœ… FIXED: Fetch Appointments - Ordered by Date ASC, Queue Number ASC
+useEffect(() => {
+  if (!staffProfile) return;
+  const fetchAppointments = () => {
+    try {
+      const appointmentsQuery = query(
+        collection(db, 'appointments'),
+        orderBy('date', 'asc'),        // Oldest dates first
+        orderBy('queueNumber', 'asc')  // Then by queue number
+      );
+      const unsubscribe = onSnapshot(
+        appointmentsQuery,
+        (snapshot) => {
+          const appointmentsData: Appointment[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            appointmentsData.push({
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt || serverTimestamp(),
+              updatedAt: data.updatedAt || serverTimestamp()
+            } as Appointment);
+          });
+          setAppointments(appointmentsData);
+        },
+        (error) => {
+          console.error('Error in appointments snapshot:', error);
+          addNotification('error', 'Failed to load appointments');
+        }
+      );
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Error setting up appointments listener:', error);
+      addNotification('error', 'Failed to set up appointment listener');
+    }
+  };
+  fetchAppointments();
+}, [staffProfile]);
 
-  // Fetch Appointments
-  useEffect(() => {
-    if (!staffProfile) return;
-    const fetchAppointments = () => {
-      try {
-        const appointmentsQuery = query(
-          collection(db, 'appointments'),
-          orderBy('date', 'desc'),
-          orderBy('time', 'asc')
-        );
-        const unsubscribe = onSnapshot(
-          appointmentsQuery,
-          (snapshot) => {
-            const appointmentsData: Appointment[] = [];
-            snapshot.forEach((doc) => {
-              const data = doc.data();
-              appointmentsData.push({
-                id: doc.id,
-                ...data,
-                createdAt: data.createdAt || serverTimestamp(),
-                updatedAt: data.updatedAt || serverTimestamp()
-              } as Appointment);
-            });
-            setAppointments(appointmentsData);
-          },
-          (error) => {
-            console.error('Error in appointments snapshot:', error);
-            addNotification('error', 'Failed to load appointments');
-          }
-        );
-        return () => unsubscribe();
-      } catch (error) {
-        console.error('Error setting up appointments listener:', error);
-        addNotification('error', 'Failed to set up appointment listener');
-      }
-    };
-    fetchAppointments();
-  }, [staffProfile]);
-  
   // Fetch Doctor Availability
   useEffect(() => {
     const fetchDoctorAvailability = async () => {
@@ -620,7 +622,7 @@ useEffect(() => {
     }
 
   };
- // Generate Time Slots - WITH EMERGENCY BUFFER AND BLOCKED SLOT SUPPORT
+ // Generate Time Slots - WITH EMERGENCY BUFFER, BLOCKED SLOT SUPPORT, AND LUNCH BREAK FILTER
 const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
   if (!doctorId || !date) return [];
 
@@ -638,6 +640,11 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     if (period === 'AM' && hours === 12) hours = 0;
     
     return hours * 60 + minutes;
+  };
+
+  // 🚫 Helper function to check if time is lunch break (12:00 PM or 12:30 PM)
+  const isLunchTime = (time12: string): boolean => {
+    return time12 === '12:00 PM' || time12 === '12:30 PM';
   };
 
   const startTotalMinutes = parseTime12Hour(start);
@@ -660,10 +667,10 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
       apt.status !== 'cancelled'
   );
 
-  console.log(`🔍 Generating slots for doctor ${doctorId} on ${date}`);
-  console.log(`📅 Is today: ${isToday}, Current time: ${now.toLocaleTimeString()}`);
-  console.log(`🏥 Found ${existingAppointments.length} existing appointments`);
-  console.log(`⚡ Current form priority: ${appointmentForm.priority}`);
+  console.log(`Generating slots for doctor ${doctorId} on ${date}`);
+  console.log(` Is today: ${isToday}, Current time: ${now.toLocaleTimeString()}`);
+  console.log(` Found ${existingAppointments.length} existing appointments`);
+  console.log(` Current form priority: ${appointmentForm.priority}`);
 
   const slots: TimeSlot[] = [];
   const appointmentDuration = 30; // minutes per regular slot
@@ -678,9 +685,15 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
     const time12 = convertTo12Hour(time24);
 
+    // 🚫 Skip lunch time slots (12:00 PM and 12:30 PM)
+    if (isLunchTime(time12)) {
+      console.log(`⏰ Skipping lunch break: ${time12}`);
+      continue;
+    }
+
     // Skip past time slots if booking for today
     if (isToday && totalMinutes < minimumBookingMinutes) {
-      console.log(`⏭️ Skipping past slot: ${time12}`);
+      console.log(`Skipping past slot: ${time12}`);
       continue;
     }
 
@@ -690,7 +703,7 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     );
     const isBooked = !!appointment;
 
-    // 🆕 Check if staff manually marked this slot as unavailable
+    // Check if staff manually marked this slot as unavailable
     const slotKey = `${doctorId}_${date}_${time12}`;
     const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
@@ -715,9 +728,13 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
           .padStart(2, '0')}`;
         const bufferTime12 = convertTo12Hour(bufferTime24);
 
-        // Skip past buffer slots if booking for today
-        if (isToday && bufferStart < minimumBookingMinutes) {
-          console.log(`⏭️ Skipping past buffer slot: ${bufferTime12}`);
+        // 🚫 Skip lunch break buffer slots too
+        if (isLunchTime(bufferTime12)) {
+          console.log(`⏰ Skipping lunch break buffer: ${bufferTime12}`);
+          // Don't add buffer duration here since we're skipping this slot
+        } else if (isToday && bufferStart < minimumBookingMinutes) {
+          // Skip past buffer slots if booking for today
+          console.log(`Skipping past buffer slot: ${bufferTime12}`);
         } else {
           // Check if buffer slot is already booked or blocked
           const bufferAppointment = existingAppointments.find(
@@ -736,7 +753,7 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
           });
 
           console.log(
-            `🚨 Added emergency buffer slot: ${bufferTime12} (${isBufferBooked ? 'booked' : isBufferBlocked ? 'blocked' : 'available'})`
+            ` Added emergency buffer slot: ${bufferTime12} (${isBufferBooked ? 'booked' : isBufferBlocked ? 'blocked' : 'available'})`
           );
         }
 
@@ -746,12 +763,11 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     }
   }
 
-  console.log(`✅ Generated ${slots.length} total slots`);
-  console.log(`🚨 Emergency mode: ${isCreatingEmergency ? 'ON - showing emergency buffer slots' : 'OFF'}`);
+  console.log(`Generated ${slots.length} total slots`);
+  console.log(`Emergency mode: ${isCreatingEmergency ? 'ON - showing emergency buffer slots' : 'OFF'}`);
 
   return slots;
 };
-
 
 // === Calendar States ===
 const [calendarCurrentDate, setCalendarCurrentDate] = useState(new Date());
@@ -770,7 +786,7 @@ const navigateMonth = (direction: "prev" | "next") => {
 const getMonthName = (date: Date) =>
   date.toLocaleString("default", { month: "long", year: "numeric" });
 
-// 🧩 Calendar Helper Functions — Single Correct Versions
+// Calendar Helper Functions Single Correct Versions
 
 // Count filled appointment slots for a specific date
 const getFilledSlotsForDate = (date: string): number => {
@@ -794,7 +810,7 @@ const getCalendarDays = (): DaySchedule[] => {
     ).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
     const booked = getFilledSlotsForDate(date);
-    const total = getTotalSlotsForDate(date); // ✅ Now shows actual calculated slots
+    const total = getTotalSlotsForDate(date); // Now shows actual calculated slots
     
     days.push({
       date,
@@ -808,7 +824,7 @@ const getCalendarDays = (): DaySchedule[] => {
   return days;
 };
 
-// ✅ Calculate how many appointment slots a doctor has based on working hours
+// Ã¢Å“â€¦ Calculate how many appointment slots a doctor has based on working hours
 const calculateDoctorDailySlots = (doctor: Doctor): number => {
   // Provide defaults if working hours are missing
   let workingHours = doctor.workingHours;
@@ -845,13 +861,13 @@ const calculateDoctorDailySlots = (doctor: Doctor): number => {
 const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeSlotSimple[] => {
   const slots: TimeSlotSimple[] = [];
   
-  // ✅ Enhanced safety check
+  // Ã¢Å“â€¦ Enhanced safety check
   if (!doctor.workingHours || !doctor.workingHours.start || !doctor.workingHours.end) {
-    console.warn(`⚠️ Doctor ${doctor.name} has no working hours defined`);
+    console.warn(` Doctor ${doctor.name} has no working hours defined`);
     return slots;
   }
 
-  // ✅ Parse 12-hour format (e.g., "9:00 AM", "5:00 PM")
+  // Ã¢Å“â€¦ Parse 12-hour format (e.g., "9:00 AM", "5:00 PM")
   const parseTime12Hour = (timeStr: string): { hour: number; minute: number } => {
     const [time, period] = timeStr.trim().split(' ');
     let [hours, minutes] = time.split(':').map(Number);
@@ -862,7 +878,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
     return { hour: hours, minute: minutes || 0 };
   };
 
-  // ✅ Handle both 12-hour format ("9:00 AM") and 24-hour format ("09:00")
+  // Ã¢Å“â€¦ Handle both 12-hour format ("9:00 AM") and 24-hour format ("09:00")
   let startHour: number, startMin: number, endHour: number, endMin: number;
 
   if (doctor.workingHours.start.includes('AM') || doctor.workingHours.start.includes('PM')) {
@@ -880,7 +896,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
   }
 
   const buffer = doctor.bufferTime || 15;
-  const active = doctor.consultationDuration || 30; // ✅ Use consultation duration
+  const active = doctor.consultationDuration || 30; // Ã¢Å“â€¦ Use consultation duration
 
   // Get existing appointments for this doctor on this date
   const existingAppointments = appointments.filter(
@@ -915,7 +931,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
     });
   }
 
-  console.log(`🕐 Generated ${slots.length} time slots for ${doctor.name} on ${selectedDate}`);
+  console.log(`Ã°Å¸â€¢Â Generated ${slots.length} time slots for ${doctor.name} on ${selectedDate}`);
   return slots;
 };
 // === Toggle Doctor Availability for the Day ===
@@ -995,13 +1011,13 @@ const checkAppointmentConflict = async (
 
     const conflictSnapshot = await getDocs(conflictQuery);
 
-    console.log(`🔍 Conflict check: Doctor ${doctorId} | Date: ${date} | Time: ${time}`);
-    console.log(`📌 Found ${conflictSnapshot.docs.length} matching appointments`);
+    console.log(`Conflict check: Doctor ${doctorId} | Date: ${date} | Time: ${time}`);
+    console.log(`Found ${conflictSnapshot.docs.length} matching appointments`);
 
     if (!conflictSnapshot.empty) {
       conflictSnapshot.docs.forEach((doc) => {
         const data = doc.data();
-        console.log(`  ➤ ${data.name} [${data.bookedBy || 'patient'}] | ID: ${doc.id} | Status: ${data.status}`);
+        console.log(`  ${data.name} [${data.bookedBy || 'patient'}] | ID: ${doc.id} | Status: ${data.status}`);
       });
     }
 
@@ -1009,16 +1025,16 @@ const checkAppointmentConflict = async (
     if (excludeId) {
       const conflictingAppointment = conflictSnapshot.docs.find(doc => doc.id !== excludeId);
       const hasConflict = !!conflictingAppointment;
-      console.log(`✏️ Editing mode: excluding ID ${excludeId}, conflict found: ${hasConflict}`);
+      console.log(` Editing mode: excluding ID ${excludeId}, conflict found: ${hasConflict}`);
       return hasConflict;
     }
 
     // For new appointments: any existing doc = conflict
     const hasConflict = !conflictSnapshot.empty;
-    console.log(`🆕 New booking: conflict = ${hasConflict}`);
+    console.log(`New booking: conflict = ${hasConflict}`);
     return hasConflict;
   } catch (error) {
-    console.error('💥 Error checking appointment conflict:', error);
+    console.error('Error checking appointment conflict:', error);
     // Safest to assume conflict on error
     return true;
   }
@@ -1127,32 +1143,38 @@ const checkAppointmentConflict = async (
   };
   
   // Queue Management
-  const getCurrentQueue = (): QueueItem[] => {
-    const today = getTodayDate();
-    const todayAppointments = appointments.filter(apt =>
-      apt.date === today && 
-      apt.status !== 'cancelled' && 
-      apt.status !== 'completed' // Exclude completed appointments from queue
-    );
-    // Sort by priority and queue number
-    const sortedQueue = todayAppointments.sort((a, b) => {
-      // Emergency appointments first
-      if (a.priority === 'emergency' && b.priority !== 'emergency') return -1;
-      if (b.priority === 'emergency' && a.priority !== 'emergency') return 1;
-      // Urgent appointments second
-      if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
-      if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
-      // Then by queue number
-      return (a.queueNumber || 0) - (b.queueNumber || 0);
-    });
-    return sortedQueue.map((apt, index) => ({
-      ...apt,
-      estimatedWaitTime: index * 30, // 30 minutes per appointment
-      isCurrentlyServing: index === 0 && apt.status === 'confirmed', // Only confirmed appointments can be "now serving"
-      isOnHold: false
-    }));
-  };
+ const getCurrentQueue = (): QueueItem[] => {
+  const today = getTodayDate();
+  const todayAppointments = appointments.filter(apt =>
+    apt.date === today && 
+    apt.status !== 'cancelled' && 
+    apt.status !== 'completed' // Exclude completed appointments from queue
+  );
   
+  // Sort by priority and queue number
+  const sortedQueue = todayAppointments.sort((a, b) => {
+    // Confirmed appointments (being served) should come first
+    if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
+    if (b.status === 'confirmed' && a.status !== 'confirmed') return 1;
+    
+    // Then by priority
+    if (a.priority === 'emergency' && b.priority !== 'emergency') return -1;
+    if (b.priority === 'emergency' && a.priority !== 'emergency') return 1;
+    if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+    if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
+    
+    // Then by queue number
+    return (a.queueNumber || 0) - (b.queueNumber || 0);
+  });
+  
+  return sortedQueue.map((apt, index) => ({
+    ...apt,
+    estimatedWaitTime: index * 30,
+    isCurrentlyServing: apt.status === 'confirmed', // âœ… All confirmed are "being served"
+    isOnHold: false
+  }));
+};
+
   // Get doctor availability for a specific date - Fixed logic
   const getDoctorAvailability = (doctorId: string, date: string): boolean => {
     if (!date) return true; // Default available if no date selected
@@ -1245,82 +1267,18 @@ const getFilteredDoctors = () => {
 useEffect(() => {
   if (appointmentForm.doctorId && appointmentForm.date) {
     const slots = generateTimeSlots(appointmentForm.doctorId, appointmentForm.date);
-    console.log("🕒 Available Slots:", slots);
+    console.log(" Available Slots:", slots);
     // Optionally store them in state if you have a slot picker
     // setAvailableSlots(slots);
   }
 }, [appointmentForm.doctorId, appointmentForm.date, appointmentForm.priority]);
 
-// === Email & Phone Validation Helpers ===
-const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-// ✅ PHONE VALIDATION — Philippine number (09XXXXXXXXX)
+// âœ… PHONE VALIDATION â€“ Philippine number (09XXXXXXXXX)
 const validatePhoneNumber = (phone: string): boolean => {
   const cleaned = phone.replace(/\D/g, ""); // remove non-numerics
   return /^09\d{9}$/.test(cleaned);
 };
-
-// ✅ SEND VERIFICATION CODE — uses server.js endpoint
-const sendVerificationCode = async (email: string) => {
-  if (!email || !validateEmail(email)) { // ✅ NOW USING validateEmail function
-    addNotification("error", "Please enter a valid email address.");
-    return;
-  }
-  try {
-    const response = await fetch("http://localhost:5000/send-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const data = await response.json();
-    if (data.success) {
-      addNotification("success", "Verification code sent to your email!");
-    } else {
-      addNotification("error", data.error || "Failed to send verification code.");
-    }
-  } catch (err) {
-    console.error("Error sending verification code:", err);
-    addNotification("error", "Server error. Try again later.");
-  }
-};
-
-// Example usage when clicking a "Send Code" button
-const handleSendCode = () => {
-  if (appointmentForm.email) {
-    sendVerificationCode(appointmentForm.email);
-  } else {
-    addNotification("error", "Please enter an email first.");
-  }
-};
-
-
-// ✅ VERIFY EMAIL CODE — confirm code entered by user
-const verifyEmailCode = async (email: string, code: string): Promise<boolean> => {
-  if (!email || !code) {
-    addNotification("error", "Please enter both email and code.");
-    return false;
-  }
-  try {
-    const response = await fetch("http://localhost:5000/verify-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code }),
-    });
-    const data = await response.json();
-    if (data.success) {
-      addNotification("success", "Email verified successfully!");
-      return true;
-    } else {
-      addNotification("error", data.error || "Invalid verification code.");
-      return false;
-    }
-  } catch (err) {
-    console.error("Error verifying email:", err);
-    addNotification("error", "Verification failed due to server error.");
-    return false;
-  }
-};
-
   const handleDoctorFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type, checked } = e.target as any;
     setDoctorForm(prev => ({
@@ -1333,40 +1291,65 @@ const verifyEmailCode = async (email: string, code: string): Promise<boolean> =>
     const { name, value } = e.target;
     setProfileForm(prev => ({ ...prev, [name]: value }));
   };
-  
-  // Corrected handlePhotoUpload function
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'appointment' | 'doctor' | 'profile' = 'appointment') => {
-    const file = e.target.files?.[0];
-    if (file && staffProfile) {
-      try {
-        addNotification('info', 'Uploading photo...');
-        // Call uploadImage with only the file parameter as defined in the function
-        const photoURL = await uploadImage(file);
-        // Update the appropriate form state with the new photo URL
-        switch (type) {
-          case 'doctor':
-            setDoctorForm(prev => ({ ...prev, photo: photoURL }));
-            break;
-          case 'profile':
-            setProfileForm(prev => ({ ...prev, photo: photoURL }));
-            break;
-          default:
-            setAppointmentForm(prev => ({ ...prev, photo: photoURL }));
-        }
-        // If editing an appointment, update the editing appointment object
-        if (type === 'appointment' && editingAppointment) {
-          setEditingAppointment(prev => {
-            if (!prev) return null;
-            return { ...prev, photo: photoURL };
-          });
-        }
-        addNotification('success', 'Photo uploaded successfully');
-      } catch (error) {
-        console.error('Error uploading photo:', error);
-        addNotification('error', 'Failed to upload photo');
+ const handlePhotoUpload = async (
+  e: React.ChangeEvent<HTMLInputElement>,
+  type: 'appointment' | 'doctor' | 'profile' | 'profileDropdown' = 'appointment'
+) => {
+  const file = e.target.files?.[0];
+  if (file && staffProfile) {
+    try {
+      addNotification('info', 'Uploading photo...');
+      const photoURL = await uploadImage(file);
+
+      switch (type) {
+        case 'doctor':
+          setDoctorForm(prev => ({ ...prev, photo: photoURL }));
+          addNotification('success', 'Doctor photo uploaded!');
+          break;
+        case 'profile':
+          setProfileForm(prev => ({ ...prev, photo: photoURL }));
+          addNotification('success', 'Profile photo uploaded!');
+          break;
+        case 'profileDropdown':
+          // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Update BOTH form and visible profile immediately
+          setProfileForm(prev => ({ ...prev, photo: photoURL }));
+          setStaffProfile(prev => prev ? { ...prev, photo: photoURL } : prev);
+          
+          // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Persist to Firestore
+          try {
+            const userQuery = query(
+              collection(db, 'users'),
+              where('uid', '==', staffProfile.uid)
+            );
+            const userSnapshot = await getDocs(userQuery);
+            
+            if (!userSnapshot.empty) {
+              const userDocRef = doc(db, 'users', userSnapshot.docs[0].id);
+              await updateDoc(userDocRef, { photo: photoURL });
+            }
+          } catch (dbError) {
+            console.error('Error saving photo to database:', dbError);
+          }
+          
+          addNotification('success', 'Profile photo updated!');
+          // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Keep dropdown open to see the change
+          break;
+        default:
+          setAppointmentForm(prev => ({ ...prev, photo: photoURL }));
+          addNotification('success', 'Photo uploaded!');
       }
+      
+      // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Reset file input
+      e.target.value = '';
+      
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      addNotification('error', 'Failed to upload photo');
     }
-  };
+  } else if (!file) {
+    addNotification('error', 'No file selected');
+  }
+};
 
  // =============================
 // STAFF DOCTOR-SPECIFIC SLOT MANAGEMENT
@@ -1375,7 +1358,7 @@ const verifyEmailCode = async (email: string, code: string): Promise<boolean> =>
 // Store per-doctor per-day slot counts (key format: doctorId_date)
 const [doctorSlotSettings, setDoctorSlotSettings] = useState<{ [key: string]: number }>({});
 
-// ✅ Get total max slots for a specific date (sum of all doctors' actual slots)
+// Ã¢Å“â€¦ Get total max slots for a specific date (sum of all doctors' actual slots)
 const getTotalSlotsForDate = (date: string): number => {
   if (!date) return 0;
 
@@ -1407,7 +1390,7 @@ const getTotalSlotsForDate = (date: string): number => {
 };
 
 // Utility: Get a single doctor's slot count for a date
-// ✅ Get a single doctor's slot count for a date
+// Ã¢Å“â€¦ Get a single doctor's slot count for a date
 const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
   const key = `${doctorId}_${date}`;
   
@@ -1480,7 +1463,6 @@ useEffect(() => {
   fetchDoctorSlotSettings();
 }, []);
 
-  // CRUD Operations - Appointments
 const handleCreateAppointment = async () => {
   if (!appointmentForm.name || !appointmentForm.date || !appointmentForm.time || !appointmentForm.doctorId) {
     addNotification('error', 'Please fill in all required fields');
@@ -1490,7 +1472,13 @@ const handleCreateAppointment = async () => {
   try {
     addNotification('info', 'Creating appointment...');
     
-    // Double-check for conflicts using the updated function
+    // âœ… CRITICAL: Check if daily limit is reached BEFORE creating
+    if (isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date)) {
+      addNotification('error', 'This doctor has reached their maximum appointments for this day. Please select another date or doctor.');
+      return;
+    }
+    
+    // âœ… Double-check for time slot conflicts
     const hasConflict = await checkAppointmentConflict(
       appointmentForm.doctorId,
       appointmentForm.date,
@@ -1499,14 +1487,11 @@ const handleCreateAppointment = async () => {
     
     if (hasConflict) {
       addNotification('error', 'This time slot is already booked by another appointment. Please select a different time.');
-      // Reset the time field to force user to pick again
       setAppointmentForm(prev => ({ ...prev, time: '' }));
       return;
     }
-
-   
     
-    // Additional real-time check by querying current appointments state
+    // âœ… Additional real-time check by querying current appointments state
     const localConflicts = appointments.filter(apt => 
       apt.doctorId === appointmentForm.doctorId &&
       apt.date === appointmentForm.date &&
@@ -1515,7 +1500,7 @@ const handleCreateAppointment = async () => {
     );
     
     if (localConflicts.length > 0) {
-      console.log('Local conflict detected:', localConflicts);
+      console.log('âš ï¸ Local conflict detected:', localConflicts);
       addNotification('error', 'Time slot conflict detected. Please refresh and try again.');
       setAppointmentForm(prev => ({ ...prev, time: '' }));
       return;
@@ -1541,13 +1526,13 @@ const handleCreateAppointment = async () => {
       status: 'pending' as const,
       queueNumber,
       userId: 'staff-created',
-      bookedBy: 'staff', // Keep this for tracking purposes
+      bookedBy: 'staff',
       assignedBy: staffProfile?.name || 'Staff',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
     
-    // Use a transaction to prevent race conditions
+    // Use addDoc to prevent race conditions
     await addDoc(collection(db, 'appointments'), appointmentData);
     
     addNotification('success', 'Appointment created successfully!');
@@ -1587,18 +1572,38 @@ const handleCreateAppointment = async () => {
     }
   }
 };
-  const handleUpdateAppointment = async () => {
+const handleUpdateAppointment = async () => {
   if (!editingAppointment) return;
   
   try {
     addNotification('info', 'Updating appointment...');
+    
+    // âœ… CRITICAL: Check if daily limit is reached (excluding current appointment)
+    const customSlotKey = `${appointmentForm.doctorId}_${appointmentForm.date}`;
+    const maxSlots = doctorSlotSettings[customSlotKey] || 
+      (() => {
+        const doctor = doctors.find(d => d.id === appointmentForm.doctorId);
+        return doctor ? calculateDoctorDailySlots(doctor) : 10;
+      })();
+    
+    const bookedCount = appointments.filter(
+      apt => apt.doctorId === appointmentForm.doctorId && 
+             apt.date === appointmentForm.date && 
+             apt.status !== 'cancelled' &&
+             apt.id !== editingAppointment.id // âœ… Exclude current appointment from count
+    ).length;
+    
+    if (bookedCount >= maxSlots) {
+      addNotification('error', 'This doctor has reached their maximum appointments for this day. Please select another date or doctor.');
+      return;
+    }
     
     // Check for conflicts when updating (exclude current appointment)
     const hasConflict = await checkAppointmentConflict(
       appointmentForm.doctorId,
       appointmentForm.date,
       appointmentForm.time,
-      editingAppointment.id
+      editingAppointment.id // âœ… Pass the current appointment ID to exclude it
     );
     
     if (hasConflict) {
@@ -1654,6 +1659,28 @@ const handleCreateAppointment = async () => {
     }
   }
 };
+// Add this helper function near your other helper functions (around line 950)
+const isDailyLimitReached = (doctorId: string, date: string): boolean => {
+  // Get custom slot setting or calculate from working hours
+  const customSlotKey = `${doctorId}_${date}`;
+  const maxSlots = doctorSlotSettings[customSlotKey] || 
+    (() => {
+      const doctor = doctors.find(d => d.id === doctorId);
+      return doctor ? calculateDoctorDailySlots(doctor) : 10;
+    })();
+  
+  // Count existing appointments for this doctor on this date
+  const bookedCount = appointments.filter(
+    apt => apt.doctorId === doctorId && 
+           apt.date === date && 
+           apt.status !== 'cancelled'
+  ).length;
+  
+  console.log(`ðŸ“Š Daily limit check: ${bookedCount}/${maxSlots} for doctor ${doctorId} on ${date}`);
+  
+  return bookedCount >= maxSlots;
+};
+
   const handleAppointmentStatusChange = async (appointmentId: string, status: 'confirmed' | 'pending' | 'cancelled' | 'completed') => {
     try {
       const appointmentRef = doc(db, 'appointments', appointmentId);
@@ -1719,7 +1746,7 @@ const handleCreateAppointment = async () => {
     }
   };
 
- // ✅ Create Doctor
+ // Ã¢Å“â€¦ Create Doctor
 const handleCreateDoctor = async () => {
   if (!doctorForm.name || !doctorForm.specialty || !doctorForm.email) {
     addNotification('error', 'Please fill all required fields');
@@ -1736,7 +1763,7 @@ const handleCreateDoctor = async () => {
       phone: doctorForm.phone,
       room: doctorForm.room,
 
-      // ✅ Default working hours if missing
+      // Ã¢Å“â€¦ Default working hours if missing
       workingHours: {
         start: doctorForm.startTime || "9:00 AM",
         end: doctorForm.endTime || "5:00 PM",
@@ -1744,7 +1771,7 @@ const handleCreateDoctor = async () => {
 
       maxAppointments: parseInt(doctorForm.maxAppointments) || 10,
 
-      // ✅ Default durations if missing
+      // Ã¢Å“â€¦ Default durations if missing
       consultationDuration: parseInt(doctorForm.consultationDuration) || 30,
       bufferTime: parseInt(doctorForm.bufferTime) || 15,
 
@@ -1755,10 +1782,10 @@ const handleCreateDoctor = async () => {
       createdAt: serverTimestamp(),
     };
 
-    // 🔥 Step 1: Add doctor to 'doctors' collection
+    // Ã°Å¸â€Â¥ Step 1: Add doctor to 'doctors' collection
     const doctorDocRef = await addDoc(collection(db, 'doctors'), doctorData);
 
-    // ✅ IMPORTANT: Update local state immediately so slots can be generated
+    // Ã¢Å“â€¦ IMPORTANT: Update local state immediately so slots can be generated
     const newDoctor: Doctor = {
       id: doctorDocRef.id,
       ...doctorData,
@@ -1767,7 +1794,7 @@ const handleCreateDoctor = async () => {
 
     setDoctors(prev => [...prev, newDoctor]);
 
-    // 🔗 Step 2: Create Firebase Auth account + User document via backend
+    // Ã°Å¸â€â€” Step 2: Create Firebase Auth account + User document via backend
     try {
       const response = await fetch('http://localhost:5000/create-doctor-account', {
         method: 'POST',
@@ -1786,15 +1813,15 @@ const handleCreateDoctor = async () => {
       if (response.ok && result.success) {
         addNotification(
           'success',
-          `✅ Doctor account created! Password setup email sent to ${doctorForm.email}`
+          `Ã¢Å“â€¦ Doctor account created! Password setup email sent to ${doctorForm.email}`
         );
 
-        // ✅ Update doctor document with userId
+        // Ã¢Å“â€¦ Update doctor document with userId
         await updateDoc(doc(db, 'doctors', doctorDocRef.id), {
           userId: result.uid,
         });
 
-        // ✅ Update local state with userId
+        // Ã¢Å“â€¦ Update local state with userId
         setDoctors(prev => 
           prev.map(d => 
             d.id === doctorDocRef.id 
@@ -1803,7 +1830,7 @@ const handleCreateDoctor = async () => {
           )
         );
 
-        // ✅ If photo exists, update user document
+        // Ã¢Å“â€¦ If photo exists, update user document
         if (doctorForm.photo) {
           try {
             const userDocRef = doc(db, 'users', result.uid);
@@ -1837,7 +1864,7 @@ const handleCreateDoctor = async () => {
   }
 };
 
-// ✅ Update Doctor
+// Ã¢Å“â€¦ Update Doctor
 const handleUpdateDoctor = async () => {
   if (!editingDoctor) return;
 
@@ -1850,7 +1877,7 @@ const handleUpdateDoctor = async () => {
       phone: doctorForm.phone,
       room: doctorForm.room,
 
-      // ✅ Keep safe defaults even when updating
+      // Ã¢Å“â€¦ Keep safe defaults even when updating
       workingHours: {
         start: doctorForm.startTime || "9:00 AM",
         end: doctorForm.endTime || "5:00 PM",
@@ -1867,7 +1894,7 @@ const handleUpdateDoctor = async () => {
       updatedAt: serverTimestamp(),
     });
 
-    // 🔁 Update linked user (if email unchanged)
+    // Ã°Å¸â€Â Update linked user (if email unchanged)
     const userQuery = query(
       collection(db, 'users'),
       where('email', '==', doctorForm.email)
@@ -1973,7 +2000,7 @@ const sendNotificationToPatient = async (
 
     const notificationContent = getNotificationMessage(type, appointmentData);
 
-    // 🔥 Real email sending via backend
+    // Ã°Å¸â€Â¥ Real email sending via backend
     const response = await fetch("http://localhost:5000/send-reminder", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2084,7 +2111,6 @@ const sendNotificationToPatient = async (
     addNotification("success", `${methods.join(" & ")} notification sent successfully`);
   }
 };
-
 // Helper to trigger notification by appointment ID
 const sendNotificationToPatientById = async (
   appointmentId: string,
@@ -2096,11 +2122,44 @@ const sendNotificationToPatientById = async (
   const email = method === "email" || method === "both" ? appointment.email : "";
   const phone = method === "sms" || method === "both" ? appointment.phone : "";
 
-  // Use real notification sender
-  await sendNotificationToPatient(email, phone, "reminder", appointment);
+  // 🧮 Calculate queue position
+  const activeAppointments = appointments.filter(
+    (apt) => apt.status === "confirmed" || apt.status === "pending"
+  );
+
+  const queueNumber =
+    activeAppointments.findIndex((apt) => apt.id === appointmentId) + 1;
+  const totalQueue = activeAppointments.length;
+
+  try {
+    // ✅ Send queue position notification to backend
+    const response = await fetch("http://localhost:5000/send-queue-notification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: appointment.name,
+        email,
+        phone,
+        queueNumber,
+        totalQueue,
+      }),
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      alert(
+        `✅ Notification sent to ${appointment.name}: You are #${queueNumber} in the queue.`
+      );
+    } else {
+      alert(`⚠️ Failed to send notification: ${result.error}`);
+    }
+  } catch (error) {
+    console.error("❌ Error sending queue notification:", error);
+    alert("❌ Failed to send queue notification. Please check your server.");
+  }
 };
 
-  // ✅ Updated Reset Forms
+  //  Updated Reset Forms
 const resetAppointmentForm = () => {
   setAppointmentForm({
     name: '',
@@ -2116,8 +2175,6 @@ const resetAppointmentForm = () => {
     doctorId: '',
     notes: '',
     photo: '',
-    verifyCode: '',        // ✅ added
-    emailVerified: false   // ✅ added
   });
 };
 
@@ -2141,7 +2198,7 @@ const resetAppointmentForm = () => {
   });
 };
   
-  // ✅ Updated handleEditAppointment
+  //Updated handleEditAppointment
 const handleEditAppointment = (appointment: Appointment) => {
   setEditingAppointment(appointment);
   setAppointmentForm({
@@ -2158,8 +2215,6 @@ const handleEditAppointment = (appointment: Appointment) => {
     doctorId: appointment.doctorId,
     notes: appointment.notes || '',
     photo: appointment.photo || '',
-    verifyCode: '',        // ✅ added for consistency
-    emailVerified: true    // ✅ assume verified when editing existing
   });
   setShowBookingForm(true);
 };
@@ -2272,7 +2327,7 @@ const handleLogout = async () => {
 {/* Main Content */}
 <main className={`main-content-full ${activeTab === 'dashboard' ? 'dashboard-active' : ''}`}>
   {/* Header with Navbar */}
- {/* ✅ UPDATED - Fixed Header with Profile Dropdown */}
+ {/* Ã¢Å“â€¦ UPDATED - Fixed Header with Profile Dropdown */}
 <header className="staff-main-header">
   <div className="staff-header-container">
     {/* Logo - Left */}
@@ -2339,19 +2394,19 @@ const handleLogout = async () => {
           />
         </div>
       )}
-
-{/* ✅ FIXED Profile Dropdown (no ARIA warnings) */}
+      
+{/* Ã¢Å“â€¦ FIXED Profile Dropdown (no ARIA warnings, no inline styles) */}
 <div className="staff-profile-dropdown-wrapper" ref={profileDropdownRef}>
   <button
-    ref={profileButtonRef} // ✅ added ref to control aria-expanded via JS
+    ref={profileButtonRef} // Ã¢Å“â€¦ added ref to control aria-expanded via JS
     className="staff-profile-button"
     onClick={() => setShowProfileDropdown(prev => !prev)}
     aria-label="Profile menu"
   >
     <div className="staff-user-avatar">
       {staffProfile?.photo ? (
-        <img 
-          src={staffProfile.photo} 
+        <img
+          src={staffProfile.photo}
           alt={staffProfile.name}
           className="staff-avatar-image"
         />
@@ -2366,8 +2421,8 @@ const handleLogout = async () => {
       <div className="staff-profile-header">
         <div className="staff-profile-avatar-lg">
           {staffProfile?.photo ? (
-            <img 
-              src={staffProfile.photo} 
+            <img
+              src={staffProfile.photo}
               alt={staffProfile.name}
               className="staff-avatar-image"
             />
@@ -2381,31 +2436,35 @@ const handleLogout = async () => {
         </div>
       </div>
 
+      {/* Ã¢Å“â€¦ Hidden file input with external CSS (no inline styles) */}
+      <input
+        type="file"
+        id="profilePhotoUploadDropdown"
+        accept="image/*"
+        onChange={(e) => handlePhotoUpload(e, "profileDropdown")}
+        className="hidden-file-input"
+        aria-label="Upload new profile picture"
+      />
+
       <button
         className="staff-profile-action"
         onClick={() => {
-          setShowProfileDropdown(false);
-          document.getElementById("profilePhotoUpload")?.click();
+          const fileInput = document.getElementById("profilePhotoUploadDropdown") as HTMLInputElement;
+          if (fileInput) {
+            fileInput.click();
+          }
         }}
       >
         <Camera size={16} aria-hidden="true" />
         Change Photo
       </button>
 
-      <input
-        type="file"
-        id="profilePhotoUpload"
-        accept="image/*"
-        onChange={(e) => handlePhotoUpload(e, "profile")}
-        className="hidden-file-input"
-        aria-label="Upload new profile picture"
-      />
-
+      {/* Ã°Å¸Å¡Âª Logout opens confirmation modal instead of direct logout */}
       <button
         className="staff-logout-action"
         onClick={() => {
           setShowProfileDropdown(false);
-          handleLogout();
+          setShowLogoutModal(true); // Ã°Å¸â€Â¥ open modal
         }}
       >
         <LogOut size={16} aria-hidden="true" />
@@ -2413,10 +2472,37 @@ const handleLogout = async () => {
       </button>
     </div>
   )}
+
+  {/* Ã°Å¸â€â€™ Logout Confirmation Modal */}
+  {showLogoutModal && (
+    <div className="logout-modal-overlay">
+      <div className="logout-modal">
+        <h3>Are you sure you want to logout?</h3>
+        <div className="logout-modal-actions">
+          <button
+            className="btn-confirm"
+            onClick={() => {
+              setShowLogoutModal(false);
+              handleLogout(); // proceed logout
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="btn-cancel"
+            onClick={() => setShowLogoutModal(false)}
+          >
+            No
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
 </div>
 </div>
 </div>
 </header>
+
 
 
   {/* Dashboard Tab */}
@@ -2785,29 +2871,43 @@ const handleLogout = async () => {
     <div className="queue-header">
       <div className="current-serving">
         <h3>Now Serving</h3>
+
+        {/* UPDATED CODE (Show Any Confirmed Patient) */}
         <div className="serving-display">
-          {queue.length > 0 && queue[0].status === 'confirmed' ? (
-            <div className="current-patient">
-              <div className="queue-number">#{queue[0].queueNumber}</div>
-              <div className="patient-info">
-                <div className="patient-name">{queue[0].name}</div>
-                <div className="patient-doctor">{queue[0].doctor}</div>
-                <div className="serving-status">Currently Being Served</div>
-              </div>
-            </div>
-          ) : queue.length > 0 ? (
-            <div className="no-patients-in-serving">
-              <Clock size={48} aria-hidden="true" />
-              <p>Waiting for confirmation...</p>
-            </div>
-          ) : (
-            <div className="no-patients-in-serving">
-              <Clock size={48} aria-hidden="true" />
-              <p>No patients in queue</p>
-            </div>
-          )}
+          {(() => {
+            const confirmedPatient = queue.find(q => q.status === 'confirmed');
+
+            if (confirmedPatient) {
+              return (
+                <div className="current-patient">
+                  <div className="queue-number">#{confirmedPatient.queueNumber}</div>
+                  <div className="patient-info">
+                    <div className="patient-name">{confirmedPatient.name}</div>
+                    <div className="patient-doctor">{confirmedPatient.doctor}</div>
+                    <div className="serving-status">Currently Being Served</div>
+                  </div>
+                </div>
+              );
+            } else if (queue.length > 0) {
+              return (
+                <div className="no-patients-in-serving">
+                  <Clock size={48} aria-hidden="true" />
+                  <p>Waiting for confirmation...</p>
+                </div>
+              );
+            } else {
+              return (
+                <div className="no-patients-in-serving">
+                  <Clock size={48} aria-hidden="true" />
+                  <p>No patients in queue</p>
+                </div>
+              );
+            }
+          })()}
         </div>
       </div>
+
+      {/* Queue Stats */}
       <div className="queue-stats">
         <div className="stat">
           <span className="label">Total in Queue</span>
@@ -2823,15 +2923,18 @@ const handleLogout = async () => {
         </div>
       </div>
     </div>
+
+    {/* Queue List */}
     <div className="queue-list">
-      {queue.length > 0 && queue.map((patient, index) => (
-        <div 
-          key={patient.id} 
+      {queue.length > 0 && queue.map((patient) => (
+        <div
+          key={patient.id}
           className={`queue-item ${
-            index === 0 && patient.status === 'confirmed' ? 'current' : ''
+            patient.status === 'confirmed' ? 'current' : ''
           } ${patient.status === 'pending' ? 'pending' : ''}`}
         >
           <div className="queue-position">#{patient.queueNumber}</div>
+
           <div className="patient-avatar">
             {patient.photo ? (
               <img src={patient.photo} alt={patient.name} />
@@ -2839,6 +2942,7 @@ const handleLogout = async () => {
               <User size={20} aria-hidden="true" />
             )}
           </div>
+
           <div className="patient-details">
             <div className="patient-name">{patient.name}</div>
             <div className="patient-type">{patient.type}</div>
@@ -2847,27 +2951,30 @@ const handleLogout = async () => {
               <span className={`status-badge ${getStatusColor(patient.status)}`}>
                 {patient.status}
               </span>
-              {index === 0 && patient.status === 'confirmed' && (
+              {patient.status === 'confirmed' && (
                 <span className="now-serving-badge">Now Serving</span>
               )}
             </div>
           </div>
+
           <div className="queue-priority">
             <span className={`priority-badge ${getPriorityColor(patient.priority)}`}>
               {patient.priority}
             </span>
           </div>
+
           <div className="queue-time">
             <div className="appointment-time">{patient.time}</div>
             <div className="wait-time">
-              {index === 0 && patient.status === 'confirmed' 
-                ? 'Being Served' 
-                : `Wait: ${patient.estimatedWaitTime}min`
-              }
+              {patient.status === 'confirmed'
+                ? 'Being Served'
+                : `Wait: ${patient.estimatedWaitTime}min`}
             </div>
           </div>
+
+          {/* UPDATED CODE (Show Complete Button for All Confirmed) */}
           <div className="queue-actions">
-            {index === 0 && patient.status === 'confirmed' ? (
+            {patient.status === 'confirmed' ? (
               <button
                 className="action-btn complete"
                 onClick={() => handleAppointmentStatusChange(patient.id, 'completed')}
@@ -2887,26 +2994,8 @@ const handleLogout = async () => {
                 <CheckCircle2 size={16} aria-hidden="true" />
                 Confirm
               </button>
-            ) : (
-              <>
-                <button
-                  className="action-btn hold"
-                  onClick={() => addNotification('info', `${patient.name} put on hold`)}
-                  aria-label={`Put ${patient.name} on hold`}
-                  title={`Put ${patient.name} on hold`}
-                >
-                  <Pause size={16} aria-hidden="true" />
-                </button>
-                <button
-                  className="action-btn skip"
-                  onClick={() => addNotification('info', `${patient.name} skipped in queue`)}
-                  aria-label={`Skip ${patient.name} in queue`}
-                  title={`Skip ${patient.name} in queue`}
-                >
-                  <SkipForward size={16} aria-hidden="true" />
-                </button>
-              </>
-            )}
+            ) : null}
+
             <button
               className="action-btn notify"
               onClick={() => sendNotificationToPatientById(patient.id, 'sms')}
@@ -2921,10 +3010,12 @@ const handleLogout = async () => {
     </div>
   </div>
 )}
+
 {/* Doctors Tab */}
 {activeTab === "doctors" && (
   <div className="doctors-content">
     <div className="doctors-header">
+      <h2 className="doctors-title">Medical Team</h2>
       <button
         className="btn-primary"
         onClick={() => setShowDoctorForm(true)}
@@ -2952,27 +3043,57 @@ const handleLogout = async () => {
               )}
             </div>
 
-            <div className="doctor-info">
-              <h4>{doctor.name}</h4>
-              <p className="specialty">{doctor.specialty}</p>
-              <div className="doctor-details">
-                <div className="detail-item">
-                  <MapPin size={14} aria-hidden="true" />
-                  <span>Room {doctor.room}</span>
-                </div>
-                <div className="detail-item">
-                  <Clock3 size={14} aria-hidden="true" />
-                  <span>
-                    {convertTo12Hour(doctor.workingHours.start)} –{" "}
-                    {convertTo12Hour(doctor.workingHours.end)}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <Users size={14} aria-hidden="true" />
-                  <span>Max {doctor.maxAppointments} patients/day</span>
-                </div>
-              </div>
-            </div>
+ <div className="doctor-info">
+  <h4>{doctor.name}</h4>
+  <p className="specialty">{doctor.specialty}</p>
+  <div className="doctor-details">
+    <div className="detail-item">
+      <Calendar size={14} aria-hidden="true" />
+      <span>
+        {(() => {
+          const today = getTodayDate();
+          const totalSlots = getDoctorSlotsForDate(doctor.id, today);
+          const bookedSlots = appointments.filter(
+            (apt) =>
+              apt.doctorId === doctor.id &&
+              apt.date === today &&
+              apt.status !== "cancelled"
+          ).length;
+
+          const isFull = bookedSlots >= totalSlots;
+          return (
+            <>
+              {`${bookedSlots}/${totalSlots} slots booked`}
+              {isFull && (
+                <span className="fully-booked-label"> — Fully Booked</span>
+              )}
+            </>
+          );
+        })()}
+      </span>
+    </div>
+
+    <div className="detail-item">
+      <Clock size={14} aria-hidden="true" />
+      <span>
+        Available:{" "}
+        {(() => {
+          const today = getTodayDate();
+          const totalSlots = getDoctorSlotsForDate(doctor.id, today);
+          const bookedSlots = appointments.filter(
+            (apt) =>
+              apt.doctorId === doctor.id &&
+              apt.date === today &&
+              apt.status !== "cancelled"
+          ).length;
+
+          const available = totalSlots - bookedSlots;
+          return available > 0 ? available : <span className="fully-booked-label">0 (Fully Booked)</span>;
+        })()}
+      </span>
+    </div>
+  </div>
+</div>
 
             {/* Action Buttons - Moved Below */}
             <div className="doctor-actions">
@@ -3089,7 +3210,7 @@ const handleLogout = async () => {
           const dayButtons = days.map((day: any) => {
             const isPastDate = new Date(day.date) < new Date(getTodayDate());
             const isToday = day.date === getTodayDate();
-            const totalSlots = getTotalSlotsForDate(day.date); // ✅ now sums all doctors' slots
+            const totalSlots = getTotalSlotsForDate(day.date); // Ã¢Å“â€¦ now sums all doctors' slots
             const isFull =
               day.appointments.booked >= totalSlots && totalSlots > 0;
 
@@ -3215,7 +3336,7 @@ const handleLogout = async () => {
                     </div>
                   </div>
 
-                  {/* 🆕 Per-Doctor Slot Input */}
+                  {/* Ã°Å¸â€ â€¢ Per-Doctor Slot Input */}
                   <div className="slot-control">
                     <label htmlFor={`slot-count-${doctor.id}`}>
                       Max Slots for this Day:
@@ -3321,11 +3442,13 @@ const handleLogout = async () => {
     )}
   </div>
 )}
-{/* Reports Tab */}
+{/* Reports Tab - Updated with Healthcare-Focused Analytics */}
 {activeTab === 'reports' && (
   <div className="reports-content">
+
     {/* Summary Cards */}
     <div className="report-summary-grid">
+      {/* Total Patients */}
       <div className="report-card summary-card">
         <div className="report-card-header">
           <Users size={24} className="report-icon" />
@@ -3334,9 +3457,19 @@ const handleLogout = async () => {
         <div className="report-value">
           {appointments.filter(apt => apt.status !== 'cancelled').length}
         </div>
-        <div className="report-subtitle">All time</div>
+        <div className="report-subtitle">All time appointments</div>
+        <div className="report-trend">
+          <span className="trend-positive">
+            {Math.round(
+              (appointments.filter(apt => apt.status !== 'cancelled').length /
+                Math.max(appointments.length, 1)) * 100
+            )}
+            % active
+          </span>
+        </div>
       </div>
 
+      {/* Completed */}
       <div className="report-card summary-card">
         <div className="report-card-header">
           <CheckCircle size={24} className="report-icon success" />
@@ -3345,9 +3478,21 @@ const handleLogout = async () => {
         <div className="report-value">
           {appointments.filter(apt => apt.status === 'completed').length}
         </div>
-        <div className="report-subtitle">Total completed visits</div>
+        <div className="report-subtitle">Successfully finished</div>
+        <div className="report-trend">
+          <span className="trend-neutral">
+            {appointments.length > 0
+              ? Math.round(
+                  (appointments.filter(apt => apt.status === 'completed').length /
+                    appointments.length) * 100
+                )
+              : 0}
+            % completion rate
+          </span>
+        </div>
       </div>
 
+      {/* This Month */}
       <div className="report-card summary-card">
         <div className="report-card-header">
           <Clock size={24} className="report-icon warning" />
@@ -3364,483 +3509,316 @@ const handleLogout = async () => {
             );
           }).length}
         </div>
-        <div className="report-subtitle">Current month patients</div>
+        <div className="report-subtitle">Current month activity</div>
+        <div className="report-trend">
+          <span className="trend-info">
+            {(() => {
+              const thisMonth = appointments.filter(apt => {
+                const aptDate = new Date(apt.date);
+                const now = new Date();
+                return (
+                  aptDate.getMonth() === now.getMonth() &&
+                  aptDate.getFullYear() === now.getFullYear() &&
+                  apt.status !== 'cancelled'
+                );
+              }).length;
+
+              const lastMonth = appointments.filter(apt => {
+                const aptDate = new Date(apt.date);
+                const now = new Date();
+                const lastMonthDate = new Date(
+                  now.getFullYear(),
+                  now.getMonth() - 1
+                );
+                return (
+                  aptDate.getMonth() === lastMonthDate.getMonth() &&
+                  aptDate.getFullYear() === lastMonthDate.getFullYear() &&
+                  apt.status !== 'cancelled'
+                );
+              }).length;
+
+              const diff = thisMonth - lastMonth;
+              return diff > 0
+                ? `${diff} from last month`
+                : diff < 0
+                ? `${Math.abs(diff)} from last month`
+                : 'Same as last month';
+            })()}
+          </span>
+        </div>
       </div>
 
+      {/* Priority Cases */}
       <div className="report-card summary-card">
         <div className="report-card-header">
           <AlertTriangle size={24} className="report-icon error" />
-          <span>Emergency Cases</span>
+          <span>Priority Cases</span>
         </div>
         <div className="report-value">
-          {appointments.filter(apt => apt.priority === 'emergency').length}
+          {appointments.filter(
+            apt => apt.priority === 'emergency' || apt.priority === 'urgent'
+          ).length}
         </div>
-        <div className="report-subtitle">All priority cases</div>
+        <div className="report-subtitle">
+          {appointments.filter(apt => apt.priority === 'emergency').length} emergency,{' '}
+          {appointments.filter(apt => apt.priority === 'urgent').length} urgent
+        </div>
+        <div className="report-trend">
+          <span className="trend-warning">Requires attention</span>
+        </div>
       </div>
     </div>
 
-    {/* Weekly Patients Chart - Curved Line Chart */}
+    {/* Weekly Patient Volume */}
     <div className="report-section">
       <div className="report-section-header">
         <h3>Weekly Patient Volume</h3>
-        <p>Last 4 weeks patient distribution</p>
+        <p>Last 4 weeks appointment distribution</p>
       </div>
       <div className="report-card chart-card">
-        <div className="curved-line-chart">
-          <svg className="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet">
-            {(() => {
-              const weeklyData = getWeeklyPatientData();
-              const maxCount = Math.max(...weeklyData.map(w => w.count), 1);
-              const padding = 40;
-              const chartWidth = 800 - padding * 2;
-              const chartHeight = 300 - padding * 2;
-              
-              interface ChartPoint {
-                x: number;
-                y: number;
-                count: number;
-                label: string;
-                dateRange: string;
+        <svg className="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet">
+          {(() => {
+            const weeklyData = getWeeklyPatientData();
+            const maxCount = Math.max(...weeklyData.map(w => w.count), 1);
+            const padding = 40;
+            const chartWidth = 800 - padding * 2;
+            const chartHeight = 300 - padding * 2;
+
+            const points = weeklyData.map((week, index) => {
+              const x = padding + (index / (weeklyData.length - 1)) * chartWidth;
+              const y = padding + chartHeight - (week.count / maxCount) * chartHeight;
+              return { x, y, count: week.count, label: week.label };
+            });
+
+            const createSmoothPath = (pts: typeof points): string => {
+              if (pts.length === 0) return '';
+              let path = `M ${pts[0].x} ${pts[0].y}`;
+              for (let i = 0; i < pts.length - 1; i++) {
+                const current = pts[i];
+                const next = pts[i + 1];
+                const controlX = (current.x + next.x) / 2;
+                path += ` Q ${controlX} ${current.y}, ${next.x} ${next.y}`;
               }
-              
-              // Calculate points for the curve
-              const points: ChartPoint[] = weeklyData.map((week, index) => {
-                const x = padding + (index / (weeklyData.length - 1)) * chartWidth;
-                const y = padding + chartHeight - (week.count / maxCount) * chartHeight;
-                return { x, y, count: week.count, label: week.label, dateRange: week.dateRange };
-              });
+              return path;
+            };
 
-              // Create smooth curve path using quadratic bezier curves
-              const createSmoothPath = (points: ChartPoint[]): string => {
-                if (points.length === 0) return '';
-                let path = `M ${points[0].x} ${points[0].y}`;
-                
-                for (let i = 0; i < points.length - 1; i++) {
-                  const current = points[i];
-                  const next = points[i + 1];
-                  const controlX = (current.x + next.x) / 2;
-                  
-                  path += ` Q ${controlX} ${current.y}, ${controlX} ${(current.y + next.y) / 2}`;
-                  path += ` Q ${controlX} ${next.y}, ${next.x} ${next.y}`;
-                }
-                
-                return path;
-              };
-
-              // Create area fill path
-              const createAreaPath = (points: ChartPoint[]): string => {
-                const linePath = createSmoothPath(points);
-                const lastPoint = points[points.length - 1];
-                const firstPoint = points[0];
-                return `${linePath} L ${lastPoint.x} ${padding + chartHeight} L ${firstPoint.x} ${padding + chartHeight} Z`;
-              };
-
-              const linePath = createSmoothPath(points);
-              const areaPath = createAreaPath(points);
-
-              return (
-                <>
-                  {/* Grid lines */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-                    <line
-                      key={i}
-                      x1={padding}
-                      y1={padding + chartHeight * ratio}
-                      x2={padding + chartWidth}
-                      y2={padding + chartHeight * ratio}
-                      stroke="#e5e7eb"
-                      strokeWidth="1"
-                      strokeDasharray="4 4"
-                    />
-                  ))}
-
-                  {/* Area fill with gradient */}
-                  <defs>
-                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
-                    </linearGradient>
-                  </defs>
-                  <path d={areaPath} fill="url(#areaGradient)" />
-
-                  {/* Main line */}
-                  <path
-                    d={linePath}
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-
-                  {/* Data points and labels */}
-                  {points.map((point, index) => (
-                    <g key={index}>
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r="5"
-                        fill="#fff"
-                        stroke="#3b82f6"
-                        strokeWidth="3"
-                      />
-                      <text
-                        x={point.x}
-                        y={point.y - 15}
-                        textAnchor="middle"
-                        className="chart-value-text"
-                        fill="#1f2937"
-                        fontSize="14"
-                        fontWeight="600"
-                      >
-                        {point.count}
-                      </text>
-                      <text
-                        x={point.x}
-                        y={padding + chartHeight + 25}
-                        textAnchor="middle"
-                        className="chart-label-text"
-                        fill="#6b7280"
-                        fontSize="12"
-                      >
-                        {point.label}
-                      </text>
-                    </g>
-                  ))}
-                </>
-              );
-            })()}
-          </svg>
-        </div>
+            const linePath = createSmoothPath(points);
+            return (
+              <>
+                <path d={linePath} className="weekly-line" />
+                {points.map((p, i) => (
+                  <g key={i}>
+                    <circle cx={p.x} cy={p.y} r="5" className="weekly-dot" />
+                    <text x={p.x} y={p.y - 15} className="weekly-text-count">{p.count}</text>
+                    <text x={p.x} y={padding + chartHeight + 25} className="weekly-text-label">{p.label}</text>
+                  </g>
+                ))}
+              </>
+            );
+          })()}
+        </svg>
       </div>
     </div>
 
-    {/* Conditions Stats - Pie Chart */}
-    <div className="report-section">
-      <div className="report-section-header">
-        <h3>Patient Conditions Distribution</h3>
-        <p>Most common medical conditions</p>
-      </div>
-      <div className="report-card">
-        <div className="pie-chart-container">
-          <svg className="pie-chart-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
-            {(() => {
-              const conditionStats = getConditionStats();
-              const totalNonCancelled = appointments.filter(apt => apt.status !== 'cancelled').length;
-              const topConditions = conditionStats.slice(0, 5);
-              
-              const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
-              const cx = 200;
-              const cy = 200;
-              const radius = 120;
-              
-              let currentAngle = -90;
-              
-              return (
-                <>
-                  {topConditions.map((stat, index) => {
-                    const percentage = (stat.count / totalNonCancelled) * 100;
-                    const angle = (percentage / 100) * 360;
-                    const startAngle = currentAngle;
-                    const endAngle = currentAngle + angle;
-                    
-                    const startRad = (startAngle * Math.PI) / 180;
-                    const endRad = (endAngle * Math.PI) / 180;
-                    
-                    const x1 = cx + radius * Math.cos(startRad);
-                    const y1 = cy + radius * Math.sin(startRad);
-                    const x2 = cx + radius * Math.cos(endRad);
-                    const y2 = cy + radius * Math.sin(endRad);
-                    
-                    const largeArc = angle > 180 ? 1 : 0;
-                    
-                    const pathData = [
-                      `M ${cx} ${cy}`,
-                      `L ${x1} ${y1}`,
-                      `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-                      'Z'
-                    ].join(' ');
-                    
-                    // Calculate label position
-                    const midAngle = (startAngle + endAngle) / 2;
-                    const midRad = (midAngle * Math.PI) / 180;
-                    const labelRadius = radius + 40;
-                    const labelX = cx + labelRadius * Math.cos(midRad);
-                    const labelY = cy + labelRadius * Math.sin(midRad);
-                    
-                    currentAngle = endAngle;
-                    
-                    return (
-                      <g key={index}>
-                        <path
-                          d={pathData}
-                          fill={colors[index]}
-                          stroke="#fff"
-                          strokeWidth="2"
-                        />
-                        <line
-                          x1={cx + (radius + 5) * Math.cos(midRad)}
-                          y1={cy + (radius + 5) * Math.sin(midRad)}
-                          x2={labelX}
-                          y2={labelY}
-                          stroke={colors[index]}
-                          strokeWidth="2"
-                        />
-                        <text
-                          x={labelX}
-                          y={labelY}
-                          textAnchor={labelX > cx ? 'start' : 'end'}
-                          className="pie-chart-label"
-                          fill="#1f2937"
-                          fontSize="13"
-                          fontWeight="600"
-                        >
-                          {percentage.toFixed(1)}%
-                        </text>
-                      </g>
-                    );
-                  })}
-                </>
-              );
-            })()}
-          </svg>
-          <div className="pie-chart-legend">
-            {(() => {
-              const conditionStats = getConditionStats();
-              const topConditions = conditionStats.slice(0, 5);
-              const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
-              
-              return topConditions.map((stat, index) => (
-                <div key={index} className="legend-item">
-                  <div 
-                    className="legend-color"
-                    data-color={colors[index]}
-                  ></div>
-                  <span className="legend-label">{stat.condition}</span>
-                  <span className="legend-count">{stat.count} patients</span>
-                </div>
-              ));
-            })()}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Monthly Trend - Smooth Area Line Chart */}
+    {/* 6-Month Patient Trend */}
     <div className="report-section">
       <div className="report-section-header">
         <h3>6-Month Patient Trend</h3>
-        <p>Patient volume over the last 6 months</p>
+        <p>Appointment volume over the last 6 months</p>
       </div>
       <div className="report-card chart-card">
-        <div className="trend-line-chart">
-          <svg className="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet">
-            {(() => {
-              const monthlyTrend = getMonthlyTrend();
-              const maxMonthCount = Math.max(...monthlyTrend.map(m => m.count), 1);
-              const padding = 40;
-              const chartWidth = 800 - padding * 2;
-              const chartHeight = 300 - padding * 2;
-              
-              interface TrendPoint {
-                x: number;
-                y: number;
-                count: number;
-                month: string;
+        <svg className="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet">
+          {(() => {
+            const monthlyTrend = getMonthlyTrend();
+            const maxCount = Math.max(...monthlyTrend.map(m => m.count), 1);
+            const padding = 40;
+            const chartWidth = 800 - padding * 2;
+            const chartHeight = 300 - padding * 2;
+
+            const points = monthlyTrend.map((m, i) => {
+              const x = padding + (i / (monthlyTrend.length - 1)) * chartWidth;
+              const y = padding + chartHeight - (m.count / maxCount) * chartHeight;
+              return { x, y, count: m.count, month: m.month };
+            });
+
+            const createSmoothPath = (pts: typeof points): string => {
+              if (pts.length === 0) return '';
+              let path = `M ${pts[0].x} ${pts[0].y}`;
+              for (let i = 0; i < pts.length - 1; i++) {
+                const current = pts[i];
+                const next = pts[i + 1];
+                const controlX = (current.x + next.x) / 2;
+                path += ` Q ${controlX} ${current.y}, ${next.x} ${next.y}`;
               }
-              
-              const points: TrendPoint[] = monthlyTrend.map((month, index) => {
-                const x = padding + (index / (monthlyTrend.length - 1)) * chartWidth;
-                const y = padding + chartHeight - (month.count / maxMonthCount) * chartHeight;
-                return { x, y, count: month.count, month: month.month };
-              });
+              return path;
+            };
 
-              const createSmoothPath = (points: TrendPoint[]): string => {
-                if (points.length === 0) return '';
-                let path = `M ${points[0].x} ${points[0].y}`;
-                
-                for (let i = 0; i < points.length - 1; i++) {
-                  const current = points[i];
-                  const next = points[i + 1];
-                  const controlX = (current.x + next.x) / 2;
-                  
-                  path += ` Q ${controlX} ${current.y}, ${controlX} ${(current.y + next.y) / 2}`;
-                  path += ` Q ${controlX} ${next.y}, ${next.x} ${next.y}`;
-                }
-                
-                return path;
-              };
-
-              const createAreaPath = (points: TrendPoint[]): string => {
-                const linePath = createSmoothPath(points);
-                const lastPoint = points[points.length - 1];
-                const firstPoint = points[0];
-                return `${linePath} L ${lastPoint.x} ${padding + chartHeight} L ${firstPoint.x} ${padding + chartHeight} Z`;
-              };
-
-              const linePath = createSmoothPath(points);
-              const areaPath = createAreaPath(points);
-
-              return (
-                <>
-                  {/* Grid lines */}
-                  {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => (
-                    <line
-                      key={i}
-                      x1={padding}
-                      y1={padding + chartHeight * ratio}
-                      x2={padding + chartWidth}
-                      y2={padding + chartHeight * ratio}
-                      stroke="#e5e7eb"
-                      strokeWidth="1"
-                      strokeDasharray="4 4"
-                    />
-                  ))}
-
-                  {/* Y-axis labels */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                    const value = Math.round(maxMonthCount * (1 - ratio));
-                    return (
-                      <text
-                        key={i}
-                        x={padding - 10}
-                        y={padding + chartHeight * ratio + 5}
-                        textAnchor="end"
-                        className="axis-label"
-                        fill="#6b7280"
-                        fontSize="12"
-                      >
-                        {value}
-                      </text>
-                    );
-                  })}
-
-                  {/* Area fills with gradients */}
-                  <defs>
-                    <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
-                      <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
-                    </linearGradient>
-                    <filter id="shadow">
-                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" />
-                    </filter>
-                  </defs>
-                  <path d={areaPath} fill="url(#trendGradient)" />
-
-                  {/* Main line with shadow */}
-                  <path
-                    d={linePath}
-                    fill="none"
-                    stroke="#6366f1"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    filter="url(#shadow)"
-                  />
-
-                  {/* Data points */}
-                  {points.map((point, index) => (
-                    <g key={index}>
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r="6"
-                        fill="#fff"
-                        stroke="#6366f1"
-                        strokeWidth="3"
-                      />
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r="3"
-                        fill="#6366f1"
-                      />
-                      <text
-                        x={point.x}
-                        y={point.y - 15}
-                        textAnchor="middle"
-                        className="chart-value-text"
-                        fill="#1f2937"
-                        fontSize="13"
-                        fontWeight="600"
-                      >
-                        {point.count}
-                      </text>
-                      <text
-                        x={point.x}
-                        y={padding + chartHeight + 25}
-                        textAnchor="middle"
-                        className="chart-label-text"
-                        fill="#6b7280"
-                        fontSize="12"
-                      >
-                        {point.month}
-                      </text>
-                    </g>
-                  ))}
-                </>
-              );
-            })()}
-          </svg>
-        </div>
+            const linePath = createSmoothPath(points);
+            return (
+              <>
+                <path d={linePath} className="trend-line" />
+                {points.map((p, i) => (
+                  <g key={i}>
+                    <circle cx={p.x} cy={p.y} r="5" className="trend-dot" />
+                    <text x={p.x} y={p.y - 15} className="trend-text-count">{p.count}</text>
+                    <text x={p.x} y={padding + chartHeight + 25} className="trend-text-month">{p.month}</text>
+                  </g>
+                ))}
+              </>
+            );
+          })()}
+        </svg>
       </div>
     </div>
 
-    {/* Doctor Performance */}
+    {/* Common Medical Conditions */}
     <div className="report-section">
       <div className="report-section-header">
-        <h3>Doctor Performance</h3>
-        <p>Patient distribution by doctor</p>
+        <h3>Common Medical Conditions</h3>
+        <p>Distribution of most frequently diagnosed conditions</p>
       </div>
-      <div className="report-card">
-        <div className="doctor-performance-list">
-          {getDoctorPerformance().map((doctor, index) => (
-            <div key={index} className="doctor-performance-item">
-              <div className="doctor-performance-header">
-                <div className="doctor-performance-info">
+      <div className="report-card piechart-card">
+        <ResponsiveContainer width="100%" height={350}>
+          <PieChart>
+            <Pie
+              data={getConditionStats()}
+              dataKey="count"
+              nameKey="condition"
+              cx="50%"
+              cy="50%"
+              outerRadius={120}
+              labelLine={false}
+              label={(props) =>
+                props && typeof props.name === 'string' && typeof props.percent === 'number'
+                  ? `${props.name} ${(props.percent * 100).toFixed(1)}%`
+                  : ''
+              }
+            >
+              {getConditionStats().map((_, index) => {
+                const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
+                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+              })}
+            </Pie>
+            <Tooltip formatter={(value: number) => `${value} cases`} />
+            <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+{/* Priority Level Analysis */}
+<div className="report-section">
+  <div className="report-section-header">
+    <h3>Priority Level Analysis</h3>
+    <p>Breakdown of appointment urgency levels</p>
+  </div>
+  <div className="priority-cards-grid">
+    {[
+      { priority: 'emergency', label: 'Emergency', color: '#ef4444', icon: AlertTriangle },
+      { priority: 'urgent', label: 'Urgent', color: '#f59e0b', icon: Clock },
+      { priority: 'normal', label: 'Normal', color: '#10b981', icon: CheckCircle2 },
+    ].map(({ priority, label, color, icon: Icon }) => {
+      const count = appointments.filter(
+        apt => apt.priority === priority && apt.status !== 'cancelled'
+      ).length;
+      const total = appointments.filter(apt => apt.status !== 'cancelled').length;
+      const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+
+      return (
+        <div key={priority} className="priority-mini-card" data-color={color} data-percentage={percentage}>
+          <div className="priority-card-header">
+            <Icon className="priority-icon" />
+            <span className="priority-card-label">{label}</span>
+          </div>
+          <div className="priority-card-value">{count}</div>
+          <div className="priority-card-footer">
+            <div className="priority-progress-bar">
+              <div className="priority-progress-fill" data-width={percentage}></div>
+            </div>
+            <span className="priority-percentage">{percentage}%</span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+
+{/* Doctor Performance */}
+<div className="report-section">
+  <div className="report-section-header">
+    <h3>Doctor Performance</h3>
+    <p>Patient distribution and completion rates by doctor</p>
+  </div>
+  <div className="report-card">
+    <div className="doctor-performance-list">
+      {getDoctorPerformance().map((doctor, index) => {
+        return (
+          <div key={index} className="doctor-performance-item">
+            <div className="doctor-performance-header">
+              <div className="doctor-performance-info">
+                <div className="doctor-rank-badge">{index + 1}</div>
+                <div className="doctor-avatar-small doctor-icon-colored">
                   <Stethoscope size={20} />
-                  <div>
-                    <div className="doctor-performance-name">
-                      {doctor.name}
-                    </div>
-                    <div className="doctor-performance-specialty">
-                      {doctor.specialty}
-                    </div>
-                  </div>
                 </div>
-                <div className="doctor-performance-total">
-                  {doctor.totalPatients} patients
+                <div>
+                  <div className="doctor-performance-name">{doctor.name}</div>
+                  <div className="doctor-performance-specialty">{doctor.specialty}</div>
                 </div>
               </div>
-              <div className="doctor-performance-stats">
-                <div className="doctor-stat">
-                  <span className="stat-label">Completed:</span>
-                  <span className="stat-value success">
-                    {doctor.completed}
-                  </span>
-                </div>
-                <div className="doctor-stat">
-                  <span className="stat-label">Confirmed:</span>
-                  <span className="stat-value info">
-                    {doctor.confirmed}
-                  </span>
-                </div>
-                <div className="doctor-stat">
-                  <span className="stat-label">Pending:</span>
-                  <span className="stat-value warning">
-                    {doctor.pending}
-                  </span>
+
+              {/* Updated Metrics Section */}
+              <div className="doctor-performance-metrics">
+                <div className="metric-badge total">
+                  <span className="metric-label">Total</span>
+                  <span className="metric-value">{doctor.totalPatients}</span>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+
+            {/* Updated Stats Section */}
+            <div className="doctor-performance-stats">
+              <div className="stat-bar-container">
+                {['completed', 'confirmed', 'pending'].map(type => {
+                  const value = doctor[type as keyof typeof doctor] as number;
+                  const percentage =
+                    doctor.totalPatients > 0
+                      ? Math.round((value / doctor.totalPatients) * 100)
+                      : 0;
+                  const barClass =
+                    type === 'completed'
+                      ? 'success'
+                      : type === 'confirmed'
+                      ? 'info'
+                      : 'warning';
+                  const labelColor =
+                    type === 'completed'
+                      ? 'text-success'
+                      : type === 'confirmed'
+                      ? 'text-info'
+                      : 'text-warning';
+                  return (
+                    <div key={type} className="stat-bar-row">
+                      <span className={`stat-bar-label ${labelColor}`}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </span>
+                      <div className="stat-bar-track">
+                        <div className={`stat-bar-fill ${barClass}`} data-width={percentage}></div>
+                      </div>
+                      <span className={`stat-bar-value ${labelColor}`}>{value}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   </div>
+</div>
+</div>
 )}
 </main>
+
 {/* Appointment Form Modal */}
 {showBookingForm && (
   <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -3890,64 +3868,18 @@ const handleLogout = async () => {
             />
           </div>
 
-          {/* Email + Send Verification Button */}
+          {/* Email */}
           <div className="form-group">
             <label htmlFor="patient-email">Email *</label>
-            <div className="email-verification">
-              <input
-                id="patient-email"
-                type="email"
-                name="email"
-                value={appointmentForm.email}
-                onChange={handleAppointmentFormChange}
-                placeholder="patient@email.com"
-                required
-              />
-              <button
-                type="button"
-                className="icon-btn verify-btn"
-                title="Send Verification Code"
-                onClick={handleSendCode}
-              >
-                <Send size={18} />
-              </button>
-            </div>
-          </div>
-
-          {/* Verification Code + Check Icon */}
-          <div className="form-group">
-            <label htmlFor="verify-code">Verification Code *</label>
-            <div className="email-verification">
-              <input
-                id="verify-code"
-                type="text"
-                name="verifyCode"
-                value={appointmentForm.verifyCode}
-                onChange={handleAppointmentFormChange}
-                placeholder="Enter 6-digit code"
-                maxLength={6}
-              />
-              <button
-                type="button"
-                className="icon-btn"
-                title="Verify Code"
-                onClick={async () => {
-                  const verified = await verifyEmailCode(
-                    appointmentForm.email,
-                    appointmentForm.verifyCode
-                  );
-                  setAppointmentForm((prev) => ({
-                    ...prev,
-                    emailVerified: verified,
-                  }));
-                }}
-              >
-                <CheckCircle size={18} />
-              </button>
-            </div>
-            {appointmentForm.emailVerified && (
-              <small className="verified-text">✅ Email verified</small>
-            )}
+            <input
+              id="patient-email"
+              type="email"
+              name="email"
+              value={appointmentForm.email}
+              onChange={handleAppointmentFormChange}
+              placeholder="patient@email.com"
+              required
+            />
           </div>
 
           {/* Phone */}
@@ -4097,52 +4029,96 @@ const handleLogout = async () => {
             />
           </div>
 
-          {/* Time Slots */}
-          {appointmentForm.doctorId && appointmentForm.date && (
-            <div className="form-group full-width">
-              <label>Available Time Slots *</label>
-              <div className="time-slots-grid">
-                {generateTimeSlots(
-                  appointmentForm.doctorId,
-                  appointmentForm.date
-                ).map((slot) => {
-                  const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
-                  const isBlocked =
-                    doctorAvailabilitySlots?.[slotKey] === false;
+         {/* Time Slots */}
+{appointmentForm.doctorId && appointmentForm.date && (() => {
+  // ✅ Check if doctor is available on this date
+  const isDoctorAvailable = getDoctorAvailability(appointmentForm.doctorId, appointmentForm.date);
+  
+  // ✅ Check if doctor is fully booked
+  const isFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
 
-                  return (
-                    <button
-                      key={slot.time}
-                      type="button"
-                      className={`time-slot 
-                        ${isBlocked ? "blocked" : ""} 
-                        ${!slot.available ? "booked" : ""} 
-                        ${appointmentForm.time === slot.time ? "selected" : ""}`}
-                      onClick={() =>
-                        slot.available &&
-                        !isBlocked &&
-                        setAppointmentForm((prev) => ({
-                          ...prev,
-                          time: slot.time,
-                        }))
-                      }
-                      disabled={!slot.available || isBlocked}
-                    >
-                      {slot.time}
-                      {isBlocked && (
-                        <span className="unavailable-indicator">
-                          Unavailable
-                        </span>
-                      )}
-                      {!isBlocked && !slot.available && (
-                        <span className="booked-indicator">Booked</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+  // ✅ If doctor is unavailable, show message
+  if (!isDoctorAvailable) {
+    return (
+      <div className="form-group full-width">
+        <label>Available Time Slots *</label>
+        <div className="doctor-unavailable-message">
+          <AlertTriangle size={24} />
+          <p>This doctor is not available on {appointmentForm.date}</p>
+          <p className="sub-message">Please select another doctor or date</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ If doctor is fully booked, show message
+  if (isFullyBooked) {
+    return (
+      <div className="form-group full-width">
+        <label>Available Time Slots *</label>
+        <div className="doctor-fully-booked-message">
+          <XCircle size={24} />
+          <p>This doctor is fully booked on {appointmentForm.date}</p>
+          <p className="sub-message">Please select another doctor or date</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Show time slots with emergency buffer labels
+  return (
+    <div className="form-group full-width">
+      <label>Available Time Slots *</label>
+      <div className="time-slots-grid">
+        {generateTimeSlots(
+          appointmentForm.doctorId,
+          appointmentForm.date
+        ).map((slot) => {
+          const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
+          const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+
+          return (
+            <button
+              key={slot.time}
+              type="button"
+              className={`time-slot 
+                ${isBlocked ? "blocked" : ""} 
+                ${!slot.available ? "booked" : ""} 
+                ${slot.emergency ? "emergency-buffer" : ""}
+                ${appointmentForm.time === slot.time ? "selected" : ""}`}
+              onClick={() =>
+                slot.available &&
+                !isBlocked &&
+                setAppointmentForm((prev) => ({
+                  ...prev,
+                  time: slot.time,
+                }))
+              }
+              disabled={!slot.available || isBlocked}
+            >
+              {slot.time}
+              
+              {/* ✅ Emergency Buffer Label */}
+              {slot.emergency && slot.available && !isBlocked && (
+                <span className="emergency-buffer-label">Emergency Buffer</span>
+              )}
+              
+              {/* Blocked Label */}
+              {isBlocked && (
+                <span className="unavailable-indicator">Unavailable</span>
+              )}
+              
+              {/* Booked Label */}
+              {!isBlocked && !slot.available && (
+                <span className="booked-indicator">Booked</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+})()}
 
           {/* Notes (Optional) */}
           <div className="form-group full-width">
@@ -4174,7 +4150,7 @@ const handleLogout = async () => {
         <button
           className={`btn-primary ${
             !appointmentForm.name ||
-            !appointmentForm.emailVerified ||
+            !appointmentForm.email ||
             !appointmentForm.phone ||
             !appointmentForm.condition ||
             (appointmentForm.condition === "custom" && !appointmentForm.customCondition) ||
@@ -4191,7 +4167,7 @@ const handleLogout = async () => {
           }
           disabled={
             !appointmentForm.name ||
-            !appointmentForm.emailVerified ||
+            !appointmentForm.email ||
             !appointmentForm.phone ||
             !appointmentForm.condition ||
             (appointmentForm.condition === "custom" && !appointmentForm.customCondition) ||
@@ -4209,7 +4185,6 @@ const handleLogout = async () => {
 )}
 
 
-      
   {/* Doctor Form Modal */}
 {showDoctorForm && (
   <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -4289,137 +4264,10 @@ const handleLogout = async () => {
             />
           </div>
 
-          {/* Room */}
-          <div className="form-group">
-            <label htmlFor="doctor-room">Room Number</label>
-            <input
-              id="doctor-room"
-              type="text"
-              name="room"
-              value={doctorForm.room}
-              onChange={handleDoctorFormChange}
-              placeholder="Room 101"
-            />
-          </div>
-
-          {/* Max Appointments */}
-          <div className="form-group">
-            <label htmlFor="max-appointments">Max Appointments/Day</label>
-            <input
-              id="max-appointments"
-              type="number"
-              name="maxAppointments"
-              value={doctorForm.maxAppointments}
-              onChange={handleDoctorFormChange}
-              min="1"
-              max="20"
-            />
-          </div>
-
-          {/* Start Time */}
-          <div className="form-group">
-            <label htmlFor="start-time">Start Time</label>
-            <select
-              id="start-time"
-              name="startTime"
-              value={doctorForm.startTime}
-              onChange={handleDoctorFormChange}
-              required
-            >
-              <option value="">Select Start Time</option>
-              {(() => {
-                const times = [];
-                let start = new Date("1970-01-01T07:00:00");
-                const end = new Date("1970-01-01T21:00:00");
-                while (start <= end) {
-                  const h = start.getHours();
-                  const m = start.getMinutes();
-                  const ampm = h >= 12 ? "PM" : "AM";
-                  const hour12 = h % 12 || 12;
-                  const minStr = m.toString().padStart(2, "0");
-                  const label = `${hour12}:${minStr} ${ampm}`;
-                  times.push(
-                    <option key={`start-${label}`} value={label}>
-                      {label}
-                    </option>
-                  );
-                  start.setMinutes(start.getMinutes() + 30);
-                }
-                return times;
-              })()}
-            </select>
-          </div>
-
-          {/* End Time */}
-          <div className="form-group">
-            <label htmlFor="end-time">End Time</label>
-            <select
-              id="end-time"
-              name="endTime"
-              value={doctorForm.endTime}
-              onChange={handleDoctorFormChange}
-              required
-            >
-              <option value="">Select End Time</option>
-              {(() => {
-                const times = [];
-                let start = new Date("1970-01-01T07:00:00");
-                const end = new Date("1970-01-01T21:00:00");
-                while (start <= end) {
-                  const h = start.getHours();
-                  const m = start.getMinutes();
-                  const ampm = h >= 12 ? "PM" : "AM";
-                  const hour12 = h % 12 || 12;
-                  const minStr = m.toString().padStart(2, "0");
-                  const label = `${hour12}:${minStr} ${ampm}`;
-                  times.push(
-                    <option key={`end-${label}`} value={label}>
-                      {label}
-                    </option>
-                  );
-                  start.setMinutes(start.getMinutes() + 30);
-                }
-                return times;
-              })()}
-            </select>
-          </div>
-
-          {/* Consultation Duration */}
-          <div className="form-group">
-            <label htmlFor="consultation-duration">Consultation Duration (minutes)</label>
-            <select
-              id="consultation-duration"
-              name="consultationDuration"
-              value={doctorForm.consultationDuration}
-              onChange={handleDoctorFormChange}
-            >
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-              <option value="45">45 minutes</option>
-              <option value="60">60 minutes</option>
-            </select>
-          </div>
-
-          {/* Buffer Time */}
-          <div className="form-group">
-            <label htmlFor="buffer-time">Buffer Time (minutes)</label>
-            <select
-              id="buffer-time"
-              name="bufferTime"
-              value={doctorForm.bufferTime}
-              onChange={handleDoctorFormChange}
-            >
-              <option value="5">5 minutes</option>
-              <option value="10">10 minutes</option>
-              <option value="15">15 minutes</option>
-              <option value="20">20 minutes</option>
-            </select>
-          </div>
-
-          {/* Photo Upload */}
+          {/* Photo Upload - Updated with centered label and dashed border */}
           <div className="form-group full-width">
-            <label htmlFor="doctorPhoto">Photo</label>
-            <div className="photo-upload">
+            <label htmlFor="doctorPhoto" className="centered-label">Photo</label>
+            <div className="photo-upload-container">
               <input
                 type="file"
                 id="doctorPhoto"
@@ -4428,37 +4276,17 @@ const handleLogout = async () => {
                 className="photo-input"
                 disabled={uploadingImage}
               />
-              <label htmlFor="doctorPhoto" className="photo-label">
-                <Camera size={16} />
-                {uploadingImage ? 'Uploading...' : (doctorForm.photo ? 'Change Photo' : 'Upload Photo')}
+              <label htmlFor="doctorPhoto" className="photo-upload-box">
+                <Camera size={24} />
+                <span className="upload-text">
+                  {uploadingImage ? 'Uploading...' : (doctorForm.photo ? 'Change Photo' : 'Upload Photo')}
+                </span>
               </label>
               {doctorForm.photo && (
-                <img src={doctorForm.photo} alt="Preview" className="photo-preview" />
+                <div className="photo-preview-container">
+                  <img src={doctorForm.photo} alt="Preview" className="photo-preview" />
+                </div>
               )}
-            </div>
-          </div>
-
-          {/* Checkboxes */}
-          <div className="form-group full-width">
-            <div className="checkbox-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="available"
-                  checked={doctorForm.available}
-                  onChange={handleDoctorFormChange}
-                />
-                Available for appointments
-              </label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={doctorForm.isActive}
-                  onChange={handleDoctorFormChange}
-                />
-                Active in system
-              </label>
             </div>
           </div>
         </div>
@@ -4488,7 +4316,6 @@ const handleLogout = async () => {
     </div>
   </div>
 )}
-
 
 
       
@@ -4746,7 +4573,7 @@ const handleLogout = async () => {
                     if (response.ok && data.success) {
                       addNotification(
                         "success",
-                        `✈️ Reminder email sent to ${selectedAppointment.email}`
+                        `Reminder email sent to ${selectedAppointment.email}`
                       );
                     } else {
                       addNotification("error", data.error || "Failed to send reminder.");
@@ -4805,7 +4632,7 @@ const handleLogout = async () => {
         </div>
       )}
 
-     {/* ✅ FOOTER - Inside main container */}
+     {/* FOOTER - Inside main container */}
 <footer className="staff-footer">
   <div className="staff-footer-content">
     <div className="staff-footer-brand">
@@ -4822,7 +4649,7 @@ const handleLogout = async () => {
     </p>
 
     <div className="staff-footer-copyright">
-      <p>© 2025 TimeFly. All rights reserved.</p>
+      <p>2025 TimeFly. All rights reserved.</p>
     </div>
   </div>
 </footer>

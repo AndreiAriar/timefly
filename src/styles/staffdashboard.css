@@ -25,6 +25,8 @@
   --urgent: #ffa726;
   --emergency: #ef5350;
 }
+
+
 /* ===== BASE STYLES ===== */
 .staff-dashboard {
   min-height: 100vh;
@@ -327,7 +329,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: transparent;
+  background: var(--dark-blue);
   color: var(--white);
   font-size: 0.875rem;
   font-weight: 600;
@@ -566,6 +568,10 @@
 .main-content-full {
   min-height: calc(100vh - 70px);
   padding: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Ensure header acts as a positioning container */
@@ -585,7 +591,7 @@
 
 /* The avatar button itself */
 .profile-trigger {
-  background: transparent;
+  background: var(--secondary-blue);
   border: none;
   cursor: pointer;
   position: relative;
@@ -1090,8 +1096,11 @@
 /* ===== APPOINTMENTS TAB ===== */
 .appointments-content {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* === FILTERS SECTION === */
@@ -1174,9 +1183,11 @@
 /* === CARD STRUCTURE - Using CSS Grid === */
 .appointment-main {
   display: grid;
-  grid-template-columns: minmax(250px, 350px) minmax(180px, 250px) 1fr;
-  gap: 2rem;
+  grid-template-columns: minmax(200px, 1fr) minmax(150px, 1fr) 1fr;
+  gap: 1.5rem;
   align-items: start;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* === PATIENT SECTION === */
@@ -1433,12 +1444,14 @@
     margin-left: 0;
   }
 }
-
 /* ===== QUEUE TAB ===== */
 .queue-content {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .queue-header {
@@ -1536,19 +1549,23 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
+  /* No overflow properties - items stack naturally */
 }
 
 .queue-item {
   display: grid;
-  grid-template-columns: auto auto 1fr auto auto auto;
-  gap: 1.5rem;
-  align-items: center;
+  grid-template-columns: auto auto 1fr auto 120px auto; /* Added explicit column for time and actions */
+  gap: 1rem;
+  align-items: start; /* Changed from center to start */
   background: var(--white);
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 12px var(--shadow-light);
   border-left: 4px solid transparent;
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .queue-item.current {
@@ -1562,7 +1579,7 @@
 }
 
 .queue-item:hover {
-  transform: translateX(5px);
+  transform: translateY(-2px);
   box-shadow: 0 6px 20px var(--shadow-medium);
 }
 
@@ -1571,16 +1588,68 @@
   font-weight: 700;
   color: var(--dark-blue);
   min-width: 50px;
+  flex-shrink: 0;
 }
 
-.queue-priority .priority-badge,
+.queue-item .patient-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--secondary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.queue-item .patient-details {
+  flex: 1;
+  min-width: 200px;
+}
+
+.queue-priority {
+  flex-shrink: 0;
+  align-self: center; /* ✅ Added to center the priority badge */
+}
+
+.queue-priority .priority-badge {
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+
+.queue-time {
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-self: center; /* ✅ Changed to center for vertical centering */
+  align-items: flex-end; /* ✅ Added to align text to the right */
+}
+
 .queue-time .appointment-time {
   font-weight: 600;
+  margin-bottom: 0;
+  line-height: 1.2;
 }
 
 .queue-time .wait-time {
   font-size: 0.875rem;
   color: var(--text-light);
+  line-height: 1.2;
+}
+
+.queue-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .now-serving-badge {
@@ -1590,8 +1659,8 @@
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
+  margin-left: 8px;
 }
-
 /* === FIX: Empty State inside "Now Serving" === */
 .no-patients-in-serving {
   text-align: center;
@@ -2211,36 +2280,28 @@
   transform: rotate(90deg);
 }
 
-/* === Modal Body (scrollable area) ===
-   Cross-browser hidden scrollbar, no console warnings */
+/* === Modal Body (scrollable area with hidden scrollbar) === */
 .modal-body {
   padding: 1.25rem;
   overflow-y: auto;
   flex: 1;
 
-  /* Hide scrollbar for IE, old Edge */
-  -ms-overflow-style: none;
+  /* Cross-browser scrollbar hiding */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-/* Hide scrollbar for Chrome, Safari, Opera, Edge (Chromium) */
+/* Hide scrollbar for WebKit browsers (Chrome, Safari, Opera, etc.) */
 .modal-body::-webkit-scrollbar {
-  display: none;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important; /* Ensure scrollbar track is invisible */
 }
 
-/* WebKit/Blink browsers (Chrome, Safari, Opera) */
-.modal-body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-/* For old WebKit where width:0 may not hide, also try setting display none (best-effort) */
-.modal-body::-webkit-scrollbar {
-  display: none;
-}
-
-/* Optional: hide horizontal scrollbar if any */
-.modal-body::-webkit-scrollbar:horizontal {
-  height: 0;
+/* Hide scrollbar for Firefox */
+@supports (scrollbar-width: none) {
+  .modal-body {
+    scrollbar-width: none; /* Hide scrollbar while keeping scrollable */
+  }
 }
 
 /* === Doctor Schedule Card === */
@@ -2330,7 +2391,6 @@ input:checked + .slider:before {
   font-weight: 600;
   color: #1e293b;
 }
-
 /* === Time Slots === */
 .time-slots-grid {
   display: grid;
@@ -2348,54 +2408,89 @@ input:checked + .slider:before {
   transition: all 0.2s ease;
   font-size: 0.85rem;
   position: relative;
+  text-align: center;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
+/* Hover effect for available slots */
 .time-slot.available:hover {
   background: #e0f2fe;
+  border-color: #38bdf8;
+  transform: translateY(-2px);
 }
 
+/* Booked slot - red border only */
 .time-slot.booked {
-  background: #ef4444;
-  color: white;
+  border: 2px solid #ef4444;
+  background: #f8fafc;
+  color: #1e293b; /* keep time readable */
   cursor: not-allowed;
 }
 
+/* Manually disabled slot - gray border only */
 .time-slot.manually-disabled {
-  background: #e2e8f0;
-  color: #64748b;
+  border: 2px solid #9ca3af; /* consistent gray border */
+  background: #f8fafc;
+  color: #1e293b; /* keep AM/PM text normal */
+  cursor: not-allowed;
 }
 
+/* === Slot Badge Text (Centered Overlay, separate from time) === */
 .slot-badge {
   position: absolute;
   bottom: 4px;
-  right: 6px;
-  font-size: 0.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
   border-radius: 4px;
-  padding: 2px 4px;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
+/* Booked badge - clear red label */
 .booked-badge {
-  background: #b91c1c;
-  color: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
 }
 
+/* Disabled badge - pure gray label */
 .disabled-badge {
-  background: #94a3b8;
-  color: white;
+  color: #6b7280;
+  border: 1px solid #9ca3af;
 }
 
-/* === Smooth Modal Animation === */
+/* Make AM/PM text appear above the label */
+.time-slot span:not(.slot-badge) {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+/* Optional subtle fade-in effect for labels */
+.time-slot.booked .slot-badge,
+.time-slot.manually-disabled .slot-badge {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.97);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
-
 
 /* ===== UTILITY CLASSES ===== */
 .no-appointments,
@@ -2682,4 +2777,375 @@ textarea:focus-visible {
 .hidden-file-input {
   display: none;
 }
+/* 🔒 Logout Confirmation Modal Overlay (UPDATED - robust centering) */
+.logout-modal-overlay {
+  position: fixed !important;
+  inset: 0;                      /* top:0; right:0; bottom:0; left:0; */
+  width: 100% !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid !important;
+  place-items: center;           /* perfect centering (horizontal + vertical) */
+  z-index: 99999 !important;     /* ensure overlay sits above everything */
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  overflow: hidden;
+}
 
+/* 🪟 Modal Box (UPDATED - let grid center it) */
+.logout-modal {
+  background: #ffffff;
+  padding: 2rem 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  max-width: 420px;
+  width: min(92%, 420px);
+  animation: fadeInScale 0.25s ease-in-out;
+  position: relative;            /* relative so grid centers naturally */
+  transform: none !important;    /* remove any stray transforms */
+  top: auto !important;
+  left: auto !important;
+}
+
+/* keep buttons / title styles as before (no changes required) */
+.logout-modal h3 {
+  margin-bottom: 1.25rem;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.logout-modal-actions { display:flex; gap:1rem; justify-content:center; }
+
+
+/* 📝 Modal Title */
+.logout-modal h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* 🔘 Buttons Layout */
+.logout-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ✅ Confirm Button */
+.btn-confirm {
+  background: #d9534f;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.btn-confirm:hover {
+  background: #c9302c;
+}
+
+/* ❌ Cancel Button */
+.btn-cancel {
+  background: #e9ecef;
+  color: #333;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.btn-cancel:hover {
+  background: #d6d8db;
+}
+
+/* ✨ Smooth Entry Animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Queue Action Buttons - Centered and Aligned with Right Text */
+.queue-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  justify-content: center;
+  align-self: center; /* ✅ Center vertically */
+  margin-top: 0;
+  position: relative;
+  top: 0;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+  white-space: nowrap;
+  min-height: 0;
+  height: auto;
+}
+
+/* Hover + Active states - subtle text color change */
+.action-btn:hover {
+  color: var(--dark-blue);
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+  color: var(--primary);
+}
+
+/* Special icons (Confirm, Complete, Notify) - clean look */
+.action-btn.confirm,
+.action-btn.complete,
+.action-btn.notify {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  margin: 0;
+}
+
+/* Align icons visually with text baseline */
+.queue-actions .action-btn svg {
+  height: 14px;
+  width: 14px;
+  vertical-align: middle;
+  margin-top: 0;
+}
+
+/* ===== UPDATED DOCTOR HEADER ===== */
+.doctors-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.doctors-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+/* ===== CENTERED PHOTO LABEL ===== */
+.centered-label {
+  text-align: center;
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+/* ===== PHOTO UPLOAD BOX WITH DASHED BORDER ===== */
+.photo-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.photo-upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 2.5rem 2rem;
+  border: 2px dashed var(--accent-blue);
+  border-radius: 12px;
+  background: var(--primary-blue);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  text-align: center;
+}
+
+.photo-upload-box:hover {
+  border-color: var(--dark-blue);
+  background: var(--secondary-blue);
+  transform: translateY(-2px);
+}
+
+.upload-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dark-blue);
+}
+
+.photo-preview-container {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-blue);
+  box-shadow: 0 4px 12px var(--shadow-light);
+}
+
+/* ===== UPDATED DOCTOR CARD DETAILS ===== */
+.doctor-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.doctor-details .detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  background: var(--light-gray);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.doctor-details .detail-item:hover {
+  background: var(--primary-blue);
+  color: var(--dark-blue);
+}
+
+.fully-booked-label {
+  color: #e63946; /* soft red for visibility */
+  font-weight: 600;
+}
+
+/* ===== DOCTOR UNAVAILABLE / FULLY BOOKED MESSAGES ===== */
+.doctor-unavailable-message,
+.doctor-fully-booked-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  text-align: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.doctor-fully-booked-message {
+  background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+  border-color: #ef5350;
+}
+
+.doctor-unavailable-message svg {
+  color: #f57c00;
+}
+
+.doctor-fully-booked-message svg {
+  color: #ef5350;
+}
+
+.doctor-unavailable-message p,
+.doctor-fully-booked-message p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.sub-message {
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  color: var(--text-light) !important;
+}
+
+/* ===== EMERGENCY BUFFER TIME SLOT STYLING ===== */
+.time-slot.emergency-buffer {
+  border: 2px solid #ff6b6b;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+  position: relative;
+}
+
+.time-slot.emergency-buffer:hover:not(.booked):not(.blocked) {
+  border-color: #ef5350;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
+}
+
+.time-slot.emergency-buffer.selected {
+  border-color: #d32f2f;
+  background: #ef5350;
+  color: var(--white);
+}
+
+.emergency-buffer-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #d32f2f;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  border: 1px solid #ef5350;
+  pointer-events: none;
+}
+
+.time-slot.emergency-buffer.selected .emergency-buffer-label {
+  color: var(--white);
+  background: rgba(211, 47, 47, 0.9);
+  border-color: var(--white);
+}
+
+/* ===== LUNCH BREAK INDICATOR (Optional - if you want to show it) ===== */
+.lunch-break-indicator {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-radius: 8px;
+  color: var(--text-dark);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lunch-break-indicator svg {
+  color: var(--dark-blue);
+}

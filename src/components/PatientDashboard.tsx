@@ -18,6 +18,7 @@ import {
   ChevronRight,
   X,
   LogOut,
+  CloudSun,
   Moon,
   Sun
 } from 'lucide-react';
@@ -42,7 +43,6 @@ import {
 } from 'firebase/auth';
 import { db, auth } from '../../firebase';
 import "../styles/dashboard.css";
-import { toast } from "react-toastify";
 import { useSearch } from "./SearchContext"; 
 import { useTheme } from "./ThemeContext";
 
@@ -328,54 +328,75 @@ const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElem
   setFormData((prev) => ({ ...prev, [name]: value }));
 };
 
-  
-  // Firebase auth state listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
-      if (user) {
-        setCurrentUser(user);
-        try {
-          const userQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-          const userDocs = await getDocs(userQuery);
-          if (!userDocs.empty) {
-            const userData = userDocs.docs[0].data();
-            setUserProfile({
-              name: userData.name || user.displayName || '',
-              email: userData.email || user.email || '',
-              role: userData.role || 'Patient',
-              phone: userData.phone || '',
-              department: userData.department || '',
-              photo: userData.photo || '',
-              uid: user.uid
-            });
-          } else {
-            const newUserProfile = {
-              name: user.displayName || '',
-              email: user.email || '',
-              role: 'Patient',
-              phone: '',
-              department: '',
-              photo: '',
-              uid: user.uid,
-              createdAt: serverTimestamp()
-            };
-            await addDoc(collection(db, 'users'), newUserProfile);
-            setUserProfile(newUserProfile);
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          addNotification('error', 'Failed to load user profile');
+// Firebase auth state listener
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+    if (user) {
+      setCurrentUser(user);
+      try {
+        const userQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const userDocs = await getDocs(userQuery);
+
+        if (!userDocs.empty) {
+          const userData = userDocs.docs[0].data();
+
+          setUserProfile({
+            name: userData.name || user.displayName || 'Guest',
+            email: userData.email || user.email || '',
+            role: userData.role || 'Patient',
+            phone: userData.phone || '',
+            department: userData.department || '',
+            photo: userData.photo || '',
+            uid: user.uid
+          });
+
+          // Don't use localStorage for the greeting - rely on userProfile state
+          console.log('✅ User profile loaded:', userData.name || user.displayName);
+        } else {
+          // User doesn't exist in Firestore - create new profile
+          const newUserProfile = {
+            name: user.displayName || user.email?.split('@')[0] || 'Guest',
+            email: user.email || '',
+            role: 'Patient',
+            phone: '',
+            department: '',
+            photo: user.photoURL || '',
+            uid: user.uid,
+            createdAt: serverTimestamp()
+          };
+
+          const docRef = await addDoc(collection(db, 'users'), newUserProfile);
+          console.log('✅ New user profile created:', docRef.id);
+          
+          setUserProfile(newUserProfile);
         }
-        setIsLoading(false);
-      } else {
-        setCurrentUser(null);
-        setUserProfile(null);
-        setIsLoading(false);
-        window.location.href = '/login';
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        addNotification('error', 'Failed to load user profile');
+        
+        // Fallback to basic user info
+        setUserProfile({
+          name: user.displayName || user.email?.split('@')[0] || 'Guest',
+          email: user.email || '',
+          role: 'Patient',
+          phone: '',
+          department: '',
+          photo: user.photoURL || '',
+          uid: user.uid
+        });
       }
-    });
-    return () => unsubscribe();
-  }, []);
+
+      setIsLoading(false);
+    } else {
+      setCurrentUser(null);
+      setUserProfile(null);
+      setIsLoading(false);
+      window.location.href = '/login';
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
 
   // Fetch doctors
   useEffect(() => {
@@ -641,8 +662,7 @@ const calculateDoctorDailySlots = (doctor: Doctor): number => {
   
   return slots > 0 ? slots : 10; // Fallback to 10 if calculation fails
 };
-
-// ✅ Generate time slots (with block + emergency logic + fallback for new doctors)
+// ✅ Generate time slots (with block + emergency logic + fallback for new doctors + lunch break filter)
 const generateTimeSlots = () => {
   const slots: TimeSlot[] = [];
 
@@ -654,6 +674,11 @@ if (!selectedDoctor || !dateToUse) {
   // Return empty slots silently to avoid console spam
   return [];
 }
+
+  // 🚫 Helper function to check if time is lunch break (12:00 PM or 12:30 PM)
+  const isLunchTime = (time12: string): boolean => {
+    return time12 === '12:00 PM' || time12 === '12:30 PM';
+  };
 
   // 🩺 Use custom schedule if available
   const scheduleForDate = selectedDoctor.scheduleSettings?.[dateToUse];
@@ -716,6 +741,12 @@ if (!selectedDoctor || !dateToUse) {
       .padStart(2, "0")}:${(appointmentStart % 60).toString().padStart(2, "0")}`;
     const time12 = convertTo12Hour(time24);
 
+    // 🚫 Skip lunch time slots (12:00 PM and 12:30 PM)
+    if (isLunchTime(time12)) {
+      console.log(`⏰ Skipping lunch break: ${time12}`);
+      continue;
+    }
+
     // Skip past times if date is today
     if (dateToUse === currentDateStr && appointmentStart < currentTotalMinutes)
       continue;
@@ -747,6 +778,12 @@ if (!selectedDoctor || !dateToUse) {
       .padStart(2, "0")}:${(bufferStart % 60).toString().padStart(2, "0")}`;
     const bufferTime12 = convertTo12Hour(bufferTime24);
 
+    // 🚫 Skip lunch break buffer slots too
+    if (isLunchTime(bufferTime12)) {
+      console.log(`⏰ Skipping lunch break buffer: ${bufferTime12}`);
+      continue; // Skip adding this buffer slot
+    }
+
     const bufferKey = `${doctorId}_${dateToUse}_${bufferTime12}`;
     const bufferBlocked = doctorAvailabilitySlots?.[bufferKey] === false;
 
@@ -764,8 +801,6 @@ if (!selectedDoctor || !dateToUse) {
   );
   return slots;
 };
-
-
   const convertTo12Hour = (time24: string): string => {
     const [hours, minutes] = time24.split(':');
     const hour = parseInt(hours);
@@ -911,6 +946,28 @@ const handlePhotoDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     }
   };
 
+  // Add this helper function to check if daily limit is reached
+const isDailyLimitReached = (doctorId: string, date: string): boolean => {
+  // Get custom slot setting or calculate from working hours
+  const customSlotKey = `${doctorId}_${date}`;
+  const maxSlots = doctorSlotSettings[customSlotKey] || 
+    (() => {
+      const doctor = doctors.find(d => d.id === doctorId);
+      return doctor ? calculateDoctorDailySlots(doctor) : 10;
+    })();
+  
+  // Count existing appointments for this doctor on this date (excluding cancelled)
+  const bookedCount = appointments.filter(
+    apt => apt.doctorId === doctorId && 
+           apt.date === date && 
+           apt.status !== 'cancelled'
+  ).length;
+  
+  console.log(`📊 Patient Dashboard - Daily limit check: ${bookedCount}/${maxSlots} for doctor ${doctorId} on ${date}`);
+  
+  return bookedCount >= maxSlots;
+};
+
 const isTimeSlotAvailable = (date: string, time: string, doctorId: string, excludeId?: string): boolean => {
   const conflictingAppointment = appointments.find(apt =>
     apt.date === date &&
@@ -941,6 +998,12 @@ const handleSubmit = async () => {
     name: selectedDoctorInfo.name,
     specialty: selectedDoctorInfo.specialty
   });
+
+  // ✅ NEW: Check if daily limit is reached BEFORE creating appointment
+  if (!editingAppointment && isDailyLimitReached(formData.doctor, formData.date)) {
+    addNotification('error', 'This doctor has reached their maximum appointments for this day. Please select another date or doctor.');
+    return;
+  }
 
   // Calculate adjusted time for emergency appointments
   let adjustedTime = formData.time;
@@ -992,105 +1055,43 @@ const handleSubmit = async () => {
       updatedAt: serverTimestamp()
     };
 
-    console.log('Appointment data being saved:', {
-      doctorId: appointmentData.doctorId,
-      doctor: appointmentData.doctor,
-      userId: appointmentData.userId,
-      patientUserId: appointmentData.patientUserId,
-      currentUserUid: currentUser.uid
-    });
-if (editingAppointment) {
-  const appointmentRef = doc(db, "appointments", editingAppointment.id);
-  await updateDoc(appointmentRef, appointmentData);
-  addNotification("success", "Appointment rescheduled successfully!");
-  setEditingAppointment(null);
+    if (editingAppointment) {
+      // ✅ NEW: Check daily limit when updating (excluding current appointment)
+      const customSlotKey = `${formData.doctor}_${formData.date}`;
+      const maxSlots = doctorSlotSettings[customSlotKey] || 
+        (() => {
+          const doctor = doctors.find(d => d.id === formData.doctor);
+          return doctor ? calculateDoctorDailySlots(doctor) : 10;
+        })();
+      
+      const bookedCount = appointments.filter(
+        apt => apt.doctorId === formData.doctor && 
+               apt.date === formData.date && 
+               apt.status !== 'cancelled' &&
+               apt.id !== editingAppointment.id // ✅ Exclude current appointment
+      ).length;
+      
+      if (bookedCount >= maxSlots) {
+        addNotification('error', 'This doctor has reached their maximum appointments for this day. Please select another date or doctor.');
+        return;
+      }
 
-  // 📧 Send reminder email to logged-in user
-  const user = auth.currentUser;
-  if (user && user.email) {
-    console.log("📩 Sending reminder request for:", user.email);
-
-    await fetch("http://localhost:5000/send-reminder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: user.email, // ✅ logged-in email
-        name: formData.fullName,
-        date: formData.date,
-        time: adjustedTime,
-      }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text(); // log raw response if not JSON
-          throw new Error(`Server error: ${res.status} - ${text}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("✅ Reminder API response:", data);
-        if (data.success) {
-          toast.success(`📩 Reminder email sent to ${user.email}`);
-        } else {
-          toast.error("⚠️ Reminder could not be sent.");
-        }
-      })
-      .catch((err) => {
-        console.error("❌ Reminder API error:", err);
-        toast.error("❌ Failed to send reminder email.");
+      const appointmentRef = doc(db, "appointments", editingAppointment.id);
+      await updateDoc(appointmentRef, appointmentData);
+      addNotification("success", "Appointment rescheduled successfully!");
+      setEditingAppointment(null);
+      // ... email sending code
+    } else {
+      const queueNumber = await getNextQueueNumber(formData.date);
+      const docRef = await addDoc(collection(db, "appointments"), {
+        ...appointmentData,
+        queueNumber,
+        createdAt: serverTimestamp(),
       });
-  } else {
-    console.warn("⚠️ No logged-in user email found");
-  }
-} else {
-  const queueNumber = await getNextQueueNumber(formData.date);
-  const docRef = await addDoc(collection(db, "appointments"), {
-    ...appointmentData,
-    queueNumber,
-    createdAt: serverTimestamp(),
-  });
-  console.log("Appointment created with Firebase ID:", docRef.id);
-  addNotification("success", "Appointment booked successfully!");
-
-  // 📧 Send reminder email to logged-in user
-  const user = auth.currentUser;
-  if (user && user.email) {
-    console.log("📩 Sending reminder request for:", user.email);
-
-    await fetch("http://127.0.0.1:5000/send-reminder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: user.email, // ✅ logged-in email
-        name: formData.fullName,
-        date: formData.date,
-        time: adjustedTime,
-      }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Server error: ${res.status} - ${text}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("✅ Reminder API response:", data);
-        if (data.success) {
-          toast.success(`📩 Reminder email sent to ${user.email}`);
-        } else {
-          toast.error("⚠️ Reminder could not be sent.");
-        }
-      })
-      .catch((err) => {
-        console.error("❌ Reminder API error:", err);
-        toast.error("❌ Failed to send reminder email.");
-      });
-  } else {
-    console.warn("⚠️ No logged-in user email found");
-  }
-}
-
+      console.log("Appointment created with Firebase ID:", docRef.id);
+      addNotification("success", "Appointment booked successfully!");
+      // ... email sending code
+    }
 
     setShowBookingForm(false);
     setFormData({
@@ -1112,7 +1113,6 @@ if (editingAppointment) {
     addNotification('error', 'Failed to save appointment');
   }
 };
-
 const handleCancelAppointment = async (id: string, reason: string) => {
   try {
     setIsSendingCancellation(true);
@@ -1286,15 +1286,66 @@ const handleCancelAppointment = async (id: string, reason: string) => {
         ))}
       </div>
 
-
-
 {/* Hero Section */}
-<section className="hero-section">
+<section
+  className="hero-section"
+  data-time={
+    new Date().getHours() < 12
+      ? "morning"
+      : new Date().getHours() < 18
+      ? "afternoon"
+      : "evening"
+  }
+>
   <div className="hero-content">
-    <h1 className="hero-title">Welcome to TimeFly</h1>
+    <h1 className="hero-title">
+      {(() => {
+        const hour = new Date().getHours();
+        let greeting = "Welcome";
+        let IconComponent = Sun;
+        let timePeriod = "morning";
+
+        if (hour < 12) {
+          greeting = "Good Morning";
+          IconComponent = Sun;
+          timePeriod = "morning";
+        } else if (hour < 18) {
+          greeting = "Good Afternoon";
+          IconComponent = CloudSun;
+          timePeriod = "afternoon";
+        } else {
+          greeting = "Good Evening";
+          IconComponent = Moon;
+          timePeriod = "evening";
+        }
+
+        // Show loading state while fetching user profile
+        if (!userProfile) {
+          return (
+            <span className="hero-greeting" data-time={timePeriod}>
+              <IconComponent className="greeting-icon" size={28} aria-hidden="true" />
+              Loading...
+            </span>
+          );
+        }
+
+        // Get user's first name from userProfile (which is fetched from Firestore)
+        const fullName = userProfile.name || "Guest";
+        const firstName = fullName.trim().split(" ")[0] || "User";
+
+        return (
+          <span className="hero-greeting" data-time={timePeriod}>
+            <IconComponent className="greeting-icon" size={28} aria-hidden="true" />
+            {`${greeting}, ${firstName}`}
+          </span>
+        );
+      })()}
+    </h1>
+
     <p className="hero-subtitle">
       Manage your eye care appointments and checkups with real-time queue updates.
     </p>
+
     <div className="hero-actions">
       <button
         className="btn-primary"
@@ -1304,6 +1355,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
         <Plus size={20} aria-hidden="true" />
         Book Appointment
       </button>
+
       <button
         className="btn-secondary"
         onClick={() => setShowCalendarView(true)}
@@ -1315,6 +1367,8 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   </div>
 </section>
+
+
 
       {/* Stats Cards (Only the first one is kept) */}
       <section className="stats-section" aria-label="Dashboard statistics">
@@ -1736,26 +1790,26 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       {/* ===== WIZARD CONTENT ===== */}
       <div className={`wizard-content wizard-step-${calendarWizardStep}`}>
 
-        {/* === STEP 1: CALENDAR GRID === */}
+{/* === STEP 1: CALENDAR GRID === */}
         <div className="wizard-step step-calendar">
           <div className="calendar-navigation">
+            <button
+              className="nav-btn"
+              onClick={() => navigateMonth('prev')}
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            
             <h3 className="month-title">{getMonthName(calendarCurrentDate)}</h3>
-            <div className="nav-buttons">
-              <button
-                className="nav-btn"
-                onClick={() => navigateMonth('prev')}
-                aria-label="Previous month"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                className="nav-btn"
-                onClick={() => navigateMonth('next')}
-                aria-label="Next month"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
+            
+            <button
+              className="nav-btn"
+              onClick={() => navigateMonth('next')}
+              aria-label="Next month"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
 
           <div className="calendar-weekdays">
@@ -1803,131 +1857,147 @@ const handleCancelAppointment = async (id: string, reason: string) => {
             })}
           </div>
         </div>
+{/* === STEP 2: DOCTOR SELECTION (UPDATED WITH ACCURATE SLOT COUNTER) === */}
+<div className="wizard-step step-doctors">
+  <button
+    className="wizard-back-btn"
+    onClick={() => {
+      setCalendarWizardStep(1);
+      setSelectedCalendarDate('');
+    }}
+  >
+    <ChevronLeft size={20} />
+    Back to Calendar
+  </button>
 
-        {/* === STEP 2: DOCTOR SELECTION (UPDATED DEFAULT AVAILABLE) === */}
-        <div className="wizard-step step-doctors">
+  <div className="selected-date-display">
+    <Calendar size={16} />
+    <span>Selected Date: {selectedCalendarDate}</span>
+  </div>
+
+  <div className="doctors-grid-wizard">
+    {doctors
+      .filter(doctor => {
+        // Check if doctor is manually marked unavailable by staff
+        const manuallyUnavailable = doctorAvailability.find(
+          entry =>
+            entry.doctorId === doctor.id &&
+            entry.date === selectedCalendarDate &&
+            entry.available === false
+        );
+        if (manuallyUnavailable) return false;
+
+        // Calculate available slots
+        const bookedCount = appointments.filter(
+          apt =>
+            apt.doctorId === doctor.id &&
+            apt.date === selectedCalendarDate &&
+            apt.status !== 'cancelled'
+        ).length;
+
+        // Get max slots for this doctor on this date
+        const customSlotKey = `${doctor.id}_${selectedCalendarDate}`;
+        const maxSlots = doctorSlotSettings[customSlotKey] || calculateDoctorDailySlots(doctor);
+
+        // Show doctor if they have available slots
+        return bookedCount < maxSlots;
+      })
+      .map((doctor: DoctorWithPhoto) => {
+        // Calculate booked slots for this doctor on selected date
+        const bookedCount = appointments.filter(
+          apt =>
+            apt.doctorId === doctor.id &&
+            apt.date === selectedCalendarDate &&
+            apt.status !== 'cancelled'
+        ).length;
+
+        // Get max slots (either custom from staff or calculated)
+        const customSlotKey = `${doctor.id}_${selectedCalendarDate}`;
+        const maxSlots = doctorSlotSettings[customSlotKey] || calculateDoctorDailySlots(doctor);
+        
+        // Calculate available slots
+        const availableSlots = maxSlots - bookedCount;
+
+        return (
           <button
-            className="wizard-back-btn"
+            key={doctor.id}
+            className="doctor-card-wizard"
             onClick={() => {
-              setCalendarWizardStep(1);
-              setSelectedCalendarDate('');
+              setSelectedCalendarDoctor(doctor);
+              setFormData(prev => ({
+                ...prev,
+                date: selectedCalendarDate,
+                doctor: doctor.id
+              }));
+              setCalendarWizardStep(3);
             }}
+            aria-label={`Select ${doctor.name}`}
           >
-            <ChevronLeft size={20} />
-            Back to Calendar
-          </button>
-
-          <div className="selected-date-display">
-            <Calendar size={16} />
-            <span>Selected Date: {selectedCalendarDate}</span>
-          </div>
-
-          <div className="doctors-grid-wizard">
-            {doctors
-              .filter(doctor => {
-                // ✅ Default: doctor is available unless staff marked them unavailable
-                const manuallyUnavailable = doctorAvailability.find(
-                  entry =>
-                    entry.doctorId === doctor.id &&
-                    entry.date === selectedCalendarDate &&
-                    entry.available === false
-                );
-                if (manuallyUnavailable) return false;
-
-                // Check if doctor has schedule for this date
-                const daySchedule = calendarDays.find(d => d.date === selectedCalendarDate);
-                if (!daySchedule) return true;
-
-                const doctorSchedule = daySchedule.doctors.find(d => d.id === doctor.id);
-                if (!doctorSchedule) return true;
-
-                // Show doctor if not fully booked
-                return doctorSchedule.available && doctorSchedule.appointmentsBooked < doctorSchedule.maxAppointments;
-              })
-              .map((doctor: DoctorWithPhoto) => {
-                // Calculate available slots for this doctor
-                const daySchedule = calendarDays.find(d => d.date === selectedCalendarDate);
-                const doctorSchedule = daySchedule?.doctors.find(d => d.id === doctor.id);
-                const availableSlots = doctorSchedule
-                  ? doctorSchedule.maxAppointments - doctorSchedule.appointmentsBooked
-                  : doctor.maxAppointments || 0;
-
-                return (
-                  <button
-                    key={doctor.id}
-                    className="doctor-card-wizard"
-                    onClick={() => {
-                      setSelectedCalendarDoctor(doctor);
-                      setFormData(prev => ({
-                        ...prev,
-                        date: selectedCalendarDate,
-                        doctor: doctor.id
-                      }));
-                      setCalendarWizardStep(3);
-                    }}
-                    aria-label={`Select ${doctor.name}`}
-                  >
-                    <div className="doctor-avatar-wizard">
-                      {doctor?.photo ? (
-                        <img
-                          src={doctor.photo}
-                          alt={doctor.name}
-                          className="doctor-avatar-image"
-                        />
-                      ) : (
-                        <User size={32} />
-                      )}
-                    </div>
-                    <div className="doctor-info-wizard">
-                      <h4 className="doctor-name">{doctor.name}</h4>
-                      <p className="doctor-specialty">
-                        {doctor?.specialty || 'General Practitioner'}
-                      </p>
-                      <p className="doctor-availability-count">
-                        {availableSlots} slot{availableSlots !== 1 ? 's' : ''} available
-                      </p>
-                    </div>
-                    <ChevronRight size={20} className="doctor-arrow" />
-                  </button>
-                );
-              })}
-          </div>
-
-          {doctors.filter(doctor => {
-            const manuallyUnavailable = doctorAvailability.find(
-              entry =>
-                entry.doctorId === doctor.id &&
-                entry.date === selectedCalendarDate &&
-                entry.available === false
-            );
-            if (manuallyUnavailable) return false;
-
-            const daySchedule = calendarDays.find(d => d.date === selectedCalendarDate);
-            if (!daySchedule) return true;
-
-            const doctorSchedule = daySchedule.doctors.find(d => d.id === doctor.id);
-            if (!doctorSchedule) return true;
-
-            return doctorSchedule.available && doctorSchedule.appointmentsBooked < doctorSchedule.maxAppointments;
-          }).length === 0 && (
-            <div className="no-doctors-available">
-              <Users size={48} />
-              <p>No doctors available on {selectedCalendarDate}</p>
-              <div className="no-doctors-suggestions">
-                <p>All doctors may be fully booked or manually marked unavailable on this date.</p>
-                <button
-                  className="btn-secondary"
-                  onClick={() => {
-                    setCalendarWizardStep(1);
-                    setSelectedCalendarDate('');
-                  }}
-                >
-                  Choose Another Date
-                </button>
-              </div>
+            <div className="doctor-avatar-wizard">
+              {doctor?.photo ? (
+                <img
+                  src={doctor.photo}
+                  alt={doctor.name}
+                  className="doctor-avatar-image"
+                />
+              ) : (
+                <User size={32} />
+              )}
             </div>
-          )}
-        </div>
+            <div className="doctor-info-wizard">
+              <h4 className="doctor-name">{doctor.name}</h4>
+              <p className="doctor-specialty">
+                {doctor?.specialty || 'General Practitioner'}
+              </p>
+              <p className="doctor-availability-count">
+                {availableSlots}/{maxSlots} slots available
+              </p>
+            </div>
+            <ChevronRight size={20} className="doctor-arrow" />
+          </button>
+        );
+      })}
+  </div>
+
+  {doctors.filter(doctor => {
+    const manuallyUnavailable = doctorAvailability.find(
+      entry =>
+        entry.doctorId === doctor.id &&
+        entry.date === selectedCalendarDate &&
+        entry.available === false
+    );
+    if (manuallyUnavailable) return false;
+
+    const bookedCount = appointments.filter(
+      apt =>
+        apt.doctorId === doctor.id &&
+        apt.date === selectedCalendarDate &&
+        apt.status !== 'cancelled'
+    ).length;
+
+    const customSlotKey = `${doctor.id}_${selectedCalendarDate}`;
+    const maxSlots = doctorSlotSettings[customSlotKey] || calculateDoctorDailySlots(doctor);
+
+    return bookedCount < maxSlots;
+  }).length === 0 && (
+    <div className="no-doctors-available">
+      <Users size={48} />
+      <p>No doctors available on {selectedCalendarDate}</p>
+      <div className="no-doctors-suggestions">
+        <p>All doctors may be fully booked or manually marked unavailable on this date.</p>
+        <button
+          className="btn-secondary"
+          onClick={() => {
+            setCalendarWizardStep(1);
+            setSelectedCalendarDate('');
+          }}
+        >
+          Choose Another Date
+        </button>
+      </div>
+    </div>
+  )}
+</div>
 
         {/* === STEP 3: TIME SLOT SELECTION (UNCHANGED) === */}
         <div className="wizard-step step-timeslots">
@@ -2319,81 +2389,120 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           </div>
         </div>
 
-        {/* UPDATED: Time Slots Section with Blocked Slot Logic */}
-        {formData.date && formData.doctor && (
-          <div className="time-slots-section">
-            <label>Available Time Slots *</label>
-            {timeSlots.length === 0 ? (
-              <div className="no-slots-message">
-                No available time slots for this date. Please select another date.
-              </div>
-            ) : (
-              <div className="time-slots-grid">
-                {timeSlots
-                  .filter((slot) =>
-                    formData.priority === "emergency" ? true : !slot.emergency
-                  )
-                  .map((slot) => {
-                    const slotKey = `${formData.doctor}_${formData.date}_${slot.time}`;
-                    const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+{/* ✅ Time Slots Section with Doctor Availability Warnings */}
+        {formData.date && formData.doctor && (() => {
+          // ✅ Check if doctor is available on this date
+          const isDoctorAvailable = isDoctorAvailableOnDate(formData.doctor, formData.date);
+          
+          // ✅ Check if doctor is fully booked
+          const isFullyBooked = isDailyLimitReached(formData.doctor, formData.date);
 
-                    return (
-                      <button
-                        key={slot.time}
-                        type="button"
-                        className={`time-slot 
-                          ${!slot.available ? "booked" : ""} 
-                          ${isBlocked ? "blocked" : ""} 
-                          ${slot.emergency ? "emergency-slot" : ""} 
-                          ${formData.time === slot.time ? "selected" : ""}`}
-                        onClick={() => {
-                          if (!slot.available || isBlocked) return;
-                          setFormData((prev) => ({
-                            ...prev,
-                            time: slot.time,
-                          }));
-                        }}
-                        disabled={
-                          !slot.available ||
-                          isBlocked ||
-                          (slot.emergency && formData.priority !== "emergency")
-                        }
-                        aria-label={`${slot.time} ${
-                          isBlocked
-                            ? "Blocked"
-                            : slot.available
-                            ? "available"
-                            : "booked"
-                        }`}
-                        title={
-                          isBlocked
-                            ? "Unavailable — set by staff"
-                            : slot.emergency
-                            ? "Emergency Only"
-                            : `${slot.time} ${
-                                slot.available ? "available" : "booked"
-                              }`
-                        }
-                      >
-                        {slot.time}
-                        {isBlocked && (
-                          <span className="blocked-indicator">Blocked</span>
-                        )}
-                        {slot.emergency && (
-                          <span className="emergency-badge">
-                            Emergency Only
-                          </span>
-                        )}
-                        {!slot.available && !slot.emergency && !isBlocked && (
-                          <span className="booked-indicator">Booked</span>
-                        )}
-                      </button>
-                    );
-                  })}
+          // ✅ If doctor is unavailable, show warning
+          if (!isDoctorAvailable) {
+            return (
+              <div className="time-slots-section">
+                <label>Available Time Slots *</label>
+                <div className="doctor-unavailable-warning">
+                  <AlertTriangle size={24} />
+                  <p><strong>Doctor Not Available</strong></p>
+                  <p>This doctor is not available on {formData.date}.</p>
+                  <p className="sub-message">Please select another doctor or date.</p>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            );
+          }
+
+          // ✅ If doctor is fully booked, show warning
+          if (isFullyBooked && !editingAppointment) {
+            return (
+              <div className="time-slots-section">
+                <label>Available Time Slots *</label>
+                <div className="doctor-fully-booked-warning">
+                  <XCircle size={24} />
+                  <p><strong>Doctor Fully Booked</strong></p>
+                  <p>This doctor has reached maximum appointments on {formData.date}.</p>
+                  <p className="sub-message">Please select another doctor or date.</p>
+                </div>
+              </div>
+            );
+          }
+
+          // ✅ Show time slots if doctor is available and not fully booked
+          return (
+            <div className="time-slots-section">
+              <label>Available Time Slots *</label>
+              {timeSlots.length === 0 ? (
+                <div className="no-slots-message">
+                  No available time slots for this date. Please select another date.
+                </div>
+              ) : (
+                <div className="time-slots-grid">
+                  {timeSlots
+                    .filter((slot) =>
+                      formData.priority === "emergency" ? true : !slot.emergency
+                    )
+                    .map((slot) => {
+                      const slotKey = `${formData.doctor}_${formData.date}_${slot.time}`;
+                      const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+
+                      return (
+                        <button
+                          key={slot.time}
+                          type="button"
+                          className={`time-slot 
+                            ${!slot.available ? "booked" : ""} 
+                            ${isBlocked ? "blocked" : ""} 
+                            ${slot.emergency ? "emergency-slot" : ""} 
+                            ${formData.time === slot.time ? "selected" : ""}`}
+                          onClick={() => {
+                            if (!slot.available || isBlocked) return;
+                            setFormData((prev) => ({
+                              ...prev,
+                              time: slot.time,
+                            }));
+                          }}
+                          disabled={
+                            !slot.available ||
+                            isBlocked ||
+                            (slot.emergency && formData.priority !== "emergency")
+                          }
+                          aria-label={`${slot.time} ${
+                            isBlocked
+                              ? "Blocked"
+                              : slot.available
+                              ? "available"
+                              : "booked"
+                          }`}
+                          title={
+                            isBlocked
+                              ? "Unavailable — set by staff"
+                              : slot.emergency
+                              ? "Emergency Only"
+                              : `${slot.time} ${
+                                  slot.available ? "available" : "booked"
+                                }`
+                          }
+                        >
+                          {slot.time}
+                          {isBlocked && (
+                            <span className="blocked-indicator">Blocked</span>
+                          )}
+                          {slot.emergency && (
+                            <span className="emergency-badge">
+                              Emergency Only
+                            </span>
+                          )}
+                          {!slot.available && !slot.emergency && !isBlocked && (
+                            <span className="booked-indicator">Booked</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {!formData.date && !formData.doctor && (
           <div className="form-hint-box">

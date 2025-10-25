@@ -345,6 +345,53 @@ app.post("/send-reminder", async (req, res) => {
 });
 
 // ============================
+// 💬 Send Queue Position Notification
+// ============================
+app.post("/send-queue-notification", async (req, res) => {
+  const { name, email, phone, queueNumber, totalQueue } = req.body;
+
+  if (!email && !phone) {
+    return res.status(400).json({ success: false, error: "Email or phone is required" });
+  }
+
+  if (!queueNumber) {
+    return res.status(400).json({ success: false, error: "Queue number is required" });
+  }
+
+  try {
+    // Email notification
+    if (email && transporter) {
+      await transporter.sendMail({
+        from: `"TimeFly Clinic" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "⏱️ Queue Update - TimeFly Clinic",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>Hi ${name || "Patient"},</h2>
+            <p>You are currently <strong>#${queueNumber}</strong> in the queue${totalQueue ? ` out of ${totalQueue} patients` : ""}.</p>
+            <p>⏰ Please arrive at least <strong>10 minutes early</strong> before your appointment.</p>
+            <p>Thank you for your patience!</p>
+            <p>— The TimeFly Clinic Team</p>
+          </div>
+        `,
+      });
+      console.log(`✅ Queue email sent to ${email}`);
+    }
+
+    // (Optional) SMS support placeholder
+    if (phone) {
+      console.log(`📱 Queue SMS would be sent to ${phone}: You are #${queueNumber} in queue. Please arrive 10 minutes early.`);
+      // Future: integrate Twilio API here if SMS is enabled
+    }
+
+    res.json({ success: true, message: "Queue notification sent successfully!" });
+  } catch (error) {
+    console.error("❌ Error sending queue notification:", error.message);
+    res.status(500).json({ success: false, error: "Failed to send queue notification" });
+  }
+});
+
+// ============================
 // 💬 Send Feedback Message
 // ============================
 app.post("/send-feedback", async (req, res) => {

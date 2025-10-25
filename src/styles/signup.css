@@ -505,3 +505,28 @@
     padding: 25px 18px;
   }
 }
+
+.email-highlight {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.verification-input {
+  letter-spacing: 0.5em;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.back-btn {
+  margin-top: 10px;
+  background: transparent;
+  color: #666;
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.back-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
