@@ -33,6 +33,7 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-dark);
   position: relative;
+  width: 100%;
 }
 
 /* === Background Image with Better Visibility === */
@@ -43,7 +44,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/images/staffbg.png'); /* ✅ correct path (inside public/images) */
+  background-image: url('/images/staffbg.png'); /* âœ… correct path (inside public/images) */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -167,20 +168,37 @@
     opacity: 1;
   }
 }
+
 /* ===================================================
-   ✅ UPDATED STAFF HEADER - STICKY WITH NO BG IMAGE
+   ✅ UPDATED STAFF HEADER - STICKY WITH SCROLL EFFECT
    =================================================== */
 
 .staff-main-header {
-  background: rgba(255, 255, 255, 0.98);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-light);
   box-shadow: 0 2px 20px var(--shadow-light);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 2000;
   width: 100%;
+  transition: all 0.3s ease;
+}
+
+/* Enhanced shadow when scrolled */
+.staff-main-header.scrolled {
+  background: rgba(255, 255, 255, 0.98);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* IMPORTANT: These must NOT have overflow properties that create scroll containers */
+.staff-dashboard,
+.main-content-full {
+  position: relative;
 }
 
 .staff-header-container {
@@ -190,7 +208,34 @@
   padding: 0 2rem;
   height: 70px;
   max-width: 100%;
+  width: 100%;
   gap: 2rem;
+  box-sizing: border-box;
+}
+
+/* LEFT GROUP: Hamburger + Logo */
+.staff-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+/* Hamburger (hidden on desktop) */
+.hamburger-menu {
+  display: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text-dark);
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.hamburger-menu:hover {
+  background: var(--primary-blue);
+  color: var(--dark-blue);
 }
 
 /* Logo */
@@ -261,40 +306,174 @@
   align-items: center;
   gap: 1rem;
   flex-shrink: 0;
-}
-
-/* Search */
-.staff-search-container {
   position: relative;
+}
+/* ===================================================
+   ✓ TAB SEARCH - ALWAYS VISIBLE LINE STYLE
+   =================================================== */
+.tab-search-container {
   display: flex;
   align-items: center;
+  gap: 8px;
+  max-width: 400px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+
+  /* ✅ Move search bar to the right */
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
-.staff-search-icon {
-  position: absolute;
-  left: 12px;
+.tab-search-icon {
   color: var(--text-light);
+  flex-shrink: 0;
+}
+
+.tab-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  padding: 6px 8px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.tab-search-input:focus {
+  border-bottom-color: var(--dark-blue);
+}
+
+.tab-search-input::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+.tab-search-clear {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-light);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
   pointer-events: none;
 }
 
-.staff-search-container input {
-  padding: 10px 12px 10px 40px;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  background: var(--white);
-  font-size: 0.9rem;
-  min-width: 250px;
-  transition: all 0.3s ease;
+.tab-search-clear.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.staff-search-container input:focus {
-  outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.1);
+.tab-search-clear:hover {
+  background: var(--primary-blue);
+  color: var(--dark-blue);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab-search-container {
+    max-width: 100%;
+    margin-left: 0;
+    justify-content: center; /* Center it for mobile */
+  }
 }
 
 /* ===================================================
-   ✅ FIXED PROFILE DROPDOWN - TOP RIGHT POSITIONED
+   âœ… MOBILE FIXES FOR SEARCH BAR ALIGNMENT
+   =================================================== */
+@media (max-width: 768px) {
+  .staff-search-container.expanded {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    top: 50%;
+    width: 85%;
+    z-index: 1002;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 0 8px;
+  }
+
+  .staff-search-container.expanded input {
+    width: 100%;
+    border-bottom: 2px solid var(--border-light);
+  }
+
+  .staff-header-container {
+    position: relative;
+    overflow: visible;
+  }
+
+  .staff-main-header {
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+  }
+}
+
+
+/* === Expandable Search Fix === */
+.staff-search-container.expanded {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  width: 100%;
+  max-width: 250px;
+}
+
+
+
+.staff-search-container.expanded input {
+  width: 100%;
+  max-width: none;
+  border: none;
+  border-bottom: 2px solid #cbd5e0;
+  background: transparent;
+  font-size: 0.9rem;
+}
+
+.staff-search-container.expanded input:focus {
+  outline: none;
+  border-bottom-color: var(--dark-blue);
+}
+
+.staff-search-container.expanded input::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+.search-close-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-light);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.search-close-btn:hover {
+  background: var(--primary-blue);
+  color: var(--dark-blue);
+}
+/* ===================================================
+   âœ… FIXED PROFILE DROPDOWN - TOP RIGHT POSITIONED
    =================================================== */
 
 .staff-profile-dropdown-wrapper {
@@ -455,7 +634,7 @@
   color: var(--error);
 }
 /* ===================================================
-   ✅ NEW STAFF FOOTER - MATCHING PATIENT DASHBOARD
+   âœ… NEW STAFF FOOTER - MATCHING PATIENT DASHBOARD
    =================================================== */
 
 .staff-footer {
@@ -465,7 +644,7 @@
   margin-top: 4rem;
 }
 
-/* ✅ Center entire footer content */
+/* âœ… Center entire footer content */
 .staff-footer-content {
   max-width: 1400px;
   margin: 0 auto;
@@ -478,7 +657,7 @@
   gap: 0.75rem;
 }
 
-/* ✅ Brand section: logo beside title */
+/* âœ… Brand section: logo beside title */
 .staff-footer-brand {
   display: flex;
   align-items: center;
@@ -486,7 +665,7 @@
   gap: 0.5rem;
 }
 
-/* ✅ Logo styling with hover effect */
+/* âœ… Logo styling with hover effect */
 .staff-footer-logo {
   width: 40px;
   height: 40px;
@@ -501,7 +680,7 @@
   filter: drop-shadow(0 0 8px rgba(33, 150, 243, 0.4));
 }
 
-/* ✅ Title next to logo */
+/* âœ… Title next to logo */
 .staff-footer-title {
   font-size: 1.25rem;
   color: var(--dark-blue);
@@ -510,7 +689,7 @@
   margin: 0;
 }
 
-/* ✅ Tagline centered below */
+/* âœ… Tagline centered below */
 .staff-footer-tagline {
   margin: 0;
   font-size: 0.9rem;
@@ -518,7 +697,7 @@
   line-height: 1.4;
 }
 
-/* ✅ Copyright */
+/* âœ… Copyright */
 .staff-footer-copyright {
   text-align: center;
 }
@@ -564,14 +743,30 @@
 }
 
 
-/* ===== MAIN CONTENT ===== */
+/* ===== MAIN CONTENT - SCROLLABLE ===== */
 .main-content-full {
   min-height: calc(100vh - 70px);
   padding: 0;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
   box-sizing: border-box;
+  position: relative;
+}
+
+/* Individual tab content areas */
+.dashboard-content,
+.appointments-content,
+.queue-content,
+.doctors-content,
+.waiting-list-content,
+.reports-content {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+  height: auto;
 }
 
 /* Ensure header acts as a positioning container */
@@ -696,7 +891,6 @@
 .dashboard-content-wrapper {
   position: relative;
   min-height: calc(100vh - 70px);
-  overflow: hidden;
 }
 
 .dashboard-background {
@@ -733,6 +927,11 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  overflow: visible !important;
+  width: 100%;
+  box-sizing: border-box;
+  height: auto !important;
+  max-height: none !important;
 }
 
 /* Welcome Section */
@@ -1092,7 +1291,6 @@
   background: transparent;
   color: #f44336 !important; /* emergency red */
 }
-
 /* ===== APPOINTMENTS TAB ===== */
 .appointments-content {
   padding: 2rem;
@@ -1100,7 +1298,8 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: visible !important;
+  height: auto !important;
 }
 
 /* === FILTERS SECTION === */
@@ -1156,13 +1355,205 @@
   background: #1565c0; /* darker blue on hover */
   transform: translateY(-2px);
 }
+/* ===================================================
+   ✅ UPDATED FILTER SECTION WITH ALIGNED SEARCH
+   =================================================== */
+.filters-section {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--shadow-light);
+  margin-bottom: 2rem;
+}
 
+.filters-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center; /* ✅ ensures vertical alignment with button */
+  flex-wrap: wrap;
+}
+
+/*  Search bar inside filter row */
+.filters-row .tab-search-container {
+  flex: 1;
+  height: 36px;
+  min-width: 250px;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* ✅ centers icon & input */
+  gap: 8px;
+  padding: 0.5rem 0.75rem;
+  background: var(--light-gray);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+  margin-top: 24px; /* ✅ small tweak for perfect alignment */
+}
+
+.filters-row .tab-search-container:focus-within {
+  border-color: var(--dark-blue);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.1);
+}
+
+.filters-row .tab-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  outline: none;
+}
+
+.filters-row .tab-search-input::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+.filters-row .tab-search-icon {
+  color: var(--text-light);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filters-row .tab-search-clear {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-light);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filters-row .tab-search-clear.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.filters-row .tab-search-clear:hover {
+  background: var(--primary-blue);
+  color: var(--dark-blue);
+}
+
+/* Filter dropdowns and button */
+.filters-row select,
+.filters-row input[type="date"] {
+  padding: 10px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--white);
+  font-size: 0.9rem;
+  min-width: 150px;
+  transition: all 0.2s ease;
+}
+
+.filters-row select:focus,
+.filters-row input[type="date"]:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(36, 107, 253, 0.15);
+}
+
+.filters-row .btn-primary {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ===================================================
+   ✅ UPDATED DOCTORS HEADER WITH SEARCH
+   =================================================== */
+.doctors-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.doctors-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+.doctors-header-actions {
+  display: flex;
+  align-items: center; /* ✅ centers search and button vertically */
+  gap: 1rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.doctors-header-actions .tab-search-container {
+  flex: 1;
+  max-width: 350px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* centers inner content properly */
+  gap: 8px;
+  padding: 0.5rem 0.75rem;
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  border: none;
+  transition: all 0.3s ease;
+  margin-top: 27px; /* ✅ keeps visual alignment with button */
+}
+
+.doctors-header-actions .tab-search-container:focus-within {
+  border-color: var(--dark-blue);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters-row .tab-search-container,
+  .filters-row select,
+  .filters-row input,
+  .filters-row .btn-primary {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .doctors-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .doctors-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .doctors-header-actions .tab-search-container {
+    max-width: none;
+    margin-top: 0;
+  }
+}
 
 /* === APPOINTMENT LIST === */
 .appointments-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow: visible; /* No scrollbar */
 }
 
 /* === CARD STYLE === */
@@ -1311,9 +1702,10 @@
 }
 
 .appointment-status .completed {
-  background: #ede7f6;
-  color: #5e35b1;
+  background: #81c784; /* light green background */
+  color: #ffffff;      /* white text */
 }
+
 
 .appointment-status .cancelled {
   background: #fdecea;
@@ -1444,6 +1836,7 @@
     margin-left: 0;
   }
 }
+
 /* ===== QUEUE TAB ===== */
 .queue-content {
   padding: 2rem;
@@ -1451,7 +1844,8 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: visible !important;
+  height: auto !important;
 }
 
 .queue-header {
@@ -1550,7 +1944,7 @@
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  /* No overflow properties - items stack naturally */
+  overflow: visible; /* No scrollbar */
 }
 
 .queue-item {
@@ -1610,7 +2004,7 @@
 
 .queue-priority {
   flex-shrink: 0;
-  align-self: center; /* ✅ Added to center the priority badge */
+  align-self: center; /* âœ… Added to center the priority badge */
 }
 
 .queue-priority .priority-badge {
@@ -1629,8 +2023,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  align-self: center; /* ✅ Changed to center for vertical centering */
-  align-items: flex-end; /* ✅ Added to align text to the right */
+  align-self: center; /* âœ… Changed to center for vertical centering */
+  align-items: flex-end; /* âœ… Added to align text to the right */
 }
 
 .queue-time .appointment-time {
@@ -1689,6 +2083,8 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  overflow: visible !important;
+  height: auto !important;
 }
 
 .doctors-header {
@@ -1865,21 +2261,24 @@
   color: var(--dark-blue);
 }
 
-/* ===== MODAL STYLES ===== */
+/* =============================== */
+/* Appointment Details Modal - UPDATED */
+/* =============================== */
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.5);
-   -webkit-backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 2rem;
+  padding: 0;
 }
 
 .modal-content {
@@ -1889,8 +2288,10 @@
   max-width: 800px;
   width: 100%;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   animation: modalSlideIn 0.3s ease-out;
+  overflow: hidden;
 }
 
 @keyframes modalSlideIn {
@@ -1912,15 +2313,14 @@
   border-bottom: 1px solid var(--border-light);
   background: var(--white);
   border-radius: 16px 16px 0 0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
   margin: 0;
   color: var(--text-dark);
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .modal-close {
@@ -1940,11 +2340,98 @@
   background: var(--light-gray);
   color: var(--text-dark);
 }
-
+/* Modal Body - Scrollable Area */
 .modal-body {
   padding: 2rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
+/* Style the scrollbar (keep it visible and thin) */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* For Firefox */
+@supports (scrollbar-width: thin) {
+  .modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+  }
+}
+
+/* Details Content Layout - Remove any overflow */
+.details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow: visible !important; /* Ensure no inner scrollbar */
+  height: auto !important;
+  max-height: none !important;
+}
+
+.detail-photo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.detail-photo img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-blue);
+  box-shadow: 0 4px 12px var(--shadow-light);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-item span {
+  font-size: 1rem;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Modal Footer with Action Buttons */
 .modal-footer {
   display: flex;
   align-items: center;
@@ -1954,6 +2441,100 @@
   border-top: 1px solid var(--border-light);
   background: var(--light-gray);
   border-radius: 0 0 16px 16px;
+  flex-shrink: 0;
+}
+
+/* Button Styles for Modal Footer */
+.modal-footer .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--white);
+  color: var(--dark-blue);
+  border: 2px solid var(--dark-blue);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.modal-footer .btn-secondary:hover {
+  background: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.2);
+}
+
+.modal-footer .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--dark-blue);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.modal-footer .btn-primary:hover {
+  background: #1e88e5;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(66, 165, 245, 0.3);
+}
+
+/* Delete Button Special Styling */
+.modal-footer .btn-secondary:last-child {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.modal-footer .btn-secondary:last-child:hover {
+  background: rgba(244, 67, 54, 0.1);
+  border-color: var(--error);
+  transform: translateY(-2px);
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 1rem;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+    margin: 0;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 1rem 1.5rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .modal-footer .btn-secondary,
+  .modal-footer .btn-primary {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
 }
 
 /* Form Styles */
@@ -2039,30 +2620,38 @@
   object-fit: cover;
   border: 2px solid var(--border-light);
 }
-
-/* Time Slots Grid */
+/* ===== TIME SLOTS GRID - FIXED VISIBILITY ===== */
 .time-slots-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 .time-slot {
-  padding: 10px;
+  padding: 1rem 0.75rem;
   border: 2px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--white);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   position: relative;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .time-slot:hover:not(.booked):not(.blocked) {
   border-color: var(--accent-blue);
   background: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-light);
 }
 
 .time-slot.selected {
@@ -2083,6 +2672,64 @@
   border-color: #e0e0e0;
   color: #9e9e9e;
   cursor: not-allowed;
+}
+
+/* ===== EMERGENCY BUFFER STYLING ===== */
+.time-slot.emergency-buffer {
+  border: 2px solid #ff6b6b;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+}
+
+.time-slot.emergency-buffer:hover:not(.booked):not(.blocked) {
+  border-color: #ef5350;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 83, 80, 0.3);
+}
+
+.time-slot.emergency-buffer.selected {
+  border-color: #d32f2f;
+  background: #ef5350;
+  color: var(--white);
+}
+
+/* ===== TIME SLOT LABELS - POSITIONED BELOW TIME ===== */
+.emergency-buffer-label,
+.unavailable-indicator,
+.booked-indicator {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.emergency-buffer-label {
+  color: #d32f2f;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ef5350;
+}
+
+.time-slot.emergency-buffer.selected .emergency-buffer-label {
+  color: var(--white);
+  background: rgba(211, 47, 47, 0.9);
+  border-color: var(--white);
+}
+
+.unavailable-indicator {
+  color: #6b7280;
+  background: rgba(156, 163, 175, 0.15);
+  border: 1px solid #9ca3af;
+}
+
+.booked-indicator {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
 }
 /* ========================================
    CALENDAR STYLES - CLEAN CENTERED VERSION (UPDATED)
@@ -2186,7 +2833,7 @@
   transform: translateY(-2px);
 }
 
-/* ✅ Removed solid blue; now subtle highlight */
+/* âœ… Removed solid blue; now subtle highlight */
 .calendar-day.today {
   background: #eef2ff;
   color: #1e3a8a;
@@ -2725,7 +3372,7 @@ textarea:focus-visible {
   transition: all 0.2s ease;
 }
 
-/* 🔍 TEMP FIX: Force Remove Blue Background Anywhere Near Profile */
+/* ðŸ” TEMP FIX: Force Remove Blue Background Anywhere Near Profile */
 .profile-avatar,
 .profile-trigger,
 .header-right,
@@ -2777,7 +3424,7 @@ textarea:focus-visible {
 .hidden-file-input {
   display: none;
 }
-/* 🔒 Logout Confirmation Modal Overlay (UPDATED - robust centering) */
+/* ðŸ”’ Logout Confirmation Modal Overlay (UPDATED - robust centering) */
 .logout-modal-overlay {
   position: fixed !important;
   inset: 0;                      /* top:0; right:0; bottom:0; left:0; */
@@ -2792,7 +3439,7 @@ textarea:focus-visible {
   overflow: hidden;
 }
 
-/* 🪟 Modal Box (UPDATED - let grid center it) */
+/* ðŸªŸ Modal Box (UPDATED - let grid center it) */
 .logout-modal {
   background: #ffffff;
   padding: 2rem 2.5rem;
@@ -2818,7 +3465,7 @@ textarea:focus-visible {
 .logout-modal-actions { display:flex; gap:1rem; justify-content:center; }
 
 
-/* 📝 Modal Title */
+/* ðŸ“ Modal Title */
 .logout-modal h3 {
   margin-bottom: 1.5rem;
   color: #333;
@@ -2826,14 +3473,14 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
-/* 🔘 Buttons Layout */
+/* ðŸ”˜ Buttons Layout */
 .logout-modal-actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
 }
 
-/* ✅ Confirm Button */
+/* âœ… Confirm Button */
 .btn-confirm {
   background: #d9534f;
   color: #fff;
@@ -2848,7 +3495,7 @@ textarea:focus-visible {
   background: #c9302c;
 }
 
-/* ❌ Cancel Button */
+/* âŒ Cancel Button */
 .btn-cancel {
   background: #e9ecef;
   color: #333;
@@ -2863,7 +3510,7 @@ textarea:focus-visible {
   background: #d6d8db;
 }
 
-/* ✨ Smooth Entry Animation */
+/* âœ¨ Smooth Entry Animation */
 @keyframes fadeInScale {
   from {
     opacity: 0;
@@ -2882,7 +3529,7 @@ textarea:focus-visible {
   gap: 4px;
   align-items: flex-end;
   justify-content: center;
-  align-self: center; /* ✅ Center vertically */
+  align-self: center; /* âœ… Center vertically */
   margin-top: 0;
   position: relative;
   top: 0;
@@ -2969,6 +3616,7 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  min-height: 200px;
 }
 
 .photo-upload-box {
@@ -3148,4 +3796,920 @@ textarea:focus-visible {
 
 .lunch-break-indicator svg {
   color: var(--dark-blue);
+}
+
+/* ========================================
+   WAITING LIST STYLES
+======================================== */
+.waiting-list-content {
+  padding: 2rem;
+}
+
+.waiting-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.waiting-list-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.waiting-list-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.waiting-list-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-badge {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1.5rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-badge .label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.stat-badge .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-badge.emergency .value {
+  color: #ef4444;
+}
+
+.stat-badge.urgent .value {
+  color: #f59e0b;
+}
+
+.empty-waiting-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border-radius: 12px;
+}
+
+.empty-waiting-list svg {
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.waiting-list-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.waiting-list-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr 1fr auto;
+  gap: 1.5rem;
+  align-items: start;
+  border-left: 4px solid var(--border);
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.waiting-list-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.waiting-list-card.emergency {
+  border-left-color: #ef4444;
+}
+
+.waiting-list-card.urgent {
+  border-left-color: #f59e0b;
+}
+
+.waiting-list-card.normal {
+  border-left-color: #10b981;
+}
+
+.waiting-position {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 3rem;
+  text-align: center;
+}
+
+.waiting-patient-info {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.waiting-patient-info .patient-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.waiting-patient-info .patient-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.waiting-patient-info h4 {
+  font-size: 1rem;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-primary);
+}
+
+.waiting-patient-info p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.contact-info span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.waiting-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.detail-row label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 120px;
+}
+
+.detail-row span {
+  color: var(--text-primary);
+}
+
+.detail-row .priority-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.detail-row .priority-badge.emergency {
+  background: #fee;
+  color: #ef4444;
+}
+
+.detail-row .priority-badge.urgent {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.detail-row .priority-badge.normal {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.waiting-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.waiting-actions button {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  outline: none;
+}
+
+.waiting-actions button:hover {
+  background: transparent;
+  color: #ef4444;
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.waiting-actions button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #ef4444 !important;
+  background: transparent !important;
+  color: #ef4444 !important;
+}
+
+.waiting-actions button:active {
+  transform: translateY(0);
+}
+
+.fully-booked-indicator {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 6px;
+  color: #f59e0b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.waiting-list-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.waiting-list-actions button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  outline: none;
+}
+
+/* Primary button (Join Waiting List) */
+.waiting-list-actions .btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.waiting-list-actions .btn-primary:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.waiting-list-actions .btn-primary:active {
+  background-color: #2563eb;
+  transform: translateY(0);
+}
+
+.waiting-list-actions .btn-primary:focus {
+  background-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Secondary button (Choose Another Doctor) */
+.waiting-list-actions .btn-secondary {
+  background-color: #374151;
+  color: white;
+}
+
+.waiting-list-actions .btn-secondary:hover {
+  background-color: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
+}
+
+.waiting-list-actions .btn-secondary:active {
+  background-color: #374151;
+  transform: translateY(0);
+}
+
+.waiting-list-actions .btn-secondary:focus {
+  background-color: #374151;
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.3);
+}
+
+.doctor-fully-booked-warning,
+.doctor-fully-booked-message {
+  padding: 20px;
+  text-align: center;
+}
+
+/* ===== BASE STYLES - ENSURE PROPER SCROLLING ===== */
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll; /* Force scrollbar to always show */
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+/* Main containers need to allow scrolling for sticky header to work */
+.staff-dashboard {
+  overflow: visible !important;
+  height: auto;
+  max-height: none;
+}
+
+.main-content-full {
+  overflow: visible !important;
+  height: auto;
+  max-height: none;
+  min-height: 100vh;
+}
+
+/* Content areas should not restrict overflow */
+.dashboard-content-wrapper,
+.dashboard-content,
+.dashboard-background,
+.dashboard-overlay,
+.appointments-content,
+.queue-content,
+.doctors-content,
+.waiting-list-content,
+.appointments-list,
+.queue-list,
+.doctors-grid,
+.stats-grid,
+.recent-appointments,
+.waiting-list-grid {
+  overflow: visible !important;
+  height: auto;
+  max-height: none;
+}
+
+/* Exception: Modal scrolls internally (with visible scrollbar) */
+.modal-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Optional: Style modal scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* For Firefox (scrollbar-width is supported in Firefox 64+) */
+@supports (scrollbar-width: thin) {
+  .modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+  }
+}
+
+/* ===== HAMBURGER MENU BASE STYLES ===== */
+.hamburger-menu {
+  display: none; /* Hidden by default on desktop */
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text-dark);
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.hamburger-menu:hover {
+  background: var(--primary-blue);
+  color: var(--dark-blue);
+}
+
+@media (max-width: 768px) {
+  /* âœ… Expandable Search - Clean line stays in header on mobile */
+  .staff-search-container.expanded input {
+    width: 180px;
+    font-size: 0.85rem;
+    padding: 6px 10px;
+    border-bottom: 2px solid var(--border-light);
+  }
+
+  .staff-search-container.expanded input:focus {
+    border-bottom-color: var(--dark-blue);
+  }
+
+  .staff-header-right {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra compact for very small screens */
+  .staff-search-container.expanded input {
+    width: 140px;
+    font-size: 0.8rem;
+    padding: 5px 8px;
+  }
+
+  .staff-search-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .search-close-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.mobile-menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Style for the search input border (was inline) */
+.staff-search-input {
+  border-bottom: 2px solid #cbd5e0;
+  outline: none;
+  padding: 4px 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease;
+}
+
+.staff-search-input:focus {
+  border-color: #4a90e2;
+}
+
+.confirm-modal {
+  background: #fff;
+  padding: 1.8rem;
+  border-radius: 10px;
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-actions {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.btn-confirm {
+  background-color: #2563eb;
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-cancel {
+  background-color: #e5e7eb;
+  color: #333;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-confirm:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-cancel:hover {
+  background-color: #e5e7eb;
+}
+
+.staff-search-input {
+  border: none;
+  border-bottom: 2px solid #cbd5e0;
+  outline: none;
+  padding: 6px 8px;
+  background: transparent;
+  color: var(--text-color, #333);
+  width: 180px;
+  transition: border-color 0.3s ease;
+}
+
+.staff-search-input:focus {
+  border-color: var(--accent-color, #4a90e2);
+}
+
+/* ===================================================
+   ✅ CONFIRMATION MODALS (CANCEL & DELETE)
+   =================================================== */
+.confirm-modal {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 450px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.confirm-modal-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.confirm-modal-icon.cancel {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  color: #f57c00;
+}
+
+.confirm-modal-icon.delete {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  color: #d32f2f;
+}
+
+.confirm-modal h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 1rem 0;
+}
+
+.confirm-modal p {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.5;
+}
+
+.confirm-modal-warning {
+  font-size: 0.875rem;
+  color: var(--warning);
+  font-weight: 600;
+  margin-bottom: 1.5rem !important;
+}
+
+.confirm-modal .modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.confirm-modal .btn-secondary {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background: var(--light-gray);
+  color: var(--text-dark);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.confirm-modal .btn-secondary:hover {
+  background: var(--light-gray);
+  transform: translateY(-2px);
+}
+
+.confirm-modal .btn-confirm {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--white);
+}
+
+.confirm-modal .btn-cancel {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+}
+
+.confirm-modal .btn-cancel:hover {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
+}
+
+.confirm-modal .btn-delete {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+}
+
+.confirm-modal .btn-delete:hover {
+  background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .confirm-modal {
+    padding: 1.5rem;
+  }
+
+  .confirm-modal h3 {
+    font-size: 1.25rem;
+  }
+
+  .confirm-modal .modal-actions {
+    flex-direction: column;
+  }
+}
+
+/* ===== MOBILE STICKY HEADER ===== */
+@media (max-width: 768px) {
+  .staff-main-header {
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+  }
+
+  .staff-header-container {
+    padding: 1rem;
+    height: auto;
+    min-height: 60px;
+  }
+
+  /* Prevent body scroll when mobile menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Mobile menu should scroll independently */
+  .staff-header-nav.mobile-open {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.98);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    overflow-y: auto;
+    z-index: 1999;
+  }
+}
+
+/* ===================================================
+   🔧 FORCE STICKY HEADER - EMERGENCY FIX
+   =================================================== */
+
+/* Force sticky positioning on header */
+.staff-main-header {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9999 !important;
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+   -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+ 
+}
+
+/* Ensure all parent containers allow sticky positioning */
+html,
+body,
+#root,
+.staff-dashboard,
+.main-content-full {
+  overflow: visible !important;
+  position: static !important;
+  height: auto !important;
+  min-height: 100% !important;
+}
+
+/* Only html should handle scrolling */
+html {
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  height: 100% !important;
+}
+
+/* Body should not interfere */
+body {
+  overflow: visible !important;
+  min-height: 100% !important;
+}
+
+/* Force header to stay on top during scroll */
+.staff-main-header {
+  will-change: transform !important;
+  transform: translateZ(0) !important;
+}
+
+/* Ensure header is above all content */
+.staff-main-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  z-index: -1;
+}
+
+/* ===== PHOTO UPLOAD - CENTERED WITH DASHED BORDER ===== */
+.centered-label {
+  text-align: center;
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.photo-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-height: 200px;
+}
+
+.photo-upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 2.5rem 2rem;
+  border: 2px dashed var(--accent-blue);
+  border-radius: 12px;
+  background: var(--primary-blue);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 280px;
+  text-align: center;
+}
+
+.photo-upload-box:hover {
+  border-color: var(--dark-blue);
+  background: var(--secondary-blue);
+  transform: translateY(-2px);
+}
+
+.upload-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dark-blue);
+}
+
+.upload-hint {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: -8px;
+}
+
+.photo-preview-container {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-blue);
+  box-shadow: 0 4px 12px var(--shadow-light);
+}
+
+.photo-remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--error);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.photo-remove-btn:hover {
+  background: #d32f2f;
+  transform: scale(1.1);
+}
+
+/* ===================================================
+   ✅ CHANGE PHOTO BUTTON - TIMEFLY STYLE
+   =================================================== */
+.btn-change-photo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(33, 150, 243, 0.25);
+  transition: all 0.3s ease;
+}
+
+.btn-change-photo:hover:not(:disabled) {
+  background: linear-gradient(135deg, #64b5f6, #2196f3);
+  box-shadow: 0 4px 14px rgba(33, 150, 243, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-change-photo:active {
+  transform: scale(0.97);
+}
+
+.btn-change-photo:disabled {
+  background: #cfd8dc;
+  color: #90a4ae;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Camera icon spacing */
+.btn-change-photo svg {
+  flex-shrink: 0;
+  margin-right: 4px;
+  transition: transform 0.3s ease;
+}
+
+.btn-change-photo:hover svg {
+  transform: scale(1.15);
 }

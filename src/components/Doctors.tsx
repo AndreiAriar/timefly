@@ -25,6 +25,24 @@ const Doctors: React.FC<DoctorsProps> = () => {
   const [filterSpecialty, setFilterSpecialty] = useState("All");
 
   /* =========================
+     HELPER: CONVERT TO 12-HOUR FORMAT
+  ========================== */
+  const convertTo12Hour = (time24: string): string => {
+    if (!time24) return '';
+    
+    // Handle if already in 12-hour format
+    if (time24.includes('AM') || time24.includes('PM')) {
+      return time24;
+    }
+    
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  /* =========================
      FETCH DOCTORS
   ========================== */
   useEffect(() => {
@@ -138,7 +156,7 @@ const Doctors: React.FC<DoctorsProps> = () => {
                     <div className="doctor-hours">
                       <Clock size={16} />
                       <span>
-                        {doctor.workingHours.start} - {doctor.workingHours.end}
+                        {convertTo12Hour(doctor.workingHours.start)} - {convertTo12Hour(doctor.workingHours.end)}
                       </span>
                     </div>
                   )}

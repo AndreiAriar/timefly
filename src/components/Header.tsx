@@ -242,52 +242,50 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </button>
 
-            {showProfileDropdown && (
-              <div className="profile-dropdown">
-                <div className="profile-header">
-                  <div className="profile-avatar-lg">
-                    {userProfile?.photo ? (
-                      <img
-                        src={userProfile.photo}
-                        alt={userProfile.name}
-                        className="avatar-image"
-                      />
-                    ) : (
-                      <User size={32} />
-                    )}
-                  </div>
-                  <div className="profile-info">
-                    <p className="profile-name">{userProfile?.name}</p>
-                    <p className="profile-email">{userProfile?.email}</p>
-                  </div>
-                </div>
+          {showProfileDropdown && (
+  <div className="profile-dropdown">
+    <div className="profile-header">
+      <div className="profile-avatar-lg">
+        {userProfile?.photo ? (
+          <img
+            src={userProfile.photo}
+            alt={userProfile.name}
+            className="avatar-image"
+          />
+        ) : (
+          <User size={32} />
+        )}
+      </div>
+      <div className="profile-info">
+        <p className="profile-name">{userProfile?.name}</p>
+        <p className="profile-email">{userProfile?.email}</p>
+      </div>
+    </div>
 
-                <div className="profile-action">
-                  <input
-                    type="file"
-                    id="profilePhoto"
-                    accept="image/*"
-                    onChange={handleProfilePhotoUpload}
-                    className="hidden"
-                  />
-                  <label htmlFor="profilePhoto" className="action-link">
-                    <Camera size={14} /> Change Photo
-                  </label>
-                </div>
+    <input
+      type="file"
+      id="profilePhoto"
+      accept="image/*"
+      onChange={handleProfilePhotoUpload}
+      className="hidden"
+    />
+    <label htmlFor="profilePhoto" className="action-link">
+      <Camera size={16} /> Change Photo
+    </label>
 
-                <button className="action-link" onClick={toggleTheme}>
-                  {theme === "light" ? <Moon size={14} /> : <Sun size={14} />}
-                  {theme === "light" ? "Dark Mode" : "Light Mode"}
-                </button>
+    <button className="action-link" onClick={toggleTheme}>
+      {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+      {theme === "light" ? "Dark Mode" : "Light Mode"}
+    </button>
 
-                <button
-                  className="logout-action"
-                  onClick={() => setShowLogoutModal(true)}
-                >
-                  <LogOut size={16} /> Logout
-                </button>
-              </div>
-            )}
+    <button
+      className="logout-action"
+      onClick={() => setShowLogoutModal(true)}
+    >
+      <LogOut size={16} /> Logout
+    </button>
+  </div>
+)}
           </div>
         </div>
       </header>

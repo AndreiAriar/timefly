@@ -293,10 +293,10 @@ app.post("/verify-code", (req, res) => {
 });
 
 // ============================
-// 📧 Send Appointment Reminder
+// 📧 Send Appointment Reminder/Notification
 // ============================
 app.post("/send-reminder", async (req, res) => {
-  const { email, phone, name, date, time } = req.body;
+  const { email, phone, name, doctor, date, time, message, subject, queueNumber } = req.body; // ✅ Added queueNumber
   console.log("📩 Reminder request received:", req.body);
 
   if (!transporter) {
@@ -312,35 +312,86 @@ app.post("/send-reminder", async (req, res) => {
   }
 
   try {
+    // Format date to "Month Day, Year" (e.g., "October 26, 2026")
+    const formatDate = (dateStr) => {
+      const [year, month, day] = dateStr.split('-');
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      return dateObj.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    };
+
+    const formattedDate = formatDate(date);
+    const doctorName = doctor || 'your doctor';
+
+    // Use custom message if provided, otherwise generate default
+    const emailMessage = message || 
+      `Your appointment with ${doctorName} on ${formattedDate} at ${time} has been confirmed. Please arrive 10 minutes early to not miss your appointment.`;
+
+    const emailSubject = subject || "✅ Appointment Confirmed - TimeFly Clinic";
+
     if (email) {
       await transporter.sendMail({
         from: `"TimeFly Clinic" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: "📅 Appointment Reminder - TimeFly Clinic",
+        subject: emailSubject,
         html: `
-          <div style="font-family:Arial,sans-serif;padding:20px">
-            <h2>Hello ${name || "Patient"},</h2>
-            <p>This is a friendly reminder of your upcoming appointment:</p>
-            <ul>
-              <li><strong>Date:</strong> ${date}</li>
-              <li><strong>Time:</strong> ${time}</li>
-            </ul>
-            <p>⏰ Please arrive at least <strong>10 minutes early</strong>.</p>
-            <p>Thank you,<br/>TimeFly Clinic</p>
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #0056b3; margin: 0;">✅ Appointment Confirmed</h2>
+              </div>
+              
+              <p style="font-size: 16px; color: #333; line-height: 1.6;">
+                Hello <strong>${name || "Patient"}</strong>,
+              </p>
+              
+              <p style="font-size: 16px; color: #333; line-height: 1.6;">
+                ${emailMessage}
+              </p>
+              
+              <div style="background-color: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #0056b3; margin-top: 0;">📋 Appointment Details</h3>
+                <p style="margin: 8px 0; font-size: 15px;"><strong>👨‍⚕️ Doctor:</strong> ${doctorName}</p>
+                <p style="margin: 8px 0; font-size: 15px;"><strong>📅 Date:</strong> ${formattedDate}</p>
+                <p style="margin: 8px 0; font-size: 15px;"><strong>🕐 Time:</strong> ${time}</p>
+                ${queueNumber ? `<p style="margin: 8px 0; font-size: 15px;"><strong>🎫 Queue Number:</strong> #${queueNumber}</p>` : ''}
+              </div>
+              
+              <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0;">
+                <p style="margin: 0; color: #856404; font-size: 14px;">
+                  ⏰ <strong>Important Reminder:</strong> Please arrive <strong>10 minutes early</strong> to complete any necessary paperwork and avoid missing your appointment.
+                </p>
+              </div>
+              
+              <p style="font-size: 14px; color: #666; line-height: 1.6; margin-top: 20px;">
+                If you need to reschedule or have any questions, please contact us as soon as possible.
+              </p>
+              
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+              
+              <p style="color: #999; font-size: 12px; text-align: center;">
+                Thank you for choosing TimeFly Clinic<br/>
+                © ${new Date().getFullYear()} TimeFly Healthcare System. All rights reserved.
+              </p>
+            </div>
           </div>
         `,
       });
-      console.log(`✅ Reminder email sent to ${email}`);
+      console.log(`✅ Confirmation email sent to ${email}`);
     }
 
     if (phone) {
-      console.log(`📱 Reminder would be sent to phone: ${phone}`);
+      console.log(`📱 SMS notification would be sent to phone: ${phone}`);
+      // Future: Integrate SMS service here
     }
 
-    res.json({ success: true, message: "Reminder notification sent successfully!" });
+    res.json({ success: true, message: "Notification sent successfully!" });
   } catch (error) {
-    console.error("❌ Error sending reminder:", error.message);
-    res.status(500).json({ success: false, error: "Failed to send reminder" });
+    console.error("❌ Error sending notification:", error.message);
+    res.status(500).json({ success: false, error: "Failed to send notification" });
   }
 });
 
@@ -526,6 +577,97 @@ app.post("/send-cancellation", async (req, res) => {
   } catch (error) {
     console.error("❌ Error sending cancellation email:", error.message);
     res.status(500).json({ success: false, error: "Failed to send cancellation email" });
+  }
+});
+
+// ============================
+// 📋 Send Waiting List Notification
+// ============================
+app.post("/send-waiting-list-notification", async (req, res) => {
+  const { name, email, phone, doctor, date, time } = req.body;
+  console.log("📋 Waiting list notification request:", req.body);
+
+  if (!transporter) {
+    return res.status(500).json({ success: false, error: "Email service not configured" });
+  }
+
+  if (!email && !phone) {
+    return res.status(400).json({ success: false, error: "At least email or phone is required" });
+  }
+
+  try {
+    // Format date to "Month Day, Year"
+    const formatDate = (dateStr) => {
+      const [year, month, day] = dateStr.split('-');
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      return dateObj.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    };
+
+    const formattedDate = formatDate(date);
+
+    if (email) {
+      await transporter.sendMail({
+        from: `"TimeFly Clinic" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "🎉 Great News! Appointment Slot Now Available - TimeFly Clinic",
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #10b981; margin: 0;">🎉 Appointment Slot Available!</h2>
+              </div>
+              
+              <p style="font-size: 16px; color: #333; line-height: 1.6;">
+                Hello <strong>${name}</strong>,
+              </p>
+              
+              <p style="font-size: 16px; color: #333; line-height: 1.6;">
+                Great news! A slot has opened up with <strong>${doctor}</strong> on your preferred date.
+              </p>
+              
+              <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+                <h3 style="color: #10b981; margin-top: 0;">📋 Your Appointment Details</h3>
+                <p style="margin: 8px 0; font-size: 15px;"><strong>👨‍⚕️ Doctor:</strong> ${doctor}</p>
+                <p style="margin: 8px 0; font-size: 15px;"><strong>📅 Date:</strong> ${formattedDate}</p>
+                <p style="margin: 8px 0; font-size: 15px;"><strong>🕐 Time:</strong> ${time}</p>
+              </div>
+              
+              <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+                <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                  ℹ️ <strong>Action Required:</strong> We've automatically assigned you to this slot from the waiting list. Please arrive <strong>10 minutes early</strong> for your appointment.
+                </p>
+              </div>
+              
+              <p style="font-size: 14px; color: #666; line-height: 1.6; margin-top: 20px;">
+                If you cannot make this appointment, please contact us as soon as possible so we can offer the slot to the next patient.
+              </p>
+              
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+              
+              <p style="color: #999; font-size: 12px; text-align: center;">
+                Thank you for your patience!<br/>
+                © ${new Date().getFullYear()} TimeFly Healthcare System. All rights reserved.
+              </p>
+            </div>
+          </div>
+        `,
+      });
+      console.log(`✅ Waiting list notification email sent to ${email}`);
+    }
+
+    if (phone) {
+      console.log(`📱 SMS notification would be sent to phone: ${phone}`);
+      // Future: Integrate SMS service here
+    }
+
+    res.json({ success: true, message: "Waiting list notification sent successfully!" });
+  } catch (error) {
+    console.error("❌ Error sending waiting list notification:", error.message);
+    res.status(500).json({ success: false, error: "Failed to send waiting list notification" });
   }
 });
 

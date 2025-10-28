@@ -28,6 +28,7 @@ import {
   doc,
   addDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -572,21 +573,32 @@ useEffect(() => {
   return () => unsubscribe();
 }, []);
 
+// Utility: Get a single doctor's slot count for a date
+const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
+  const key = `${doctorId}_${date}`;
+  
+  // Check if staff has set a custom value
+  if (doctorSlotSettings[key]) {
+    return doctorSlotSettings[key];
+  }
+  
+  // Otherwise calculate from working hours
+  const doctor = doctors.find(d => d.id === doctorId);
+  if (doctor) {
+    return calculateDoctorDailySlots(doctor);
+  }
+  
+  return 10; // Ultimate fallback
+};
+
+
 // ✅ Get total max slots for a specific date (sum of all doctors' actual slots)
 const getTotalSlotsForDate = (date: string): number => {
   if (!date) return 0;
 
-  // First check if staff has set custom slot counts for this date
-  const customTotal = Object.entries(doctorSlotSettings)
-    .filter(([key]) => key.endsWith(`_${date}`))
-    .reduce((sum, [, count]) => sum + (count || 0), 0);
-  
-  if (customTotal > 0) {
-    return customTotal;
-  }
-
-  // Otherwise, calculate based on each doctor's working hours
   let total = 0;
+
+  // Loop through each doctor and get their slot count for this date
   doctors.forEach(doctor => {
     // Check if doctor is available on this date
     const availability = doctorAvailability.find(
@@ -596,13 +608,14 @@ const getTotalSlotsForDate = (date: string): number => {
     const isAvailable = availability ? availability.available : doctor.available;
     
     if (isAvailable) {
-      total += calculateDoctorDailySlots(doctor);
+      // Use getDoctorSlotsForDate which checks both custom settings and calculated slots
+      const doctorSlots = getDoctorSlotsForDate(doctor.id, date);
+      total += doctorSlots;
     }
   });
 
   return total;
 };
-
 const getCalendarDays = (): DaySchedule[] => {
   const end = new Date(
     calendarCurrentDate.getFullYear(),
@@ -988,21 +1001,66 @@ const handleSubmit = async () => {
   const selectedDoctorInfo = doctors.find(doc => doc.id === formData.doctor);
   if (!selectedDoctorInfo) {
     addNotification('error', 'Selected doctor not found');
-    console.log('Available doctors:', doctors.map(d => ({ id: d.id, name: d.name })));
-    console.log('Selected doctor ID:', formData.doctor);
     return;
   }
 
-  console.log('Selected doctor info:', {
-    id: selectedDoctorInfo.id,
-    name: selectedDoctorInfo.name,
-    specialty: selectedDoctorInfo.specialty
-  });
-
-  // ✅ NEW: Check if daily limit is reached BEFORE creating appointment
+  // ✅ NEW: Check if daily limit is reached and offer waiting list
   if (!editingAppointment && isDailyLimitReached(formData.doctor, formData.date)) {
-    addNotification('error', 'This doctor has reached their maximum appointments for this day. Please select another date or doctor.');
-    return;
+    const userChoice = window.confirm(
+      `${selectedDoctorInfo.name} is fully booked on ${formData.date}.\n\n` +
+      `Would you like to join the waiting list? You'll be automatically notified if a slot becomes available.`
+    );
+
+    if (!userChoice) {
+      addNotification('info', 'Please select another date or doctor.');
+      return;
+    }
+
+    // Add to waiting list
+    try {
+      await addDoc(collection(db, 'waitingList'), {
+        patientName: formData.fullName,
+        patientEmail: formData.email,
+        patientPhone: formData.phone,
+        preferredDoctorId: formData.doctor,
+        preferredDoctorName: selectedDoctorInfo.name,
+        preferredDate: formData.date,
+        priority: formData.priority,
+        addedAt: serverTimestamp(),
+        originalAppointmentData: {
+          name: formData.fullName,
+          age: formData.age,
+          email: formData.email,
+          phone: formData.phone,
+          gender: formData.gender,
+          type: formData.condition === 'custom' ? formData.customCondition : formData.condition,
+          photo: formData.photo,
+          notes: ''
+        }
+      });
+
+      addNotification('success', `You've been added to the waiting list for ${selectedDoctorInfo.name}. We'll notify you when a slot opens.`);
+      setShowBookingForm(false);
+      setFormData({
+        fullName: '',
+        age: '',
+        date: '',
+        time: '',
+        condition: '',
+        customCondition: '',
+        priority: 'normal',
+        email: '',
+        phone: '',
+        doctor: '',
+        photo: '',
+        gender: ''
+      });
+      return;
+    } catch (error) {
+      console.error('Error adding to waiting list:', error);
+      addNotification('error', 'Failed to add to waiting list');
+      return;
+    }
   }
 
   // Calculate adjusted time for emergency appointments
@@ -1117,14 +1175,13 @@ const handleCancelAppointment = async (id: string, reason: string) => {
   try {
     setIsSendingCancellation(true);
     
-    // Get appointment details
     const appointment = appointments.find(apt => apt.id === id);
     if (!appointment) {
       addNotification('error', 'Appointment not found');
       return;
     }
 
-    // Update appointment status in Firebase
+    // Update appointment status
     const appointmentRef = doc(db, 'appointments', id);
     await updateDoc(appointmentRef, {
       status: 'cancelled',
@@ -1132,6 +1189,67 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       cancelledAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+
+    // ✅ NEW: Check waiting list for this doctor and date
+    const waitingListQuery = query(
+      collection(db, 'waitingList'),
+      where('preferredDoctorId', '==', appointment.doctorId),
+      where('preferredDate', '==', appointment.date),
+      orderBy('priority', 'desc'),
+      orderBy('addedAt', 'asc')
+    );
+
+    const waitingListSnapshot = await getDocs(waitingListQuery);
+
+    if (!waitingListSnapshot.empty) {
+      const nextInLine = waitingListSnapshot.docs[0];
+      const waitingData = nextInLine.data();
+
+      // Create appointment for waiting list patient
+      const queueNumber = await getNextQueueNumber(appointment.date);
+      
+      await addDoc(collection(db, 'appointments'), {
+        ...waitingData.originalAppointmentData,
+        time: appointment.time,
+        date: appointment.date,
+        status: 'pending',
+        priority: waitingData.priority,
+        doctor: waitingData.preferredDoctorName,
+        doctorId: waitingData.preferredDoctorId,
+        userId: 'waiting-list-assigned',
+        bookedBy: 'staff',
+        assignedBy: 'System (Waiting List)',
+        queueNumber,
+        waitingListAssignment: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      // Remove from waiting list
+      await deleteDoc(doc(db, 'waitingList', nextInLine.id));
+
+      // Send notification to waiting list patient
+      try {
+        await fetch('http://127.0.0.1:5000/send-waiting-list-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: waitingData.patientName,
+            email: waitingData.patientEmail,
+            phone: waitingData.patientPhone,
+            doctor: waitingData.preferredDoctorName,
+            date: appointment.date,
+            time: appointment.time
+          })
+        });
+      } catch (notifError) {
+        console.error('Error sending waiting list notification:', notifError);
+      }
+
+      addNotification('info', 'Appointment cancelled. The slot has been offered to the next patient on the waiting list.');
+    } else {
+      addNotification('info', 'Appointment cancelled successfully');
+    }
 
     // Send cancellation email to clinic
     try {
@@ -1152,15 +1270,11 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       const data = await response.json();
       if (data.success) {
         console.log('✅ Cancellation email sent to clinic');
-      } else {
-        console.warn('⚠️ Cancellation email failed:', data.error);
       }
     } catch (emailError) {
       console.error('❌ Error sending cancellation email:', emailError);
-      // Don't fail the cancellation if email fails
     }
 
-    addNotification('info', 'Appointment cancelled successfully');
     setShowCancelModal(false);
     setCancelReason('');
     setSelectedAppointment(null);
@@ -1172,7 +1286,6 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     setIsSendingCancellation(false);
   }
 };
-
   const handleReschedule = (appointment: Appointment) => {
     setEditingAppointment(appointment);
     setFormData({
@@ -1408,208 +1521,370 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           </div>
         </div>
       </section>
-
-{/* Main Content */}
+ {/* Main Content */}
 <div className="main-content">
-  {/* My Appointments */}
-  <section className="appointments-section">
-    <div className="section-header">
-      <div className="section-title">
-        <Calendar size={20} /> My Appointments
-      </div>
-      <div className="section-subtitle">
-        Manage your scheduled appointments
-        {searchTerm && (
-          <span className="search-results">
-            - Found {filteredAppointments.length} result(s)
-          </span>
-        )}
+  {/* Left Column - Appointments */}
+  <div className="appointments-column">
+    {/* Today's Appointments */}
+    <section className="appointments-section today-appointments">
+      <div className="section-header">
+        <div className="section-title">
+          <Calendar size={20} /> Today's Appointments
+        </div>
+        <div className="section-subtitle">
+          {(() => {
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            return `Appointments scheduled for today (${formattedDate})`;
+          })()}
+          {(() => {
+            const todayAppointments = filteredAppointments.filter(
+              apt => apt.date === getTodayDate()
+            );
+            return searchTerm && todayAppointments.length > 0 ? (
+              <span className="search-results">
+                - Found {todayAppointments.length} result(s)
+              </span>
+            ) : null;
+          })()}
+        </div>
       </div>
 
-      {/* ✅ Search bar removed from here (now in Header) */}
-    </div>
+      <div className="appointments-list">
+        {(() => {
+          const todayAppointments = filteredAppointments.filter(
+            apt => apt.date === getTodayDate()
+          );
+          
+          if (todayAppointments.length === 0) {
+            return (
+              <div className="empty-state">
+                {searchTerm ? (
+                  <p>No appointments found for today matching "{searchTerm}"</p>
+                ) : (
+                  <p>You have no appointments scheduled for today</p>
+                )}
+              </div>
+            );
+          }
+          
+          return todayAppointments.map((appointment) => (
+            <div key={appointment.id} className="appointment-card">
+              {/* Avatar */}
+              <button
+                className="appointment-avatar-btn"
+                onClick={() => {
+                  setSelectedProfile(appointment);
+                  setShowDetailsModal(true);
+                }}
+                aria-label={`View profile for ${appointment.name}`}
+                title={`View profile for ${appointment.name}`}
+              >
+                <div className="appointment-avatar">
+                  {appointment.photo ? (
+                    <img
+                      src={appointment.photo}
+                      alt={appointment.name}
+                      className="avatar-image"
+                    />
+                  ) : (
+                    <User size={20} />
+                  )}
+                </div>
+              </button>
 
-    <div className="appointments-list">
-      {filteredAppointments.length === 0 ? (
-        <div className="empty-state">
-          {searchTerm ? (
-            <p>No appointments found matching "{searchTerm}"</p>
-          ) : (
-            <p>You have no appointments scheduled</p>
+              {/* Patient Details (Left Side) */}
+              <div className="appointment-details">
+                <div className="queue-number">#{appointment.queueNumber}</div>
+                <div className="appointment-name">
+                  {appointment.name}
+                  {appointment.age && (
+                    <span className="appointment-age"> (Age: {appointment.age})</span>
+                  )}
+                </div>
+                <div className="appointment-type">{appointment.type}</div>
+                <div className="appointment-doctor">{appointment.doctor}</div>
+              </div>
+
+              {/* Meta Info (Right Side) */}
+              <div className="appointment-meta">
+                <div className="appointment-time">{appointment.time}</div>
+
+                <div className="appointment-tags">
+                  <div className={`appointment-status status-${appointment.status}`}>
+                    {appointment.status}
+                  </div>
+                  <div
+                    className={`appointment-priority ${getPriorityColor(
+                      appointment.priority
+                    )}`}
+                  >
+                    {getPriorityIcon(appointment.priority)} {appointment.priority}
+                  </div>
+                </div>
+
+                <div className="appointment-actions">
+                  <button
+                    className="action-btn view-btn"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setShowDetailsModal(true);
+                    }}
+                    aria-label={`View details for ${appointment.name}`}
+                    title={`View details for ${appointment.name}`}
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={() => handleReschedule(appointment)}
+                    aria-label={`Reschedule appointment for ${appointment.name}`}
+                    title={`Reschedule appointment for ${appointment.name}`}
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    className="action-btn cancel-btn"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setShowCancelModal(true);
+                    }}
+                    aria-label={`Cancel appointment for ${appointment.name}`}
+                    title={`Cancel appointment for ${appointment.name}`}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ));
+        })()}
+      </div>
+    </section>
+
+    {/* My Appointments - ALL TIME */}
+    <section className="appointments-section my-appointments">
+      <div className="section-header">
+        <div className="section-title">
+          <CalendarDays size={20} /> My Appointments
+        </div>
+        <div className="section-subtitle">
+          All your scheduled appointments
+          {searchTerm && (
+            <span className="search-results">
+              - Found {filteredAppointments.length} result(s)
+            </span>
           )}
         </div>
-      ) : (
-        filteredAppointments.map((appointment) => (
-          <div key={appointment.id} className="appointment-card">
-            {/* Avatar */}
-            <button
-              className="appointment-avatar-btn"
-              onClick={() => {
-                setSelectedProfile(appointment);
-                setShowDetailsModal(true);
-              }}
-              aria-label={`View profile for ${appointment.name}`}
-              title={`View profile for ${appointment.name}`}
-            >
-              <div className="appointment-avatar">
-                {appointment.photo ? (
-                  <img
-                    src={appointment.photo}
-                    alt={appointment.name}
-                    className="avatar-image"
-                  />
-                ) : (
-                  <User size={20} />
-                )}
-              </div>
-            </button>
+      </div>
 
-            {/* Patient Details (Left Side) */}
-            <div className="appointment-details">
-              <div className="queue-number">#{appointment.queueNumber}</div>
-              <div className="appointment-name">
-                {appointment.name}
-                {appointment.age && (
-                  <span className="appointment-age"> (Age: {appointment.age})</span>
-                )}
+      <div className="appointments-list">
+        {filteredAppointments.length === 0 ? (
+          <div className="empty-state">
+            {searchTerm ? (
+              <p>No appointments found matching "{searchTerm}"</p>
+            ) : (
+              <p>You have no appointments scheduled</p>
+            )}
+          </div>
+        ) : (
+          filteredAppointments.map((appointment) => (
+            <div key={appointment.id} className="appointment-card">
+              {/* Avatar */}
+              <button
+                className="appointment-avatar-btn"
+                onClick={() => {
+                  setSelectedProfile(appointment);
+                  setShowDetailsModal(true);
+                }}
+                aria-label={`View profile for ${appointment.name}`}
+                title={`View profile for ${appointment.name}`}
+              >
+                <div className="appointment-avatar">
+                  {appointment.photo ? (
+                    <img
+                      src={appointment.photo}
+                      alt={appointment.name}
+                      className="avatar-image"
+                    />
+                  ) : (
+                    <User size={20} />
+                  )}
+                </div>
+              </button>
+
+              {/* Patient Details (Left Side) */}
+              <div className="appointment-details">
+                <div className="queue-number">#{appointment.queueNumber}</div>
+                <div className="appointment-name">
+                  {appointment.name}
+                  {appointment.age && (
+                    <span className="appointment-age"> (Age: {appointment.age})</span>
+                  )}
+                </div>
+                <div className="appointment-type">{appointment.type}</div>
+                <div className="appointment-doctor">{appointment.doctor}</div>
+                <div className="appointment-date-display">
+                  {(() => {
+                    const [year, month, day] = appointment.date.split('-');
+                    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+                    return dateObj.toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    });
+                  })()}
+                </div>
               </div>
-              <div className="appointment-type">{appointment.type}</div>
-              <div className="appointment-doctor">{appointment.doctor}</div>
+
+              {/* Meta Info (Right Side) */}
+              <div className="appointment-meta">
+                <div className="appointment-time">{appointment.time}</div>
+
+                <div className="appointment-tags">
+                  <div className={`appointment-status status-${appointment.status}`}>
+                    {appointment.status}
+                  </div>
+                  <div
+                    className={`appointment-priority ${getPriorityColor(
+                      appointment.priority
+                    )}`}
+                  >
+                    {getPriorityIcon(appointment.priority)} {appointment.priority}
+                  </div>
+                </div>
+
+                <div className="appointment-actions">
+                  <button
+                    className="action-btn view-btn"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setShowDetailsModal(true);
+                    }}
+                    aria-label={`View details for ${appointment.name}`}
+                    title={`View details for ${appointment.name}`}
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={() => handleReschedule(appointment)}
+                    aria-label={`Reschedule appointment for ${appointment.name}`}
+                    title={`Reschedule appointment for ${appointment.name}`}
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    className="action-btn cancel-btn"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setShowCancelModal(true);
+                    }}
+                    aria-label={`Cancel appointment for ${appointment.name}`}
+                    title={`Cancel appointment for ${appointment.name}`}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
             </div>
+          ))
+        )}
+      </div>
+    </section>
+  </div>
 
-            {/* Meta Info (Right Side) */}
-            <div className="appointment-meta">
-              <div className="appointment-time">{appointment.time}</div>
-
-              <div className="appointment-tags">
-                <div className={`appointment-status status-${appointment.status}`}>
-                  {appointment.status}
-                </div>
-                <div
-                  className={`appointment-priority ${getPriorityColor(
-                    appointment.priority
-                  )}`}
-                >
-                  {getPriorityIcon(appointment.priority)} {appointment.priority}
+  {/* Right Column - Current Queue */}
+  <section className="queue-section">
+    <div className="section-header">
+      <div className="section-title">
+        <Clock size={20} />
+        Current Queue
+      </div>
+      <div className="section-subtitle">
+        Real-time queue status - All appointments for today
+      </div>
+    </div>
+    {/* Now Serving */}
+    <div className="queue-summary">
+      <span className="serving-label">Now Serving</span>
+      <span className="serving-number">
+        #{currentPatient?.queueNumber || 'None'}
+      </span>
+    </div>
+    {/* Next Patient */}
+    {nextPatient && (
+      <div className="queue-summary next-patient">
+        <span className="serving-label">Up Next</span>
+        <span className="serving-number">#{nextPatient.queueNumber}</span>
+      </div>
+    )}
+    {/* Queue List */}
+    <div className="queue-list">
+      <div className="queue-header">
+        <span>Queue showing all appointments</span>
+      </div>
+      {queue.length > 0 ? (
+        queue.map((patient) => (
+          <div
+            key={patient.id}
+            className={`queue-card 
+              status-${(patient.status || '').toLowerCase()} 
+              priority-${(patient.priority || '').toLowerCase()} 
+              ${patient.priority === 'emergency' ? 'emergency-blinking' : ''}`}
+          >
+            {/* Top Row */}
+            <div className="queue-top">
+              <span className="queue-number">#{patient.queueNumber}</span>
+              <div className="queue-time">
+                <div className="appointment-time">{patient.time}</div>
+                <div className="appointment-date">
+                  {(() => {
+                    const [year, month, day] = patient.date.split('-');
+                    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+                    return dateObj.toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    });
+                  })()}
                 </div>
               </div>
-
-              <div className="appointment-actions">
-                <button
-                  className="action-btn view-btn"
-                  onClick={() => {
-                    setSelectedAppointment(appointment);
-                    setShowDetailsModal(true);
-                  }}
-                  aria-label={`View details for ${appointment.name}`}
-                  title={`View details for ${appointment.name}`}
+            </div>
+            {/* Middle */}
+            <div className="queue-body">
+              <div className="booking-status-row">
+                {/* Status Pill */}
+                <span
+                  className={`status-pill ${patient.status?.toLowerCase() || ''}`}
                 >
-                  <Eye size={16} />
-                </button>
-                <button
-                  className="action-btn edit-btn"
-                  onClick={() => handleReschedule(appointment)}
-                  aria-label={`Reschedule appointment for ${appointment.name}`}
-                  title={`Reschedule appointment for ${appointment.name}`}
+                  {patient.status}
+                </span>
+                {/* Priority Pill */}
+                <span
+                  className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}
                 >
-                  <Edit size={16} />
-                </button>
-                <button
-                  className="action-btn cancel-btn"
-                  onClick={() => {
-                    setSelectedAppointment(appointment);
-                    setShowCancelModal(true);
-                  }}
-                  aria-label={`Cancel appointment for ${appointment.name}`}
-                  title={`Cancel appointment for ${appointment.name}`}
-                >
-                  <Trash2 size={16} />
-                </button>
+                  {patient.priority === 'emergency' && '🚨 Emergency'}
+                  {patient.priority === 'urgent' && '⚠️ Urgent'}
+                  {patient.priority === 'normal' && 'Normal'}
+                </span>
               </div>
             </div>
           </div>
         ))
+      ) : (
+        <div className="empty-queue">
+          <p>No patients in queue for today</p>
+        </div>
       )}
     </div>
   </section>
-{/* ✅ KEEP THIS - Current Queue (FIRST ONE) */}
-<section className="queue-section">
-  <div className="section-header">
-    <div className="section-title">
-      <Clock size={20} />
-      Current Queue
-    </div>
-    <div className="section-subtitle">
-      Real-time queue status - All appointments for today
-    </div>
-  </div>
-  {/* Now Serving */}
-  <div className="queue-summary">
-    <span className="serving-label">Now Serving</span>
-    <span className="serving-number">
-      #{currentPatient?.queueNumber || 'None'}
-    </span>
-  </div>
-  {/* Next Patient */}
-  {nextPatient && (
-    <div className="queue-summary next-patient">
-      <span className="serving-label">Up Next</span>
-      <span className="serving-number">#{nextPatient.queueNumber}</span>
-    </div>
-  )}
-  {/* Queue List */}
-  <div className="queue-list">
-    <div className="queue-header">
-      <span>Queue showing all appointments</span>
-    </div>
-    {queue.length > 0 ? (
-      queue.map((patient) => (
-        <div
-          key={patient.id}
-          className={`queue-card 
-            status-${(patient.status || '').toLowerCase()} 
-            priority-${(patient.priority || '').toLowerCase()} 
-            ${patient.priority === 'emergency' ? 'emergency-blinking' : ''}`}
-        >
-          {/* Top Row */}
-          <div className="queue-top">
-            <span className="queue-number">#{patient.queueNumber}</span>
-            <div className="queue-time">
-              <div className="appointment-time">{patient.time}</div>
-              <div className="appointment-date">{patient.date}</div>
-            </div>
-          </div>
-          {/* Middle */}
-          <div className="queue-body">
-            <div className="booking-status-row">
-              {/* Status Pill */}
-              <span
-                className={`status-pill ${patient.status?.toLowerCase() || ''}`}
-              >
-                {patient.status}
-              </span>
-              {/* Priority Pill */}
-              <span
-                className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}
-              >
-                {patient.priority === 'emergency' && '🚨 Emergency'}
-                {patient.priority === 'urgent' && '⚠️ Urgent'}
-                {patient.priority === 'normal' && 'Normal'}
-              </span>
-            </div>
-          </div>
-        </div>
-      ))
-    ) : (
-      <div className="empty-queue">
-        <p>No patients in queue for today</p>
-      </div>
-    )}
-  </div>
-</section>
 </div>
 {/* ✅ Close main-content div here */}
-
 {/* Cancel Appointment Modal */}
 {showCancelModal && selectedAppointment && (
   <div 
@@ -1871,9 +2146,19 @@ const handleCancelAppointment = async (id: string, reason: string) => {
   </button>
 
   <div className="selected-date-display">
-    <Calendar size={16} />
-    <span>Selected Date: {selectedCalendarDate}</span>
-  </div>
+  <Calendar size={16} />
+  <span>
+    Selected Date: {(() => {
+      const [year, month, day] = selectedCalendarDate.split('-');
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    })()}
+  </span>
+</div>
 
   <div className="doctors-grid-wizard">
     {doctors
@@ -2310,28 +2595,40 @@ const handleCancelAppointment = async (id: string, reason: string) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="doctor">Doctor *</label>
-          <select
-            id="doctor"
-            name="doctor"
-            value={formData.doctor}
-            onChange={handleFormChange}
-            required
-          >
-            <option value="">Select doctor</option>
-            {doctors
-              .filter((doc) => doc.available)
-              .filter((doc) => {
-                if (!formData.date) return true;
-                return isDoctorAvailableOnDate(doc.id, formData.date);
-              })
-              .map((doc) => (
-                <option key={doc.id} value={doc.id}>
-                  {doc.name} - {doc.specialty}
-                </option>
-              ))}
-          </select>
-
+  <label htmlFor="doctor">Doctor *</label>
+  <select
+    id="doctor"
+    name="doctor"
+    value={formData.doctor}
+    onChange={handleFormChange}
+    required
+  >
+    <option value="">Select doctor</option>
+    {doctors
+      .filter((doc) => {
+        // Filter out doctors who are not generally available
+        if (!doc.available) return false;
+        
+        // If date is selected, check date-specific availability
+        if (formData.date) {
+          const availability = doctorAvailability.find(
+            av => av.doctorId === doc.id && av.date === formData.date
+          );
+          // If there's a specific availability record for this date, use it
+          // If available is explicitly set to false, exclude the doctor
+          if (availability && availability.available === false) {
+            return false;
+          }
+        }
+        
+        return true;
+      })
+      .map((doc) => (
+        <option key={doc.id} value={doc.id}>
+          {doc.name} - {doc.specialty}
+        </option>
+      ))}
+  </select>
           {formData.date &&
             doctors.some(
               (doc) =>
@@ -2388,122 +2685,207 @@ const handleCancelAppointment = async (id: string, reason: string) => {
             </select>
           </div>
         </div>
-
 {/* ✅ Time Slots Section with Doctor Availability Warnings */}
-        {formData.date && formData.doctor && (() => {
-          // ✅ Check if doctor is available on this date
-          const isDoctorAvailable = isDoctorAvailableOnDate(formData.doctor, formData.date);
+{formData.date && formData.doctor && (() => {
+  const isDoctorAvailable = isDoctorAvailableOnDate(formData.doctor, formData.date);
+  const isFullyBooked = isDailyLimitReached(formData.doctor, formData.date);
+
+  // ✅ If doctor is unavailable, show warning
+  if (!isDoctorAvailable) {
+    return (
+      <div className="time-slots-section">
+        <label>Available Time Slots *</label>
+        <div className="doctor-unavailable-warning">
+          <AlertTriangle size={24} />
+          <p><strong>Doctor Not Available</strong></p>
+          <p>This doctor is not available on {formData.date}.</p>
+          <p className="sub-message">Please select another doctor or date.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ If doctor is fully booked, show warning WITH BUTTON
+  if (isFullyBooked && !editingAppointment) {
+    return (
+      <div className="time-slots-section">
+        <label>Available Time Slots *</label>
+        <div className="doctor-fully-booked-warning">
+          <XCircle size={24} />
+          <p><strong>Doctor Fully Booked</strong></p>
+          <p>This doctor has reached maximum appointments on {formData.date}.</p>
+          <p className="sub-message">Would you like to join the waiting list?</p>
           
-          // ✅ Check if doctor is fully booked
-          const isFullyBooked = isDailyLimitReached(formData.doctor, formData.date);
+         {/* ✅ UPDATED WAITING LIST SECTION WITH VALIDATION */}
+<div className="waiting-list-actions">
+  <button
+    type="button"
+    className="btn-secondary"
+    onClick={() => setShowBookingForm(false)}
+  >
+    Choose Another Doctor/Date
+  </button>
+  <button
+    type="button"
+    className="btn-primary"
+    disabled={
+      !formData.fullName ||
+      !formData.age ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.gender ||
+      !formData.condition ||
+      (formData.condition === 'custom' && !formData.customCondition) ||
+      !formData.doctor ||
+      !formData.date ||
+      !/^\+63\d{10}$/.test(formData.phone)
+    }
+    onClick={async () => {
+      // Validate required fields before adding to waiting list
+      if (!formData.fullName || !formData.age || !formData.email || 
+          !formData.phone || !formData.gender || !formData.condition ||
+          (formData.condition === 'custom' && !formData.customCondition) ||
+          !formData.doctor || !formData.date) {
+        addNotification('error', 'Please fill in all required fields before joining the waiting list');
+        return;
+      }
 
-          // ✅ If doctor is unavailable, show warning
-          if (!isDoctorAvailable) {
-            return (
-              <div className="time-slots-section">
-                <label>Available Time Slots *</label>
-                <div className="doctor-unavailable-warning">
-                  <AlertTriangle size={24} />
-                  <p><strong>Doctor Not Available</strong></p>
-                  <p>This doctor is not available on {formData.date}.</p>
-                  <p className="sub-message">Please select another doctor or date.</p>
-                </div>
-              </div>
-            );
+      // Validate phone number format
+      if (!/^\+63\d{10}$/.test(formData.phone)) {
+        addNotification('error', 'Please enter a valid Philippine phone number (+63XXXXXXXXXX)');
+        return;
+      }
+
+      try {
+        const selectedDoctorInfo = doctors.find(doc => doc.id === formData.doctor);
+        
+        await addDoc(collection(db, 'waitingList'), {
+          patientName: formData.fullName,
+          patientEmail: formData.email,
+          patientPhone: formData.phone,
+          preferredDoctorId: formData.doctor,
+          preferredDoctorName: selectedDoctorInfo?.name || '',
+          preferredDate: formData.date,
+          priority: formData.priority,
+          addedAt: serverTimestamp(),
+          originalAppointmentData: {
+            name: formData.fullName,
+            age: formData.age,
+            email: formData.email,
+            phone: formData.phone,
+            gender: formData.gender,
+            type: formData.condition === 'custom' ? formData.customCondition : formData.condition,
+            photo: formData.photo,
+            notes: ''
           }
+        });
 
-          // ✅ If doctor is fully booked, show warning
-          if (isFullyBooked && !editingAppointment) {
-            return (
-              <div className="time-slots-section">
-                <label>Available Time Slots *</label>
-                <div className="doctor-fully-booked-warning">
-                  <XCircle size={24} />
-                  <p><strong>Doctor Fully Booked</strong></p>
-                  <p>This doctor has reached maximum appointments on {formData.date}.</p>
-                  <p className="sub-message">Please select another doctor or date.</p>
-                </div>
-              </div>
-            );
-          }
+        addNotification('success', `You've been added to the waiting list for ${selectedDoctorInfo?.name}. We'll notify you when a slot opens.`);
+        setShowBookingForm(false);
+        setFormData({
+          fullName: '',
+          age: '',
+          date: '',
+          time: '',
+          condition: '',
+          customCondition: '',
+          priority: 'normal',
+          email: '',
+          phone: '',
+          doctor: '',
+          photo: '',
+          gender: ''
+        });
+      } catch (error) {
+        console.error('Error adding to waiting list:', error);
+        addNotification('error', 'Failed to add to waiting list');
+      }
+    }}
+  >
+    Join Waiting List
+  </button>
+</div>
+        </div>
+      </div>
+    );
+  }
 
-          // ✅ Show time slots if doctor is available and not fully booked
-          return (
-            <div className="time-slots-section">
-              <label>Available Time Slots *</label>
-              {timeSlots.length === 0 ? (
-                <div className="no-slots-message">
-                  No available time slots for this date. Please select another date.
-                </div>
-              ) : (
-                <div className="time-slots-grid">
-                  {timeSlots
-                    .filter((slot) =>
-                      formData.priority === "emergency" ? true : !slot.emergency
-                    )
-                    .map((slot) => {
-                      const slotKey = `${formData.doctor}_${formData.date}_${slot.time}`;
-                      const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+  // ✅ Show time slots if doctor is available and not fully booked
+  return (
+    <div className="time-slots-section">
+      <label>Available Time Slots *</label>
+      {timeSlots.length === 0 ? (
+        <div className="no-slots-message">
+          No available time slots for this date. Please select another date.
+        </div>
+      ) : (
+        <div className="time-slots-grid">
+          {timeSlots
+            .filter((slot) =>
+              formData.priority === "emergency" ? true : !slot.emergency
+            )
+            .map((slot) => {
+              const slotKey = `${formData.doctor}_${formData.date}_${slot.time}`;
+              const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
-                      return (
-                        <button
-                          key={slot.time}
-                          type="button"
-                          className={`time-slot 
-                            ${!slot.available ? "booked" : ""} 
-                            ${isBlocked ? "blocked" : ""} 
-                            ${slot.emergency ? "emergency-slot" : ""} 
-                            ${formData.time === slot.time ? "selected" : ""}`}
-                          onClick={() => {
-                            if (!slot.available || isBlocked) return;
-                            setFormData((prev) => ({
-                              ...prev,
-                              time: slot.time,
-                            }));
-                          }}
-                          disabled={
-                            !slot.available ||
-                            isBlocked ||
-                            (slot.emergency && formData.priority !== "emergency")
-                          }
-                          aria-label={`${slot.time} ${
-                            isBlocked
-                              ? "Blocked"
-                              : slot.available
-                              ? "available"
-                              : "booked"
-                          }`}
-                          title={
-                            isBlocked
-                              ? "Unavailable — set by staff"
-                              : slot.emergency
-                              ? "Emergency Only"
-                              : `${slot.time} ${
-                                  slot.available ? "available" : "booked"
-                                }`
-                          }
-                        >
-                          {slot.time}
-                          {isBlocked && (
-                            <span className="blocked-indicator">Blocked</span>
-                          )}
-                          {slot.emergency && (
-                            <span className="emergency-badge">
-                              Emergency Only
-                            </span>
-                          )}
-                          {!slot.available && !slot.emergency && !isBlocked && (
-                            <span className="booked-indicator">Booked</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
+              return (
+                <button
+                  key={slot.time}
+                  type="button"
+                  className={`time-slot 
+                    ${!slot.available ? "booked" : ""} 
+                    ${isBlocked ? "blocked" : ""} 
+                    ${slot.emergency ? "emergency-slot" : ""} 
+                    ${formData.time === slot.time ? "selected" : ""}`}
+                  onClick={() => {
+                    if (!slot.available || isBlocked) return;
+                    setFormData((prev) => ({
+                      ...prev,
+                      time: slot.time,
+                    }));
+                  }}
+                  disabled={
+                    !slot.available ||
+                    isBlocked ||
+                    (slot.emergency && formData.priority !== "emergency")
+                  }
+                  aria-label={`${slot.time} ${
+                    isBlocked
+                      ? "Blocked"
+                      : slot.available
+                      ? "available"
+                      : "booked"
+                  }`}
+                  title={
+                    isBlocked
+                      ? "Unavailable – set by staff"
+                      : slot.emergency
+                      ? "Emergency Only"
+                      : `${slot.time} ${
+                          slot.available ? "available" : "booked"
+                        }`
+                  }
+                >
+                  {slot.time}
+                  {isBlocked && (
+                    <span className="blocked-indicator">Blocked</span>
+                  )}
+                  {slot.emergency && (
+                    <span className="emergency-badge">
+                      Emergency Only
+                    </span>
+                  )}
+                  {!slot.available && !slot.emergency && !isBlocked && (
+                    <span className="booked-indicator">Booked</span>
+                  )}
+                </button>
+              );
+            })}
+        </div>
+      )}
+    </div>
+  );
+})()}
         {!formData.date && !formData.doctor && (
           <div className="form-hint-box">
             Please select a doctor and date to view available time slots.

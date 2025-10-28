@@ -100,7 +100,7 @@
 }
 
 .feedback-btn:hover {
-  background: var(--feedback-primary-hover);
+  background: var(--feedback-primary-gradient);
   transform: translateY(-2px);
 }
 

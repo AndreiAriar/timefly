@@ -468,12 +468,34 @@
   cursor: pointer;
   transition: all var(--transition-fast);
 }
+.action-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
 
-.profile-action:hover,
 .action-link:hover {
   background: var(--bg-secondary);
   color: var(--primary);
   transform: translateX(4px);
+}
+
+/* Ensure all icons are same size */
+.action-link svg,
+.logout-action svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .logout-action {

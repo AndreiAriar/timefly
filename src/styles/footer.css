@@ -1,31 +1,148 @@
-.app-footer.simple {
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
+/* ===================================================
+   ✅ PATIENT FOOTER - MATCHING STAFF DASHBOARD + LIGHT BLUE TITLE + DARK MODE
+   =================================================== */
+
+.app-footer {
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  border-top: 1px solid var(--border-light);
+  padding: 2rem 0;
+  margin-top: 4rem;
+  transition: background 0.4s ease, color 0.3s ease, filter 0.3s ease;
+}
+
+/* ✅ Center all content */
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 2rem 1rem;
-  font-family: "Inter", sans-serif;
+  gap: 0.75rem;
 }
 
-.app-footer.simple h3 {
-  color: var(--primary);
+/* ✅ Brand section: logo + title */
+.footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* ✅ Logo styling */
+.footer-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.3));
+}
+
+.footer-logo:hover {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.6));
+}
+
+/* ✅ Title next to logo */
+.footer-title {
+  font-size: 1.35rem;
+  color: #42a5f5; /* ✅ Light blue title */
   font-weight: 700;
-  font-size: 1.4rem;
-  margin-bottom: 0.25rem;
+  line-height: 1.2;
+  margin: 0;
+  text-shadow: 0 0 6px rgba(66, 165, 245, 0.5);
+  transition: color 0.3s ease, text-shadow 0.3s ease, transform 0.3s ease;
 }
 
-.app-footer.simple p {
-  margin: 0.3rem 0;
-  color: var(--text-tertiary);
+.footer-title:hover {
+  text-shadow: 0 0 14px rgba(66, 165, 245, 0.9);
+  transform: scale(1.05);
+  animation: glowPulse 1.5s infinite ease-in-out;
+}
+
+/* ✅ Tagline below */
+.footer-tagline {
+  margin: 0;
   font-size: 0.9rem;
+  color: var(--text-light);
+  line-height: 1.4;
 }
 
-.footer-copy {
-  margin-top: 1rem;
-  font-size: 0.8rem;
+/* ✅ Copyright */
+.footer-copyright {
+  text-align: center;
 }
 
-/* ✅ Dark mode (still clean, no divider) */
-[data-theme="dark"] .app-footer.simple {
-  background: var(--bg-secondary);
-  color: var(--text-muted);
+.footer-copyright p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+/* ===================================================
+   🌙 DARK MODE VARIANT
+   =================================================== */
+[data-theme="dark"] .app-footer {
+  background: linear-gradient(135deg, #071223 0%, #0d1f33 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .footer-logo {
+  filter: drop-shadow(0 0 8px rgba(144, 202, 249, 0.6));
+}
+
+[data-theme="dark"] .footer-logo:hover {
+  filter: drop-shadow(0 0 15px rgba(144, 202, 249, 1));
+}
+
+[data-theme="dark"] .footer-title {
+  color: #90caf9; /* ✅ Light blue for dark mode */
+  text-shadow: 0 0 8px rgba(144, 202, 249, 0.8);
+}
+
+[data-theme="dark"] .footer-title:hover {
+  text-shadow: 0 0 18px rgba(144, 202, 249, 1);
+  animation: glowPulse 1.5s infinite ease-in-out;
+}
+
+[data-theme="dark"] .footer-tagline,
+[data-theme="dark"] .footer-copyright p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===================================================
+   🌟 GLOW PULSE ANIMATION
+   =================================================== */
+@keyframes glowPulse {
+  0% {
+    text-shadow: 0 0 8px rgba(66, 165, 245, 0.7);
+  }
+  50% {
+    text-shadow: 0 0 16px rgba(66, 165, 245, 1);
+  }
+  100% {
+    text-shadow: 0 0 8px rgba(66, 165, 245, 0.7);
+  }
+}
+
+/* ===================================================
+   📱 RESPONSIVE DESIGN
+   =================================================== */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-title {
+    font-size: 1.2rem;
+  }
+
+  .footer-copyright {
+    text-align: center;
+  }
 }

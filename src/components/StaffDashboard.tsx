@@ -27,6 +27,7 @@ import {
   Badge,
   MessageSquare,
   CheckCircle,
+  Menu,
   Info
 } from 'lucide-react';
 import {
@@ -57,6 +58,7 @@ import { db, auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import '../styles/staffdashboard.css';
 import '../styles/reports.css';
+import '../styles/staffdashboard-mobile.css';
 
 interface Appointment {
   id: string;
@@ -122,6 +124,28 @@ interface Notification {
   timestamp: Date;
 }
 
+interface WaitingListEntry {
+  id: string;
+  patientName: string;
+  patientEmail: string;
+  patientPhone: string;
+  preferredDoctorId: string;
+  preferredDoctorName: string;
+  preferredDate: string;
+  priority: 'normal' | 'urgent' | 'emergency';
+  addedAt: Timestamp;
+  originalAppointmentData: {
+    name: string;
+    age: string;
+    email: string;
+    phone: string;
+    gender: string;
+    type: string;
+    photo?: string;
+    notes?: string;
+  };
+}
+
 interface QueueItem extends Appointment {
   estimatedWaitTime: number;
   isCurrentlyServing: boolean;
@@ -174,12 +198,16 @@ const StaffDashboard = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
- const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-
-
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement | null>(null);
 
+
+// CONFIRMATION MODAL STATES:
+const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+const [appointmentToCancel, setAppointmentToCancel] = useState<string | null>(null);
+const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
 
   // Data State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -244,13 +272,55 @@ const [appointmentForm, setAppointmentForm] = useState({
   
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [waitingList, setWaitingList] = useState<WaitingListEntry[]>([]);
 
   // Doctor availability management
   const [doctorAvailability, setDoctorAvailability] = useState<DoctorAvailability[]>([]);
   const [doctorAvailabilitySlots, setDoctorAvailabilitySlots] = useState<{[key: string]: boolean}>({});
   
 
+// Scroll detection for header blur effect
+useEffect(() => {
+  const handleScroll = () => {
+    const header = document.querySelector('.staff-main-header');
+    if (header) {
+      if (window.scrollY > 20) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    }
+  };
 
+  // Add scroll listener
+  window.addEventListener('scroll', handleScroll);
+  
+  // Trigger on mount to handle initial state
+  handleScroll();
+  
+  // Cleanup
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth > 768) {
+      setShowMobileMenu(false);
+      document.body.classList.remove('mobile-menu-open');
+    }
+  };
+  
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+// Lock body scroll when mobile menu is open
+useEffect(() => {
+  if (showMobileMenu) {
+    document.body.classList.add('mobile-menu-open');
+  } else {
+    document.body.classList.remove('mobile-menu-open');
+  }
+}, [showMobileMenu]);
 
 // Close profile dropdown when clicking outside
 useEffect(() => {
@@ -320,7 +390,7 @@ useEffect(() => {
             email: staffData.email,
             phone: staffData.phone,
             department: staffData.department,
-            photo: staffData.photo ?? '', // Ã¢Å“â€¦ guaranteed string
+            photo: staffData.photo ?? '', // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ guaranteed string
           });
         } else {
           // If no user document exists, create a basic profile from auth
@@ -347,7 +417,7 @@ useEffect(() => {
             email: basicStaffData.email,
             phone: basicStaffData.phone,
             department: basicStaffData.department,
-            photo: basicStaffData.photo ?? '', // Ã¢Å“â€¦ guaranteed string
+            photo: basicStaffData.photo ?? '', // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ guaranteed string
           });
         }
 
@@ -465,7 +535,7 @@ useEffect(() => {
     );
   }
 }, [showProfileDropdown]);
-// âœ… FIXED: Fetch Appointments - Ordered by Date ASC, Queue Number ASC
+// FIXED: Fetch Appointments - Ordered by Date ASC, Queue Number ASC
 useEffect(() => {
   if (!staffProfile) return;
   const fetchAppointments = () => {
@@ -502,6 +572,34 @@ useEffect(() => {
     }
   };
   fetchAppointments();
+}, [staffProfile]);
+
+// Fetch Waiting List
+useEffect(() => {
+  if (!staffProfile) return;
+  
+  const waitingListQuery = query(
+    collection(db, 'waitingList'),
+    orderBy('priority', 'desc'),
+    orderBy('addedAt', 'asc')
+  );
+  
+  const unsubscribe = onSnapshot(
+    waitingListQuery,
+    (snapshot) => {
+      const waitingData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as WaitingListEntry[];
+      setWaitingList(waitingData);
+    },
+    (error) => {
+      console.error('Error loading waiting list:', error);
+      addNotification('error', 'Failed to load waiting list');
+    }
+  );
+  
+  return () => unsubscribe();
 }, [staffProfile]);
 
   // Fetch Doctor Availability
@@ -642,7 +740,7 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     return hours * 60 + minutes;
   };
 
-  // 🚫 Helper function to check if time is lunch break (12:00 PM or 12:30 PM)
+  // ðŸš« Helper function to check if time is lunch break (12:00 PM or 12:30 PM)
   const isLunchTime = (time12: string): boolean => {
     return time12 === '12:00 PM' || time12 === '12:30 PM';
   };
@@ -685,9 +783,9 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
     const time12 = convertTo12Hour(time24);
 
-    // 🚫 Skip lunch time slots (12:00 PM and 12:30 PM)
+    // ðŸš« Skip lunch time slots (12:00 PM and 12:30 PM)
     if (isLunchTime(time12)) {
-      console.log(`⏰ Skipping lunch break: ${time12}`);
+      console.log(`â° Skipping lunch break: ${time12}`);
       continue;
     }
 
@@ -728,9 +826,9 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
           .padStart(2, '0')}`;
         const bufferTime12 = convertTo12Hour(bufferTime24);
 
-        // 🚫 Skip lunch break buffer slots too
+        // ðŸš« Skip lunch break buffer slots too
         if (isLunchTime(bufferTime12)) {
-          console.log(`⏰ Skipping lunch break buffer: ${bufferTime12}`);
+          console.log(`â° Skipping lunch break buffer: ${bufferTime12}`);
           // Don't add buffer duration here since we're skipping this slot
         } else if (isToday && bufferStart < minimumBookingMinutes) {
           // Skip past buffer slots if booking for today
@@ -824,7 +922,7 @@ const getCalendarDays = (): DaySchedule[] => {
   return days;
 };
 
-// Ã¢Å“â€¦ Calculate how many appointment slots a doctor has based on working hours
+// ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Calculate how many appointment slots a doctor has based on working hours
 const calculateDoctorDailySlots = (doctor: Doctor): number => {
   // Provide defaults if working hours are missing
   let workingHours = doctor.workingHours;
@@ -861,13 +959,13 @@ const calculateDoctorDailySlots = (doctor: Doctor): number => {
 const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeSlotSimple[] => {
   const slots: TimeSlotSimple[] = [];
   
-  // Ã¢Å“â€¦ Enhanced safety check
+  // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Enhanced safety check
   if (!doctor.workingHours || !doctor.workingHours.start || !doctor.workingHours.end) {
     console.warn(` Doctor ${doctor.name} has no working hours defined`);
     return slots;
   }
 
-  // Ã¢Å“â€¦ Parse 12-hour format (e.g., "9:00 AM", "5:00 PM")
+  // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Parse 12-hour format (e.g., "9:00 AM", "5:00 PM")
   const parseTime12Hour = (timeStr: string): { hour: number; minute: number } => {
     const [time, period] = timeStr.trim().split(' ');
     let [hours, minutes] = time.split(':').map(Number);
@@ -878,7 +976,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
     return { hour: hours, minute: minutes || 0 };
   };
 
-  // Ã¢Å“â€¦ Handle both 12-hour format ("9:00 AM") and 24-hour format ("09:00")
+  // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Handle both 12-hour format ("9:00 AM") and 24-hour format ("09:00")
   let startHour: number, startMin: number, endHour: number, endMin: number;
 
   if (doctor.workingHours.start.includes('AM') || doctor.workingHours.start.includes('PM')) {
@@ -896,7 +994,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
   }
 
   const buffer = doctor.bufferTime || 15;
-  const active = doctor.consultationDuration || 30; // Ã¢Å“â€¦ Use consultation duration
+  const active = doctor.consultationDuration || 30; // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Use consultation duration
 
   // Get existing appointments for this doctor on this date
   const existingAppointments = appointments.filter(
@@ -931,7 +1029,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
     });
   }
 
-  console.log(`Ã°Å¸â€¢Â Generated ${slots.length} time slots for ${doctor.name} on ${selectedDate}`);
+  console.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¢Ã‚Â Generated ${slots.length} time slots for ${doctor.name} on ${selectedDate}`);
   return slots;
 };
 // === Toggle Doctor Availability for the Day ===
@@ -1170,7 +1268,7 @@ const checkAppointmentConflict = async (
   return sortedQueue.map((apt, index) => ({
     ...apt,
     estimatedWaitTime: index * 30,
-    isCurrentlyServing: apt.status === 'confirmed', // âœ… All confirmed are "being served"
+    isCurrentlyServing: apt.status === 'confirmed', // Ã¢Å“â€¦ All confirmed are "being served"
     isOnHold: false
   }));
 };
@@ -1274,7 +1372,7 @@ useEffect(() => {
 }, [appointmentForm.doctorId, appointmentForm.date, appointmentForm.priority]);
 
 
-// âœ… PHONE VALIDATION â€“ Philippine number (09XXXXXXXXX)
+// Ã¢Å“â€¦ PHONE VALIDATION Ã¢â‚¬â€œ Philippine number (09XXXXXXXXX)
 const validatePhoneNumber = (phone: string): boolean => {
   const cleaned = phone.replace(/\D/g, ""); // remove non-numerics
   return /^09\d{9}$/.test(cleaned);
@@ -1311,11 +1409,11 @@ const validatePhoneNumber = (phone: string): boolean => {
           addNotification('success', 'Profile photo uploaded!');
           break;
         case 'profileDropdown':
-          // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Update BOTH form and visible profile immediately
+          // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Update BOTH form and visible profile immediately
           setProfileForm(prev => ({ ...prev, photo: photoURL }));
           setStaffProfile(prev => prev ? { ...prev, photo: photoURL } : prev);
           
-          // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Persist to Firestore
+          // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Persist to Firestore
           try {
             const userQuery = query(
               collection(db, 'users'),
@@ -1332,14 +1430,14 @@ const validatePhoneNumber = (phone: string): boolean => {
           }
           
           addNotification('success', 'Profile photo updated!');
-          // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Keep dropdown open to see the change
+          // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Keep dropdown open to see the change
           break;
         default:
           setAppointmentForm(prev => ({ ...prev, photo: photoURL }));
           addNotification('success', 'Photo uploaded!');
       }
       
-      // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Reset file input
+      //Reset file input
       e.target.value = '';
       
     } catch (error) {
@@ -1357,22 +1455,13 @@ const validatePhoneNumber = (phone: string): boolean => {
 
 // Store per-doctor per-day slot counts (key format: doctorId_date)
 const [doctorSlotSettings, setDoctorSlotSettings] = useState<{ [key: string]: number }>({});
-
-// Ã¢Å“â€¦ Get total max slots for a specific date (sum of all doctors' actual slots)
+//  Get total max slots for a specific date (sum of all doctors' actual slots)
 const getTotalSlotsForDate = (date: string): number => {
   if (!date) return 0;
 
-  // First check if staff has set custom slot counts for this date
-  const customTotal = Object.entries(doctorSlotSettings)
-    .filter(([key]) => key.endsWith(`_${date}`))
-    .reduce((sum, [, count]) => sum + (count || 0), 0);
-  
-  if (customTotal > 0) {
-    return customTotal;
-  }
-
-  // Otherwise, calculate based on each doctor's working hours
   let total = 0;
+
+  // Loop through each doctor and get their slot count for this date
   doctors.forEach(doctor => {
     // Check if doctor is available on this date
     const availability = doctorAvailability.find(
@@ -1382,7 +1471,9 @@ const getTotalSlotsForDate = (date: string): number => {
     const isAvailable = availability ? availability.available : doctor.available;
     
     if (isAvailable) {
-      total += calculateDoctorDailySlots(doctor);
+      // Use getDoctorSlotsForDate which checks both custom settings and calculated slots
+      const doctorSlots = getDoctorSlotsForDate(doctor.id, date);
+      total += doctorSlots;
     }
   });
 
@@ -1390,7 +1481,7 @@ const getTotalSlotsForDate = (date: string): number => {
 };
 
 // Utility: Get a single doctor's slot count for a date
-// Ã¢Å“â€¦ Get a single doctor's slot count for a date
+// Get a single doctor's slot count for a date
 const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
   const key = `${doctorId}_${date}`;
   
@@ -1472,13 +1563,62 @@ const handleCreateAppointment = async () => {
   try {
     addNotification('info', 'Creating appointment...');
     
-    // âœ… CRITICAL: Check if daily limit is reached BEFORE creating
+    //  CRITICAL: Check if daily limit is reached BEFORE creating
     if (isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date)) {
       addNotification('error', 'This doctor has reached their maximum appointments for this day. Please select another date or doctor.');
       return;
     }
+    // âœ… NEW: Check if doctor is fully booked
+const isDoctorFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
+
+if (isDoctorFullyBooked) {
+  // Offer to add to waiting list
+  const confirmWaitingList = window.confirm(
+    `This doctor is fully booked on ${appointmentForm.date}.\n\n` +
+    `Would you like to add ${appointmentForm.name} to the waiting list instead?`
+  );
+
+  if (!confirmWaitingList) {
+    addNotification('info', 'Please select another date or doctor.');
+    return;
+  }
+
+  // Add to waiting list
+  try {
+    const selectedDoctor = doctors.find(d => d.id === appointmentForm.doctorId);
     
-    // âœ… Double-check for time slot conflicts
+    await addDoc(collection(db, 'waitingList'), {
+      patientName: appointmentForm.name,
+      patientEmail: appointmentForm.email,
+      patientPhone: appointmentForm.phone,
+      preferredDoctorId: appointmentForm.doctorId,
+      preferredDoctorName: selectedDoctor?.name || '',
+      preferredDate: appointmentForm.date,
+      priority: appointmentForm.priority,
+      addedAt: serverTimestamp(),
+      originalAppointmentData: {
+        name: appointmentForm.name,
+        age: appointmentForm.age,
+        email: appointmentForm.email,
+        phone: appointmentForm.phone,
+        gender: appointmentForm.gender,
+        type: appointmentForm.condition === 'custom' ? appointmentForm.customCondition : appointmentForm.condition,
+        photo: appointmentForm.photo,
+        notes: appointmentForm.notes
+      }
+    });
+
+    addNotification('success', `${appointmentForm.name} has been added to the waiting list. They'll be notified when a slot opens.`);
+    setShowBookingForm(false);
+    resetAppointmentForm();
+    return;
+  } catch (error) {
+    console.error('Error adding to waiting list:', error);
+    addNotification('error', 'Failed to add to waiting list');
+    return;
+  }
+}
+    //  Double-check for time slot conflicts
     const hasConflict = await checkAppointmentConflict(
       appointmentForm.doctorId,
       appointmentForm.date,
@@ -1491,7 +1631,7 @@ const handleCreateAppointment = async () => {
       return;
     }
     
-    // âœ… Additional real-time check by querying current appointments state
+    //  Additional real-time check by querying current appointments state
     const localConflicts = appointments.filter(apt => 
       apt.doctorId === appointmentForm.doctorId &&
       apt.date === appointmentForm.date &&
@@ -1500,7 +1640,7 @@ const handleCreateAppointment = async () => {
     );
     
     if (localConflicts.length > 0) {
-      console.log('âš ï¸ Local conflict detected:', localConflicts);
+      console.log('Local conflict detected:', localConflicts);
       addNotification('error', 'Time slot conflict detected. Please refresh and try again.');
       setAppointmentForm(prev => ({ ...prev, time: '' }));
       return;
@@ -1578,7 +1718,7 @@ const handleUpdateAppointment = async () => {
   try {
     addNotification('info', 'Updating appointment...');
     
-    // âœ… CRITICAL: Check if daily limit is reached (excluding current appointment)
+    // CRITICAL: Check if daily limit is reached (excluding current appointment)
     const customSlotKey = `${appointmentForm.doctorId}_${appointmentForm.date}`;
     const maxSlots = doctorSlotSettings[customSlotKey] || 
       (() => {
@@ -1590,7 +1730,7 @@ const handleUpdateAppointment = async () => {
       apt => apt.doctorId === appointmentForm.doctorId && 
              apt.date === appointmentForm.date && 
              apt.status !== 'cancelled' &&
-             apt.id !== editingAppointment.id // âœ… Exclude current appointment from count
+             apt.id !== editingAppointment.id // Ã¢Å“â€¦ Exclude current appointment from count
     ).length;
     
     if (bookedCount >= maxSlots) {
@@ -1603,7 +1743,7 @@ const handleUpdateAppointment = async () => {
       appointmentForm.doctorId,
       appointmentForm.date,
       appointmentForm.time,
-      editingAppointment.id // âœ… Pass the current appointment ID to exclude it
+      editingAppointment.id // Ã¢Å“â€¦ Pass the current appointment ID to exclude it
     );
     
     if (hasConflict) {
@@ -1676,64 +1816,128 @@ const isDailyLimitReached = (doctorId: string, date: string): boolean => {
            apt.status !== 'cancelled'
   ).length;
   
-  console.log(`ðŸ“Š Daily limit check: ${bookedCount}/${maxSlots} for doctor ${doctorId} on ${date}`);
+  console.log(` Daily limit check: ${bookedCount}/${maxSlots} for doctor ${doctorId} on ${date}`);
   
   return bookedCount >= maxSlots;
 };
 
-  const handleAppointmentStatusChange = async (appointmentId: string, status: 'confirmed' | 'pending' | 'cancelled' | 'completed') => {
-    try {
-      const appointmentRef = doc(db, 'appointments', appointmentId);
-      await updateDoc(appointmentRef, {
-        status,
-        updatedAt: serverTimestamp()
-      });
-      const appointment = appointments.find(apt => apt.id === appointmentId);
-      // Send notification to patient
-      if (appointment && (appointment.email || appointment.phone)) {
-        await sendNotificationToPatient(appointment.email, appointment.phone, `appointment_${status}`, appointment);
-      }
-      // Special handling for completed appointments
-      if (status === 'completed') {
-        addNotification('success', `Appointment completed for ${appointment?.name}. Next patient moved to serving.`);
-        // Automatically move next patient to "now serving" if available
-        const today = getTodayDate();
-        const remainingQueue = appointments.filter(apt =>
-          apt.date === today && 
-          apt.id !== appointmentId &&
-          apt.status === 'confirmed'
-        ).sort((a, b) => {
-          // Sort by priority first, then queue number
-          if (a.priority === 'emergency' && b.priority !== 'emergency') return -1;
-          if (b.priority === 'emergency' && a.priority !== 'emergency') return 1;
-          if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
-          if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
-          return (a.queueNumber || 0) - (b.queueNumber || 0);
+const handleAppointmentStatusChange = async (appointmentId: string, status: 'confirmed' | 'pending' | 'cancelled' | 'completed') => {
+  try {
+    const appointmentRef = doc(db, 'appointments', appointmentId);
+    const appointment = appointments.find(apt => apt.id === appointmentId);
+    
+    if (!appointment) {
+      addNotification('error', 'Appointment not found');
+      return;
+    }
+    
+    // Update appointment status
+    await updateDoc(appointmentRef, {
+      status,
+      updatedAt: serverTimestamp()
+    });
+    
+    // âœ… NEW: Check waiting list when appointment is cancelled
+    if (status === 'cancelled') {
+      const waitingListQuery = query(
+        collection(db, 'waitingList'),
+        where('preferredDoctorId', '==', appointment.doctorId),
+        where('preferredDate', '==', appointment.date),
+        orderBy('priority', 'desc'),
+        orderBy('addedAt', 'asc')
+      );
+
+      const waitingListSnapshot = await getDocs(waitingListQuery);
+
+      if (!waitingListSnapshot.empty) {
+        const nextInLine = waitingListSnapshot.docs[0];
+        const waitingData = nextInLine.data();
+
+        // Create appointment for waiting list patient
+        const queueNumber = await getNextQueueNumber(appointment.date);
+        
+        await addDoc(collection(db, 'appointments'), {
+          ...waitingData.originalAppointmentData,
+          time: appointment.time,
+          date: appointment.date,
+          status: 'pending',
+          priority: waitingData.priority,
+          doctor: waitingData.preferredDoctorName,
+          doctorId: waitingData.preferredDoctorId,
+          userId: 'waiting-list-assigned',
+          bookedBy: 'staff',
+          assignedBy: 'System (Waiting List)',
+          queueNumber,
+          waitingListAssignment: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
-        const nextPatient = remainingQueue[0];
-        if (nextPatient) {
-          addNotification('info', `Now serving: ${nextPatient.name} (Queue #${nextPatient.queueNumber})`);
-          // Send notification to next patient
-          if (nextPatient.email || nextPatient.phone) {
-            await sendNotificationToPatient(
-              nextPatient.email, 
-              nextPatient.phone, 
-              'now_serving', 
-              nextPatient
-            );
-          }
-        } else {
-          addNotification('info', 'No more patients in queue.');
+
+        // Remove from waiting list
+        await deleteDoc(doc(db, 'waitingList', nextInLine.id));
+
+        // Send notification to waiting list patient
+        try {
+          await fetch('http://127.0.0.1:5000/send-waiting-list-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: waitingData.patientName,
+              email: waitingData.patientEmail,
+              phone: waitingData.patientPhone,
+              doctor: waitingData.preferredDoctorName,
+              date: appointment.date,
+              time: appointment.time
+            })
+          });
+        } catch (notifError) {
+          console.error('Error sending waiting list notification:', notifError);
+        }
+
+        addNotification('info', `Appointment cancelled. Next patient from waiting list has been automatically assigned.`);
+      } else {
+        addNotification('success', 'Appointment cancelled successfully');
+      }
+    }
+    // Special handling for completed appointments
+    else if (status === 'completed') {
+      addNotification('success', `Appointment completed for ${appointment?.name}. Next patient moved to serving.`);
+      
+      const today = getTodayDate();
+      const remainingQueue = appointments.filter(apt =>
+        apt.date === today && 
+        apt.id !== appointmentId &&
+        apt.status === 'confirmed'
+      ).sort((a, b) => {
+        if (a.priority === 'emergency' && b.priority !== 'emergency') return -1;
+        if (b.priority === 'emergency' && a.priority !== 'emergency') return 1;
+        if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+        if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
+        return (a.queueNumber || 0) - (b.queueNumber || 0);
+      });
+      
+      const nextPatient = remainingQueue[0];
+      if (nextPatient) {
+        addNotification('info', `Now serving: ${nextPatient.name} (Queue #${nextPatient.queueNumber})`);
+        if (nextPatient.email || nextPatient.phone) {
+          await sendNotificationToPatient(
+            nextPatient.email, 
+            nextPatient.phone, 
+            'now_serving', 
+            nextPatient
+          );
         }
       } else {
-        addNotification('success', `Appointment marked as ${status}`);
+        addNotification('info', 'No more patients in queue.');
       }
-    } catch (error) {
-      console.error('Error updating appointment status:', error);
-      addNotification('error', 'Failed to update appointment status');
+    } else {
+      addNotification('success', `Appointment marked as ${status}`);
     }
-  };
-  
+  } catch (error) {
+    console.error('Error updating appointment status:', error);
+    addNotification('error', 'Failed to update appointment status');
+  }
+};
   const handleDeleteAppointment = async (appointmentId: string) => {
     if (!confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
       return;
@@ -1746,7 +1950,7 @@ const isDailyLimitReached = (doctorId: string, date: string): boolean => {
     }
   };
 
- // Ã¢Å“â€¦ Create Doctor
+ // Create Doctor
 const handleCreateDoctor = async () => {
   if (!doctorForm.name || !doctorForm.specialty || !doctorForm.email) {
     addNotification('error', 'Please fill all required fields');
@@ -1763,7 +1967,7 @@ const handleCreateDoctor = async () => {
       phone: doctorForm.phone,
       room: doctorForm.room,
 
-      // Ã¢Å“â€¦ Default working hours if missing
+      //  Default working hours if missing
       workingHours: {
         start: doctorForm.startTime || "9:00 AM",
         end: doctorForm.endTime || "5:00 PM",
@@ -1771,7 +1975,7 @@ const handleCreateDoctor = async () => {
 
       maxAppointments: parseInt(doctorForm.maxAppointments) || 10,
 
-      // Ã¢Å“â€¦ Default durations if missing
+      //  Default durations if missing
       consultationDuration: parseInt(doctorForm.consultationDuration) || 30,
       bufferTime: parseInt(doctorForm.bufferTime) || 15,
 
@@ -1782,10 +1986,10 @@ const handleCreateDoctor = async () => {
       createdAt: serverTimestamp(),
     };
 
-    // Ã°Å¸â€Â¥ Step 1: Add doctor to 'doctors' collection
+    // Step 1: Add doctor to 'doctors' collection
     const doctorDocRef = await addDoc(collection(db, 'doctors'), doctorData);
 
-    // Ã¢Å“â€¦ IMPORTANT: Update local state immediately so slots can be generated
+    // IMPORTANT: Update local state immediately so slots can be generated
     const newDoctor: Doctor = {
       id: doctorDocRef.id,
       ...doctorData,
@@ -1794,7 +1998,7 @@ const handleCreateDoctor = async () => {
 
     setDoctors(prev => [...prev, newDoctor]);
 
-    // Ã°Å¸â€â€” Step 2: Create Firebase Auth account + User document via backend
+    //  Step 2: Create Firebase Auth account + User document via backend
     try {
       const response = await fetch('http://localhost:5000/create-doctor-account', {
         method: 'POST',
@@ -1813,15 +2017,15 @@ const handleCreateDoctor = async () => {
       if (response.ok && result.success) {
         addNotification(
           'success',
-          `Ã¢Å“â€¦ Doctor account created! Password setup email sent to ${doctorForm.email}`
+          ` Doctor account created! Password setup email sent to ${doctorForm.email}`
         );
 
-        // Ã¢Å“â€¦ Update doctor document with userId
+        // Update doctor document with userId
         await updateDoc(doc(db, 'doctors', doctorDocRef.id), {
           userId: result.uid,
         });
 
-        // Ã¢Å“â€¦ Update local state with userId
+        //  Update local state with userId
         setDoctors(prev => 
           prev.map(d => 
             d.id === doctorDocRef.id 
@@ -1830,7 +2034,7 @@ const handleCreateDoctor = async () => {
           )
         );
 
-        // Ã¢Å“â€¦ If photo exists, update user document
+        //  If photo exists, update user document
         if (doctorForm.photo) {
           try {
             const userDocRef = doc(db, 'users', result.uid);
@@ -1864,7 +2068,7 @@ const handleCreateDoctor = async () => {
   }
 };
 
-// Ã¢Å“â€¦ Update Doctor
+// Update Doctor
 const handleUpdateDoctor = async () => {
   if (!editingDoctor) return;
 
@@ -1877,7 +2081,7 @@ const handleUpdateDoctor = async () => {
       phone: doctorForm.phone,
       room: doctorForm.room,
 
-      // Ã¢Å“â€¦ Keep safe defaults even when updating
+      //  Keep safe defaults even when updating
       workingHours: {
         start: doctorForm.startTime || "9:00 AM",
         end: doctorForm.endTime || "5:00 PM",
@@ -1894,7 +2098,7 @@ const handleUpdateDoctor = async () => {
       updatedAt: serverTimestamp(),
     });
 
-    // Ã°Å¸â€Â Update linked user (if email unchanged)
+    // Update linked user (if email unchanged)
     const userQuery = query(
       collection(db, 'users'),
       where('email', '==', doctorForm.email)
@@ -1939,7 +2143,8 @@ const handleUpdateDoctor = async () => {
       addNotification('error', 'Failed to update profile');
     }
   };
-  // Enhanced notification system with queue-specific messages
+  
+ // Enhanced notification system with queue-specific messages
 const sendNotificationToPatient = async (
   email: string,
   phone: string,
@@ -1947,8 +2152,21 @@ const sendNotificationToPatient = async (
   appointmentData: any
 ) => {
   try {
+    // Format date helper function
+    const formatDate = (dateStr: string): string => {
+      const [year, month, day] = dateStr.split('-');
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      return dateObj.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    };
+
     // Get notification message based on type
     const getNotificationMessage = (type: string, appointment: any) => {
+      const formattedDate = formatDate(appointment.date);
+      
       switch (type) {
         case "now_serving":
           return {
@@ -1962,33 +2180,33 @@ const sendNotificationToPatient = async (
           };
         case "appointment_confirmed":
           return {
-            subject: "Appointment Confirmed",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time} has been confirmed. Queue #${appointment.queueNumber}`,
+            subject: "Appointment Confirmed - TimeFly Clinic",
+            message: `Your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time} has been confirmed. Please arrive 10 minutes early to not miss your appointment.`,
           };
         case "appointment_cancelled":
           return {
             subject: "Appointment Cancelled",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time} has been cancelled.`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time} has been cancelled.`,
           };
         case "appointment_pending":
           return {
             subject: "Appointment Pending",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time} is pending confirmation.`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time} is pending confirmation.`,
           };
         case "appointment_created":
           return {
             subject: "New Appointment Booked",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been booked for ${appointment.date} at ${appointment.time}. Queue #${appointment.queueNumber}`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been booked for ${formattedDate} at ${appointment.time}. Queue #${appointment.queueNumber}`,
           };
         case "appointment_updated":
           return {
             subject: "Appointment Updated",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been updated. New time: ${appointment.date} at ${appointment.time}`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been updated. New time: ${formattedDate} at ${appointment.time}`,
           };
         case "reminder":
           return {
             subject: "Appointment Reminder",
-            message: `Hello ${appointment.name}, this is a reminder for your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time}. Queue #${appointment.queueNumber}`,
+            message: `Hello ${appointment.name}, this is a reminder for your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time}. Queue #${appointment.queueNumber}`,
           };
         default:
           return {
@@ -1999,21 +2217,21 @@ const sendNotificationToPatient = async (
     };
 
     const notificationContent = getNotificationMessage(type, appointmentData);
-
-    // Ã°Å¸â€Â¥ Real email sending via backend
-    const response = await fetch("http://localhost:5000/send-reminder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        name: appointmentData.name,
-        doctor: appointmentData.doctor,
-        date: appointmentData.date,
-        time: appointmentData.time,
-        message: notificationContent.message,
-        subject: notificationContent.subject,
-      }),
-    });
+// ðŸ”¥ Real email sending via backend
+const response = await fetch("http://localhost:5000/send-reminder", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email,
+    name: appointmentData.name,
+    doctor: appointmentData.doctor,
+    date: appointmentData.date,
+    time: appointmentData.time,
+    queueNumber: appointmentData.queueNumber, // âœ… ADDED QUEUE NUMBER
+    message: notificationContent.message,
+    subject: notificationContent.subject,
+  }),
+});
 
     const data = await response.json();
 
@@ -2028,8 +2246,21 @@ const sendNotificationToPatient = async (
   } catch (error) {
     console.log("Notification fallback triggered:", error);
 
+    // Format date helper function (fallback)
+    const formatDate = (dateStr: string): string => {
+      const [year, month, day] = dateStr.split('-');
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      return dateObj.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    };
+
     // Fallback simulation (kept for structure)
     const getNotificationMessage = (type: string, appointment: any) => {
+      const formattedDate = formatDate(appointment.date);
+      
       switch (type) {
         case "now_serving":
           return {
@@ -2043,33 +2274,33 @@ const sendNotificationToPatient = async (
           };
         case "appointment_confirmed":
           return {
-            subject: "Appointment Confirmed",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time} has been confirmed. Queue #${appointment.queueNumber}`,
+            subject: "Appointment Confirmed - TimeFly Clinic",
+            message: `Your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time} has been confirmed. Please arrive 10 minutes early to not miss your appointment.`,
           };
         case "appointment_cancelled":
           return {
             subject: "Appointment Cancelled",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time} has been cancelled.`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time} has been cancelled.`,
           };
         case "appointment_pending":
           return {
             subject: "Appointment Pending",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time} is pending confirmation.`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time} is pending confirmation.`,
           };
         case "appointment_created":
           return {
             subject: "New Appointment Booked",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been booked for ${appointment.date} at ${appointment.time}. Queue #${appointment.queueNumber}`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been booked for ${formattedDate} at ${appointment.time}. Queue #${appointment.queueNumber}`,
           };
         case "appointment_updated":
           return {
             subject: "Appointment Updated",
-            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been updated. New time: ${appointment.date} at ${appointment.time}`,
+            message: `Hello ${appointment.name}, your appointment with ${appointment.doctor} has been updated. New time: ${formattedDate} at ${appointment.time}`,
           };
         case "reminder":
           return {
             subject: "Appointment Reminder",
-            message: `Hello ${appointment.name}, this is a reminder for your appointment with ${appointment.doctor} on ${appointment.date} at ${appointment.time}. Queue #${appointment.queueNumber}`,
+            message: `Hello ${appointment.name}, this is a reminder for your appointment with ${appointment.doctor} on ${formattedDate} at ${appointment.time}. Queue #${appointment.queueNumber}`,
           };
         default:
           return {
@@ -2111,6 +2342,7 @@ const sendNotificationToPatient = async (
     addNotification("success", `${methods.join(" & ")} notification sent successfully`);
   }
 };
+
 // Helper to trigger notification by appointment ID
 const sendNotificationToPatientById = async (
   appointmentId: string,
@@ -2122,7 +2354,7 @@ const sendNotificationToPatientById = async (
   const email = method === "email" || method === "both" ? appointment.email : "";
   const phone = method === "sms" || method === "both" ? appointment.phone : "";
 
-  // 🧮 Calculate queue position
+  // ðŸ§® Calculate queue position
   const activeAppointments = appointments.filter(
     (apt) => apt.status === "confirmed" || apt.status === "pending"
   );
@@ -2132,7 +2364,7 @@ const sendNotificationToPatientById = async (
   const totalQueue = activeAppointments.length;
 
   try {
-    // ✅ Send queue position notification to backend
+    // âœ… Send queue position notification to backend
     const response = await fetch("http://localhost:5000/send-queue-notification", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2148,14 +2380,14 @@ const sendNotificationToPatientById = async (
     const result = await response.json();
     if (result.success) {
       alert(
-        `✅ Notification sent to ${appointment.name}: You are #${queueNumber} in the queue.`
+        `âœ… Notification sent to ${appointment.name}: You are #${queueNumber} in the queue.`
       );
     } else {
-      alert(`⚠️ Failed to send notification: ${result.error}`);
+      alert(`âš ï¸ Failed to send notification: ${result.error}`);
     }
   } catch (error) {
-    console.error("❌ Error sending queue notification:", error);
-    alert("❌ Failed to send queue notification. Please check your server.");
+    console.error("âŒ Error sending queue notification:", error);
+    alert("âŒ Failed to send queue notification. Please check your server.");
   }
 };
 
@@ -2323,188 +2555,220 @@ const handleLogout = async () => {
             </div>
           ))}
         </div>
-        
-{/* Main Content */}
+ {/* Main Content */}
 <main className={`main-content-full ${activeTab === 'dashboard' ? 'dashboard-active' : ''}`}>
   {/* Header with Navbar */}
- {/* Ã¢Å“â€¦ UPDATED - Fixed Header with Profile Dropdown */}
-<header className="staff-main-header">
-  <div className="staff-header-container">
-    {/* Logo - Left */}
-    <button 
-      className="staff-header-logo" 
-      onClick={() => setActiveTab('dashboard')}
-      aria-label="Go to Dashboard"
-    >
-      <img src="/images/bird.png" alt="TimeFly Logo" className="staff-logo-icon" />
-      <span className="staff-logo-text">TimeFly</span>
-    </button>
-
-    {/* Navigation Links - Center */}
-    <nav className="staff-header-nav">
-      <button
-        className={`staff-nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
-        onClick={() => setActiveTab('appointments')}
-      >
-        <Calendar size={18} aria-hidden="true" />
-        Appointments
-      </button>
-      <button
-        className={`staff-nav-link ${activeTab === 'queue' ? 'active' : ''}`}
-        onClick={() => setActiveTab('queue')}
-      >
-        <Clock size={18} aria-hidden="true" />
-        Current Queue
-      </button>
-      <button
-        className={`staff-nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
-        onClick={() => setActiveTab('doctors')}
-      >
-        <Stethoscope size={18} aria-hidden="true" />
-        Doctors
-      </button>
-      <button
-        className={`staff-nav-link ${activeTab === 'calendar' ? 'active' : ''}`}
-        onClick={() => setActiveTab('calendar')}
-      >
-        <CalendarDays size={18} aria-hidden="true" />
-        Calendar
-      </button>
-      <button
-        className={`staff-nav-link ${activeTab === 'reports' ? 'active' : ''}`}
-        onClick={() => setActiveTab('reports')}
-      >
-        <MessageSquare size={18} aria-hidden="true" />
-        Reports
-      </button>
-    </nav>
-
-    {/* Right Side - Search and Profile */}
-    <div className="staff-header-right">
-      {/* Search - visible in appointments and doctors tabs */}
-      {(activeTab === 'appointments' || activeTab === 'doctors') && (
-        <div className="staff-search-container">
-          <Search size={18} className="staff-search-icon" aria-hidden="true" />
-          <input
-            type="text"
-            placeholder={activeTab === 'appointments' ? "Search appointments..." : "Search doctors..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            aria-label={activeTab === 'appointments' ? "Search appointments" : "Search doctors"}
-          />
-        </div>
-      )}
-      
-{/* Ã¢Å“â€¦ FIXED Profile Dropdown (no ARIA warnings, no inline styles) */}
-<div className="staff-profile-dropdown-wrapper" ref={profileDropdownRef}>
-  <button
-    ref={profileButtonRef} // Ã¢Å“â€¦ added ref to control aria-expanded via JS
-    className="staff-profile-button"
-    onClick={() => setShowProfileDropdown(prev => !prev)}
-    aria-label="Profile menu"
-  >
-    <div className="staff-user-avatar">
-      {staffProfile?.photo ? (
-        <img
-          src={staffProfile.photo}
-          alt={staffProfile.name}
-          className="staff-avatar-image"
-        />
-      ) : (
-        <User size={20} aria-hidden="true" />
-      )}
-    </div>
-  </button>
-
-  {showProfileDropdown && (
-    <div className="staff-profile-dropdown">
-      <div className="staff-profile-header">
-        <div className="staff-profile-avatar-lg">
-          {staffProfile?.photo ? (
-            <img
-              src={staffProfile.photo}
-              alt={staffProfile.name}
-              className="staff-avatar-image"
-            />
+  <header className="staff-main-header">
+    <div className="staff-header-container">
+      <div className="staff-header-left">
+        <button
+          className="hamburger-menu"
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          aria-label="Toggle menu"
+          aria-expanded={showMobileMenu}
+          aria-controls="staff-main-nav"
+        >
+          {showMobileMenu ? (
+            <X size={24} aria-hidden="true" />
           ) : (
-            <User size={24} aria-hidden="true" />
+            <Menu size={24} aria-hidden="true" />
+          )}
+        </button>
+
+        <button
+          className="staff-header-logo"
+          onClick={() => {
+            setActiveTab('dashboard');
+            setShowMobileMenu(false);
+          }}
+          aria-label="Go to Dashboard"
+        >
+          <img
+            src="/images/bird.png"
+            alt="TimeFly Logo"
+            className="staff-logo-icon"
+          />
+          <span className="staff-logo-text">TimeFly</span>
+        </button>
+      </div>
+
+      <nav
+        id="staff-main-nav"
+        className={`staff-header-nav ${showMobileMenu ? 'mobile-open' : ''}`}
+      >
+        <button
+          className={`staff-nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('appointments');
+            setShowMobileMenu(false);
+          }}
+        >
+          <Calendar size={18} aria-hidden="true" />
+          Appointments
+        </button>
+
+        <button
+          className={`staff-nav-link ${activeTab === 'queue' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('queue');
+            setShowMobileMenu(false);
+          }}
+        >
+          <Clock size={18} aria-hidden="true" />
+          Current Queue
+        </button>
+
+        <button
+          className={`staff-nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('doctors');
+            setShowMobileMenu(false);
+          }}
+        >
+          <Stethoscope size={18} aria-hidden="true" />
+          Doctors
+        </button>
+
+        <button
+          className={`staff-nav-link ${activeTab === 'calendar' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('calendar');
+            setShowMobileMenu(false);
+          }}
+        >
+          <CalendarDays size={18} aria-hidden="true" />
+          Calendar
+        </button>
+
+        <button
+          className={`staff-nav-link ${activeTab === 'reports' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('reports');
+            setShowMobileMenu(false);
+          }}
+        >
+          <MessageSquare size={18} aria-hidden="true" />
+          Reports
+        </button>
+
+        <button
+          className={`staff-nav-link ${activeTab === 'waiting-list' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('waiting-list');
+            setShowMobileMenu(false);
+          }}
+        >
+          <Users size={18} aria-hidden="true" />
+          Waiting List
+        </button>
+      </nav>
+
+      <div className="staff-header-right">
+        <div className="staff-profile-dropdown-wrapper" ref={profileDropdownRef}>
+          <button
+            ref={profileButtonRef}
+            className="staff-profile-button"
+            onClick={() => setShowProfileDropdown((prev) => !prev)}
+            aria-label="Profile menu"
+            aria-expanded={showProfileDropdown}
+            aria-controls="staff-profile-dropdown"
+          >
+            <div className="staff-user-avatar">
+              {staffProfile?.photo ? (
+                <img
+                  src={staffProfile.photo}
+                  alt={staffProfile.name}
+                  className="staff-avatar-image"
+                />
+              ) : (
+                <User size={20} aria-hidden="true" />
+              )}
+            </div>
+          </button>
+
+          {showProfileDropdown && (
+            <div id="staff-profile-dropdown" className="staff-profile-dropdown">
+              <div className="staff-profile-header">
+                <div className="staff-profile-avatar-lg">
+                  {staffProfile?.photo ? (
+                    <img
+                      src={staffProfile.photo}
+                      alt={staffProfile.name}
+                      className="staff-avatar-image"
+                    />
+                  ) : (
+                    <User size={24} aria-hidden="true" />
+                  )}
+                </div>
+                <div className="staff-profile-info">
+                  <p className="staff-profile-name">{staffProfile?.name}</p>
+                  <p className="staff-profile-email">{staffProfile?.email}</p>
+                </div>
+              </div>
+
+              <input
+                type="file"
+                id="profilePhotoUploadDropdown"
+                accept="image/*"
+                onChange={(e) => handlePhotoUpload(e, 'profileDropdown')}
+                className="hidden-file-input"
+                aria-label="Upload new profile picture"
+              />
+
+              <button
+                className="staff-profile-action"
+                onClick={() => {
+                  const fileInput = document.getElementById('profilePhotoUploadDropdown');
+                  if (fileInput) {
+                    fileInput.click();
+                  }
+                }}
+              >
+                <Camera size={16} aria-hidden="true" />
+                Change Photo
+              </button>
+
+              <button
+                className="staff-logout-action"
+                onClick={() => {
+                  setShowProfileDropdown(false);
+                  setShowLogoutModal(true);
+                }}
+              >
+                <LogOut size={16} aria-hidden="true" />
+                Logout
+              </button>
+            </div>
+          )}
+
+          {showLogoutModal && (
+            <div className="logout-modal-overlay">
+              <div className="logout-modal">
+                <h3>Are you sure you want to logout?</h3>
+                <div className="logout-modal-actions">
+                  <button
+                    className="btn-confirm"
+                    onClick={() => {
+                      setShowLogoutModal(false);
+                      handleLogout();
+                    }}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="btn-cancel"
+                    onClick={() => setShowLogoutModal(false)}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-        <div className="staff-profile-info">
-          <p className="staff-profile-name">{staffProfile?.name}</p>
-          <p className="staff-profile-email">{staffProfile?.email}</p>
-        </div>
-      </div>
-
-      {/* Ã¢Å“â€¦ Hidden file input with external CSS (no inline styles) */}
-      <input
-        type="file"
-        id="profilePhotoUploadDropdown"
-        accept="image/*"
-        onChange={(e) => handlePhotoUpload(e, "profileDropdown")}
-        className="hidden-file-input"
-        aria-label="Upload new profile picture"
-      />
-
-      <button
-        className="staff-profile-action"
-        onClick={() => {
-          const fileInput = document.getElementById("profilePhotoUploadDropdown") as HTMLInputElement;
-          if (fileInput) {
-            fileInput.click();
-          }
-        }}
-      >
-        <Camera size={16} aria-hidden="true" />
-        Change Photo
-      </button>
-
-      {/* Ã°Å¸Å¡Âª Logout opens confirmation modal instead of direct logout */}
-      <button
-        className="staff-logout-action"
-        onClick={() => {
-          setShowProfileDropdown(false);
-          setShowLogoutModal(true); // Ã°Å¸â€Â¥ open modal
-        }}
-      >
-        <LogOut size={16} aria-hidden="true" />
-        Logout
-      </button>
-    </div>
-  )}
-
-  {/* Ã°Å¸â€â€™ Logout Confirmation Modal */}
-  {showLogoutModal && (
-    <div className="logout-modal-overlay">
-      <div className="logout-modal">
-        <h3>Are you sure you want to logout?</h3>
-        <div className="logout-modal-actions">
-          <button
-            className="btn-confirm"
-            onClick={() => {
-              setShowLogoutModal(false);
-              handleLogout(); // proceed logout
-            }}
-          >
-            Yes
-          </button>
-          <button
-            className="btn-cancel"
-            onClick={() => setShowLogoutModal(false)}
-          >
-            No
-          </button>
-        </div>
       </div>
     </div>
-  )}
-</div>
-</div>
-</div>
-</header>
-
-
-
+  </header>
   {/* Dashboard Tab */}
   {activeTab === 'dashboard' && (
     <div className="dashboard-content-wrapper">
@@ -2680,12 +2944,35 @@ const handleLogout = async () => {
         </div>
       </div>
     </div>
-  )}{/* Appointments Tab */}
+  )}
+  
+{/* Appointments Tab */}
 {activeTab === 'appointments' && (
   <div className="appointments-content">
-    {/* Filters */}
+    {/* UPDATED: Filters Section with Search Bar Inside */}
     <div className="filters-section">
       <div className="filters-row">
+        {/* Search Bar - Now First Item in Filter Row */}
+        <div className="tab-search-container">
+          <Search size={20} className="tab-search-icon" aria-hidden="true" />
+          <input
+            type="text"
+            className="tab-search-input"
+            placeholder="Search appointments"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search appointments"
+          />
+          <button
+            className={`tab-search-clear ${searchTerm ? 'visible' : ''}`}
+            onClick={() => setSearchTerm('')}
+            aria-label="Clear search"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Filter Dropdowns */}
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
@@ -2698,6 +2985,7 @@ const handleLogout = async () => {
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
         </select>
+
         <select
           value={filterDoctor}
           onChange={(e) => setFilterDoctor(e.target.value)}
@@ -2711,6 +2999,7 @@ const handleLogout = async () => {
             </option>
           ))}
         </select>
+
         <input
           type="date"
           value={filterDate}
@@ -2718,6 +3007,7 @@ const handleLogout = async () => {
           aria-label="Filter by date"
           title="Filter by date"
         />
+
         <select
           value={filterPriority}
           onChange={(e) => setFilterPriority(e.target.value)}
@@ -2729,6 +3019,8 @@ const handleLogout = async () => {
           <option value="urgent">Urgent</option>
           <option value="emergency">Emergency</option>
         </select>
+
+        {/* New Appointment Button - Now at End */}
         <button
           className="btn-primary"
           onClick={() => setShowBookingForm(true)}
@@ -2739,6 +3031,7 @@ const handleLogout = async () => {
         </button>
       </div>
     </div>
+
 
     {/* Appointments List */}
     <div className="appointments-list">
@@ -2801,7 +3094,7 @@ const handleLogout = async () => {
                   </div>
                 </div>
 
-                {/* RIGHT: Status + Actions */}
+                {/* ✅ UPDATED: Action Buttons with Confirmation */}
                 <div className="appointment-right">
                   <div className="appointment-status">
                     <span className={appointment.priority}>
@@ -2814,7 +3107,7 @@ const handleLogout = async () => {
 
                   <div className="appointment-actions">
                     <button
-                      className="icon-btn"
+                      className="icon-btn view"
                       onClick={() => {
                         setSelectedAppointment(appointment);
                         setShowDetailsModal(true);
@@ -2823,34 +3116,42 @@ const handleLogout = async () => {
                     >
                       <Eye size={20} />
                     </button>
+                    
                     <button
-                      className="icon-btn"
+                      className="icon-btn edit"
                       onClick={() => handleEditAppointment(appointment)}
                       title={`Edit appointment for ${appointment.name}`}
                     >
                       <Edit size={20} />
                     </button>
+                    
                     <button
-                      className="icon-btn"
-                      onClick={() =>
-                        sendNotificationToPatientById(appointment.id, 'both')
-                      }
+                      className="icon-btn notify"
+                      onClick={() => sendNotificationToPatientById(appointment.id, 'both')}
                       title={`Send notification to ${appointment.name}`}
                     >
                       <Send size={20} />
                     </button>
+                    
+                    {/* ✅ UPDATED: Cancel Button with Confirmation */}
                     <button
-                      className="icon-btn"
-                      onClick={() =>
-                        handleAppointmentStatusChange(appointment.id, 'cancelled')
-                      }
+                      className="icon-btn cancel"
+                      onClick={() => {
+                        setAppointmentToCancel(appointment.id);
+                        setShowCancelConfirmModal(true);
+                      }}
                       title={`Cancel appointment for ${appointment.name}`}
                     >
                       <X size={20} />
                     </button>
+                    
+                    {/* ✅ UPDATED: Delete Button with Confirmation */}
                     <button
-                      className="icon-btn"
-                      onClick={() => handleDeleteAppointment(appointment.id)}
+                      className="icon-btn delete"
+                      onClick={() => {
+                        setAppointmentToDelete(appointment.id);
+                        setShowDeleteConfirmModal(true);
+                      }}
                       title={`Delete appointment for ${appointment.name}`}
                     >
                       <Trash2 size={20} />
@@ -2862,6 +3163,88 @@ const handleLogout = async () => {
           );
         })
       )}
+    </div>
+  </div>
+)}
+{/* ✅ NEW: Cancel Appointment Confirmation Modal */}
+{showCancelConfirmModal && appointmentToCancel && (
+  <div className="modal-overlay">
+    <div className="confirm-modal">
+      <div className="confirm-modal-icon cancel">
+        <AlertTriangle size={48} />
+      </div>
+      <h3>Cancel Appointment?</h3>
+      <p>Are you sure you want to cancel this appointment?</p>
+      <p className="confirm-modal-warning">
+        The patient will be notified of the cancellation.
+      </p>
+      <div className="modal-actions">
+        <button
+          className="btn-secondary"
+          onClick={() => {
+            setShowCancelConfirmModal(false);
+            setAppointmentToCancel(null);
+          }}
+        >
+          No, Keep It
+        </button>
+        <button
+          className="btn-confirm btn-cancel"
+          onClick={async () => {
+            try {
+              await handleAppointmentStatusChange(appointmentToCancel, 'cancelled');
+              setShowCancelConfirmModal(false);
+              setAppointmentToCancel(null);
+            } catch (error) {
+              console.error('Error cancelling appointment:', error);
+              addNotification('error', 'Failed to cancel appointment');
+            }
+          }}
+        >
+          Yes, Cancel It
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* ✅ NEW: Delete Appointment Confirmation Modal */}
+{showDeleteConfirmModal && appointmentToDelete && (
+  <div className="modal-overlay">
+    <div className="confirm-modal">
+      <div className="confirm-modal-icon delete">
+        <Trash2 size={48} />
+      </div>
+      <h3>Delete Appointment?</h3>
+      <p>Are you sure you want to permanently delete this appointment?</p>
+      <p className="confirm-modal-warning">
+        This action cannot be undone. All appointment data will be lost.
+      </p>
+      <div className="modal-actions">
+        <button
+          className="btn-secondary"
+          onClick={() => {
+            setShowDeleteConfirmModal(false);
+            setAppointmentToDelete(null);
+          }}
+        >
+          No, Keep It
+        </button>
+        <button
+          className="btn-confirm btn-delete"
+          onClick={async () => {
+            try {
+              await handleDeleteAppointment(appointmentToDelete);
+              setShowDeleteConfirmModal(false);
+              setAppointmentToDelete(null);
+            } catch (error) {
+              console.error('Error deleting appointment:', error);
+              addNotification('error', 'Failed to delete appointment');
+            }
+          }}
+        >
+          Yes, Delete It
+        </button>
+      </div>
     </div>
   </div>
 )}
@@ -2997,35 +3380,70 @@ const handleLogout = async () => {
             ) : null}
 
             <button
-              className="action-btn notify"
-              onClick={() => sendNotificationToPatientById(patient.id, 'sms')}
-              aria-label={`Notify ${patient.name} via SMS`}
-              title={`Notify ${patient.name} via SMS`}
-            >
-              <MessageSquare size={16} aria-hidden="true" />
-            </button>
+  className="action-btn notify"
+  onClick={async () => {
+    try {
+      await sendNotificationToPatient(
+        patient.email,
+        patient.phone,
+        'appointment_confirmed',
+        patient
+      );
+      addNotification('success', `Notification sent to ${patient.name}`);
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      addNotification('error', 'Failed to send notification');
+    }
+  }}
+  aria-label={`Send confirmation notification to ${patient.name}`}
+  title={`Send confirmation notification to ${patient.name}`}
+>
+  <MessageSquare size={16} aria-hidden="true" />
+</button>
           </div>
         </div>
       ))}
     </div>
   </div>
 )}
-
 {/* Doctors Tab */}
 {activeTab === "doctors" && (
   <div className="doctors-content">
+    {/* UPDATED: Search Bar Moved to Header Row */}
     <div className="doctors-header">
       <h2 className="doctors-title">Medical Team</h2>
-      <button
-        className="btn-primary"
-        onClick={() => setShowDoctorForm(true)}
-        title="Add Doctor"
-      >
-        <Plus size={16} aria-hidden="true" />
-        Add Doctor
-      </button>
+      
+      {/* Search Container - Now in Header */}
+      <div className="doctors-header-actions">
+        <div className="tab-search-container">
+          <Search size={20} className="tab-search-icon" aria-hidden="true" />
+          <input
+            type="text"
+            className="tab-search-input"
+            placeholder="Search doctors"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search doctors"
+          />
+          <button
+            className={`tab-search-clear ${searchTerm ? 'visible' : ''}`}
+            onClick={() => setSearchTerm('')}
+            aria-label="Clear search"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+
+        <button
+          className="btn-primary"
+          onClick={() => setShowDoctorForm(true)}
+          title="Add Doctor"
+        >
+          <Plus size={16} aria-hidden="true" />
+          Add Doctor
+        </button>
+      </div>
     </div>
-    
 {getFilteredDoctors().length === 0 ? (
   <div className="no-doctors">
     <Stethoscope size={48} aria-hidden="true" />
@@ -3065,7 +3483,7 @@ const handleLogout = async () => {
             <>
               {`${bookedSlots}/${totalSlots} slots booked`}
               {isFull && (
-                <span className="fully-booked-label"> — Fully Booked</span>
+                <span className="fully-booked-label"> â€” Fully Booked</span>
               )}
             </>
           );
@@ -3210,7 +3628,7 @@ const handleLogout = async () => {
           const dayButtons = days.map((day: any) => {
             const isPastDate = new Date(day.date) < new Date(getTodayDate());
             const isToday = day.date === getTodayDate();
-            const totalSlots = getTotalSlotsForDate(day.date); // Ã¢Å“â€¦ now sums all doctors' slots
+            const totalSlots = getTotalSlotsForDate(day.date); // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ now sums all doctors' slots
             const isFull =
               day.appointments.booked >= totalSlots && totalSlots > 0;
 
@@ -3336,7 +3754,7 @@ const handleLogout = async () => {
                     </div>
                   </div>
 
-                  {/* Ã°Å¸â€ â€¢ Per-Doctor Slot Input */}
+                  {/* ÃƒÂ°Ã…Â¸Ã¢â‚¬ Ã¢â‚¬Â¢ Per-Doctor Slot Input */}
                   <div className="slot-control">
                     <label htmlFor={`slot-count-${doctor.id}`}>
                       Max Slots for this Day:
@@ -3817,6 +4235,192 @@ const handleLogout = async () => {
 </div>
 </div>
 )}
+{/* Waiting List Tab */}
+{activeTab === 'waiting-list' && (
+  <div className="waiting-list-content">
+    <div className="waiting-list-header">
+      <div>
+        <h2>Waiting List</h2>
+        <p>Patients waiting for their preferred doctor to have available slots</p>
+      </div>
+      <div className="waiting-list-stats">
+        <div className="stat-badge">
+          <span className="label">Total Waiting</span>
+          <span className="value">{waitingList.length}</span>
+        </div>
+        <div className="stat-badge emergency">
+          <span className="label">Emergency</span>
+          <span className="value">
+            {waitingList.filter(w => w.priority === 'emergency').length}
+          </span>
+        </div>
+        <div className="stat-badge urgent">
+          <span className="label">Urgent</span>
+          <span className="value">
+            {waitingList.filter(w => w.priority === 'urgent').length}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {waitingList.length === 0 ? (
+      <div className="empty-waiting-list">
+        <Users size={48} />
+        <p>No patients in waiting list</p>
+      </div>
+    ) : (
+      <div className="waiting-list-grid">
+        {waitingList.map((entry, index) => {
+          const slotsAvailable = !isDailyLimitReached(
+            entry.preferredDoctorId,
+            entry.preferredDate
+          );
+
+          return (
+            <div key={entry.id} className={`waiting-list-card ${entry.priority}`}>
+              <div className="waiting-position">#{index + 1}</div>
+              
+              <div className="waiting-patient-info">
+                <div className="patient-avatar">
+                  {entry.originalAppointmentData.photo ? (
+                    <img src={entry.originalAppointmentData.photo} alt={entry.patientName} />
+                  ) : (
+                    <User size={24} />
+                  )}
+                </div>
+                <div>
+                  <h4>{entry.patientName}</h4>
+                  <p>{entry.originalAppointmentData.type}</p>
+                  <div className="contact-info">
+                    <span><Mail size={12} /> {entry.patientEmail}</span>
+                    <span><Phone size={12} /> {entry.patientPhone}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="waiting-details">
+                <div className="detail-row">
+                  <label>Preferred Doctor:</label>
+                  <span>{entry.preferredDoctorName}</span>
+                </div>
+                <div className="detail-row">
+                  <label>Preferred Date:</label>
+                  <span>{new Date(entry.preferredDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}</span>
+                </div>
+                <div className="detail-row">
+                  <label>Priority:</label>
+                  <span className={`priority-badge ${entry.priority}`}>
+                    {entry.priority}
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <label>Waiting Since:</label>
+                  <span>
+                    {entry.addedAt && typeof entry.addedAt.toDate === 'function'
+                      ? new Date(entry.addedAt.toDate()).toLocaleString()
+                      : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="waiting-actions">
+                {slotsAvailable && (
+                  <button
+                    className="btn-primary"
+                    onClick={async () => {
+                      try {
+                        const timeSlots = generateTimeSlots(
+                          entry.preferredDoctorId,
+                          entry.preferredDate
+                        );
+                        const availableSlot = timeSlots.find(s => s.available);
+
+                        if (!availableSlot) {
+                          addNotification('error', 'No time slots available');
+                          return;
+                        }
+
+                        const queueNumber = await getNextQueueNumber(entry.preferredDate);
+
+                        await addDoc(collection(db, 'appointments'), {
+                          ...entry.originalAppointmentData,
+                          time: availableSlot.time,
+                          date: entry.preferredDate,
+                          status: 'pending',
+                          priority: entry.priority,
+                          doctor: entry.preferredDoctorName,
+                          doctorId: entry.preferredDoctorId,
+                          userId: 'waiting-list-assigned',
+                          bookedBy: 'staff',
+                          assignedBy: staffProfile?.name || 'Staff',
+                          queueNumber,
+                          waitingListAssignment: true,
+                          createdAt: serverTimestamp(),
+                          updatedAt: serverTimestamp()
+                        });
+
+                        await deleteDoc(doc(db, 'waitingList', entry.id));
+
+                        await fetch('http://127.0.0.1:5000/send-waiting-list-notification', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            name: entry.patientName,
+                            email: entry.patientEmail,
+                            phone: entry.patientPhone,
+                            doctor: entry.preferredDoctorName,
+                            date: entry.preferredDate,
+                            time: availableSlot.time
+                          })
+                        });
+
+                        addNotification('success', 'Patient assigned to available slot');
+                      } catch (error) {
+                        console.error('Error assigning patient:', error);
+                        addNotification('error', 'Failed to assign patient');
+                      }
+                    }}
+                  >
+                    <CheckCircle2 size={16} />
+                    Assign Now
+                  </button>
+                )}
+                
+                <button
+                  className="btn-secondary"
+                  onClick={async () => {
+                    if (confirm(`Remove ${entry.patientName} from waiting list?`)) {
+                      try {
+                        await deleteDoc(doc(db, 'waitingList', entry.id));
+                        addNotification('success', 'Removed from waiting list');
+                      } catch (error) {
+                        addNotification('error', 'Failed to remove from waiting list');
+                      }
+                    }
+                  }}
+                >
+                  <X size={16} />
+                  Remove
+                </button>
+              </div>
+
+              {!slotsAvailable && (
+                <div className="fully-booked-indicator">
+                  <AlertTriangle size={16} />
+                  Doctor still fully booked
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+)}
 </main>
 
 {/* Appointment Form Modal */}
@@ -3909,6 +4513,115 @@ const handleLogout = async () => {
               required
             />
           </div>
+{/* ✅ PATIENT PHOTO UPLOAD - CENTERED WITH DRAG & DROP */}
+<div className="form-group full-width">
+  <label htmlFor="appointmentPhoto" className="centered-label">
+    Patient Photo (Optional)
+  </label>
+  <div className="photo-upload-container">
+    {/* Hide input and upload box when photo exists */}
+    {!appointmentForm.photo ? (
+      <>
+        <input
+          type="file"
+          id="appointmentPhoto"
+          accept="image/*"
+          onChange={(e) => handlePhotoUpload(e, 'appointment')}
+          className="photo-input"
+          disabled={uploadingImage}
+          aria-label="Upload patient photo"
+        />
+        <label 
+          htmlFor="appointmentPhoto" 
+          className="photo-upload-box"
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = 'var(--dark-blue)';
+            e.currentTarget.style.background = 'var(--secondary-blue)';
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = 'var(--accent-blue)';
+            e.currentTarget.style.background = 'var(--primary-blue)';
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = 'var(--accent-blue)';
+            e.currentTarget.style.background = 'var(--primary-blue)';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+              const fakeEvent = {
+                target: { files: [file] }
+              } as any;
+              handlePhotoUpload(fakeEvent, 'appointment');
+            } else {
+              addNotification('error', 'Please drop a valid image file');
+            }
+          }}
+        >
+          <Camera size={24} aria-hidden="true" />
+          <span className="upload-text">
+            {uploadingImage 
+              ? 'Uploading...' 
+              : 'Click to upload or drag & drop'}
+          </span>
+          <span className="upload-hint">PNG, JPG up to 2MB</span>
+        </label>
+      </>
+    ) : (
+      <>
+        {/* Show only preview and change button when photo exists */}
+        <div className="photo-preview-container">
+          <img 
+            src={appointmentForm.photo} 
+            alt="Patient preview" 
+            className="photo-preview" 
+          />
+          <button
+            type="button"
+            className="photo-remove-btn"
+            onClick={(e) => {
+              e.preventDefault();
+              setAppointmentForm(prev => ({ ...prev, photo: '' }));
+            }}
+            aria-label="Remove photo"
+            title="Remove photo"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        
+        {/* Hidden file input for changing photo */}
+        <input
+          type="file"
+          id="appointmentPhotoChange"
+          accept="image/*"
+          onChange={(e) => handlePhotoUpload(e, 'appointment')}
+          className="photo-input"
+          disabled={uploadingImage}
+          aria-label="Change patient photo"
+        />
+        
+        {/* Change Photo Button */}
+        <button
+          type="button"
+          className="btn-change-photo"
+          onClick={() => {
+            const fileInput = document.getElementById('appointmentPhotoChange');
+            if (fileInput) {
+              fileInput.click();
+            }
+          }}
+          disabled={uploadingImage}
+        >
+          <Camera size={16} aria-hidden="true" />
+          {uploadingImage ? 'Uploading...' : 'Change Photo'}
+        </button>
+      </>
+    )}
+  </div>
+</div>
 
           {/* Gender */}
           <div className="form-group">
@@ -3998,23 +4711,36 @@ const handleLogout = async () => {
 
           {/* Doctor */}
           <div className="form-group">
-            <label htmlFor="doctor-select">Doctor *</label>
-            <select
-              id="doctor-select"
-              name="doctorId"
-              value={appointmentForm.doctorId}
-              onChange={handleAppointmentFormChange}
-              required
-            >
-              <option value="">Select doctor</option>
-              {doctors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} - {d.specialty}
-                </option>
-              ))}
-            </select>
-          </div>
-
+  <label htmlFor="doctor-select">Doctor *</label>
+  <select
+    id="doctor-select"
+    name="doctorId"
+    value={appointmentForm.doctorId}
+    onChange={handleAppointmentFormChange}
+    required
+  >
+    <option value="">Select doctor</option>
+    {doctors
+      .filter((doc) => {
+        // If date is selected, check date-specific availability
+        if (appointmentForm.date) {
+          const availability = doctorAvailability.find(
+            av => av.doctorId === doc.id && av.date === appointmentForm.date
+          );
+          // If doctor is marked unavailable for this specific date, exclude them
+          if (availability && availability.available === false) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .map((d) => (
+        <option key={d.id} value={d.id}>
+          {d.name} - {d.specialty}
+        </option>
+      ))}
+  </select>
+</div>
           {/* Date */}
           <div className="form-group">
             <label htmlFor="appointment-date">Date *</label>
@@ -4029,96 +4755,163 @@ const handleLogout = async () => {
             />
           </div>
 
-         {/* Time Slots */}
-{appointmentForm.doctorId && appointmentForm.date && (() => {
-  // ✅ Check if doctor is available on this date
-  const isDoctorAvailable = getDoctorAvailability(appointmentForm.doctorId, appointmentForm.date);
-  
-  // ✅ Check if doctor is fully booked
-  const isFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
+          {/* Time Slots */}
+          {appointmentForm.doctorId && appointmentForm.date && (() => {
+            const isDoctorAvailable = getDoctorAvailability(appointmentForm.doctorId, appointmentForm.date);
+            const isFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
 
-  // ✅ If doctor is unavailable, show message
-  if (!isDoctorAvailable) {
-    return (
-      <div className="form-group full-width">
-        <label>Available Time Slots *</label>
-        <div className="doctor-unavailable-message">
-          <AlertTriangle size={24} />
-          <p>This doctor is not available on {appointmentForm.date}</p>
-          <p className="sub-message">Please select another doctor or date</p>
-        </div>
-      </div>
-    );
-  }
+            // ✅ If doctor is unavailable, show warning
+            if (!isDoctorAvailable) {
+              return (
+                <div className="form-group full-width">
+                  <label>Available Time Slots *</label>
+                  <div className="doctor-unavailable-warning">
+                    <AlertTriangle size={24} />
+                    <p><strong>Doctor Not Available</strong></p>
+                    <p>This doctor is not available on {appointmentForm.date}</p>
+                    <p className="sub-message">Please select another doctor or date</p>
+                  </div>
+                </div>
+              );
+            }
 
-  // ✅ If doctor is fully booked, show message
-  if (isFullyBooked) {
-    return (
-      <div className="form-group full-width">
-        <label>Available Time Slots *</label>
-        <div className="doctor-fully-booked-message">
-          <XCircle size={24} />
-          <p>This doctor is fully booked on {appointmentForm.date}</p>
-          <p className="sub-message">Please select another doctor or date</p>
-        </div>
-      </div>
-    );
-  }
+            // ✅ If doctor is fully booked, show message WITH BUTTON
+            if (isFullyBooked) {
+              return (
+                <div className="form-group full-width">
+                  <label>Available Time Slots *</label>
+                  <div className="doctor-fully-booked-message">
+                    <XCircle size={24} />
+                    <p><strong>This doctor is fully booked on {appointmentForm.date}</strong></p>
+                    <p className="sub-message">Would you like to add this patient to the waiting list?</p>
+                    
+                    {/* ✅ UPDATED WAITING LIST SECTION WITH VALIDATION */}
+                    <div className="waiting-list-actions">
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => {
+                          setAppointmentForm(prev => ({ ...prev, doctorId: '', date: '' }));
+                        }}
+                      >
+                        Choose Another Doctor/Date
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={
+                          !appointmentForm.name ||
+                          !appointmentForm.age ||
+                          !appointmentForm.email ||
+                          !appointmentForm.phone ||
+                          !appointmentForm.gender ||
+                          !appointmentForm.condition ||
+                          (appointmentForm.condition === 'custom' && !appointmentForm.customCondition) ||
+                          !appointmentForm.doctorId ||
+                          !appointmentForm.date
+                        }
+                        onClick={async () => {
+                          // Validate required fields before adding to waiting list
+                          if (!appointmentForm.name || !appointmentForm.age || !appointmentForm.email || 
+                              !appointmentForm.phone || !appointmentForm.gender || !appointmentForm.condition ||
+                              (appointmentForm.condition === 'custom' && !appointmentForm.customCondition) ||
+                              !appointmentForm.doctorId || !appointmentForm.date) {
+                            addNotification('error', 'Please fill in all required fields before adding to waiting list');
+                            return;
+                          }
 
-  // ✅ Show time slots with emergency buffer labels
-  return (
-    <div className="form-group full-width">
-      <label>Available Time Slots *</label>
-      <div className="time-slots-grid">
-        {generateTimeSlots(
-          appointmentForm.doctorId,
-          appointmentForm.date
-        ).map((slot) => {
-          const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
-          const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+                          try {
+                            const selectedDoctor = doctors.find(d => d.id === appointmentForm.doctorId);
+                            
+                            await addDoc(collection(db, 'waitingList'), {
+                              patientName: appointmentForm.name,
+                              patientEmail: appointmentForm.email,
+                              patientPhone: appointmentForm.phone,
+                              preferredDoctorId: appointmentForm.doctorId,
+                              preferredDoctorName: selectedDoctor?.name || '',
+                              preferredDate: appointmentForm.date,
+                              priority: appointmentForm.priority,
+                              addedAt: serverTimestamp(),
+                              originalAppointmentData: {
+                                name: appointmentForm.name,
+                                age: appointmentForm.age,
+                                email: appointmentForm.email,
+                                phone: appointmentForm.phone,
+                                gender: appointmentForm.gender,
+                                type: appointmentForm.condition === 'custom' ? appointmentForm.customCondition : appointmentForm.condition,
+                                photo: appointmentForm.photo,
+                                notes: appointmentForm.notes
+                              }
+                            });
 
-          return (
-            <button
-              key={slot.time}
-              type="button"
-              className={`time-slot 
-                ${isBlocked ? "blocked" : ""} 
-                ${!slot.available ? "booked" : ""} 
-                ${slot.emergency ? "emergency-buffer" : ""}
-                ${appointmentForm.time === slot.time ? "selected" : ""}`}
-              onClick={() =>
-                slot.available &&
-                !isBlocked &&
-                setAppointmentForm((prev) => ({
-                  ...prev,
-                  time: slot.time,
-                }))
-              }
-              disabled={!slot.available || isBlocked}
-            >
-              {slot.time}
-              
-              {/* ✅ Emergency Buffer Label */}
-              {slot.emergency && slot.available && !isBlocked && (
-                <span className="emergency-buffer-label">Emergency Buffer</span>
-              )}
-              
-              {/* Blocked Label */}
-              {isBlocked && (
-                <span className="unavailable-indicator">Unavailable</span>
-              )}
-              
-              {/* Booked Label */}
-              {!isBlocked && !slot.available && (
-                <span className="booked-indicator">Booked</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-})()}
+                            addNotification('success', `${appointmentForm.name} has been added to the waiting list. They'll be notified when a slot opens.`);
+                            setShowBookingForm(false);
+                            resetAppointmentForm();
+                          } catch (error) {
+                            console.error('Error adding to waiting list:', error);
+                            addNotification('error', 'Failed to add to waiting list');
+                          }
+                        }}
+                      >
+                        Add to Waiting List
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // Show time slots with emergency buffer labels
+            return (
+              <div className="form-group full-width">
+                <label>Available Time Slots *</label>
+                <div className="time-slots-grid">
+                  {generateTimeSlots(
+                    appointmentForm.doctorId,
+                    appointmentForm.date
+                  ).map((slot) => {
+                    const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
+                    const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+
+                    return (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        className={`time-slot 
+                          ${isBlocked ? "blocked" : ""} 
+                          ${!slot.available ? "booked" : ""} 
+                          ${slot.emergency ? "emergency-buffer" : ""}
+                          ${appointmentForm.time === slot.time ? "selected" : ""}`}
+                        onClick={() =>
+                          slot.available &&
+                          !isBlocked &&
+                          setAppointmentForm((prev) => ({
+                            ...prev,
+                            time: slot.time,
+                          }))
+                        }
+                        disabled={!slot.available || isBlocked}
+                      >
+                        {slot.time}
+                        
+                        {slot.emergency && slot.available && !isBlocked && (
+                          <span className="emergency-buffer-label">Emergency Buffer</span>
+                        )}
+                        
+                        {isBlocked && (
+                          <span className="unavailable-indicator">Unavailable</span>
+                        )}
+                        
+                        {!isBlocked && !slot.available && (
+                          <span className="booked-indicator">Booked</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Notes (Optional) */}
           <div className="form-group full-width">
@@ -4183,8 +4976,6 @@ const handleLogout = async () => {
     </div>
   </div>
 )}
-
-
   {/* Doctor Form Modal */}
 {showDoctorForm && (
   <div className="modal-overlay" role="dialog" aria-modal="true">

@@ -2052,31 +2052,34 @@ border-radius: var(--radius-xl);
   text-transform: uppercase !important;
   margin: 0 !important;
   flex-shrink: 0 !important;
-  order: 2 !important; /* ✅ Force middle position */
+  order: 2 !important;
 }
 
-/* Navigation Buttons */
-.calendar-navigation .nav-btn {
-  background: #fff !important;
-  border: none !important;
-  padding: 0.5rem !important;
-  border-radius: 50% !important;
-  cursor: pointer !important;
-  transition: background 0.2s ease, transform 0.2s ease !important;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+/* ✅ Dark mode fix for month title */
+[data-theme="dark"] .month-title {
+  color: #60a5fa !important;
+}
+
+/* Fix white month header background */
+.calendar-navigation {
   display: flex !important;
+  flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  color: var(--text-primary) !important;
-  width: 40px !important;
-  height: 40px !important;
-  flex-shrink: 0 !important;
+  gap: 2rem !important;
+  margin-bottom: 1.5rem !important;
+  width: 100% !important;
+  background: var(--bg-secondary) !important; /* ✅ Match calendar dark blue */
+  border-radius: var(--radius-lg) !important;
+  padding: 1rem 0 !important;
 }
 
-/* First button (Previous) */
-.calendar-navigation .nav-btn:first-child {
-  order: 1 !important; /* ✅ Force left position */
+/* Dark mode */
+[data-theme="dark"] .calendar-navigation {
+  background: var(--bg-tertiary) !important; /* ✅ Even darker tone */
+  border: 1px solid var(--border-light) !important;
 }
+
 
 /* Last button (Next) */
 .calendar-navigation .nav-btn:last-child {
@@ -2084,14 +2087,14 @@ border-radius: var(--radius-xl);
 }
 
 .calendar-navigation .nav-btn:hover {
-  background: #e8f0fe !important;
+  background: var(--bg-secondary) !important;
   transform: scale(1.05) !important;
   color: var(--primary) !important;
 }
 
 /* Dark Mode */
 [data-theme="dark"] .calendar-navigation .nav-btn {
-  background: var(--bg-tertiary) !important;
+  background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
   box-shadow: 0 2px 6px rgba(255, 255, 255, 0.05) !important;
 }
@@ -5500,6 +5503,36 @@ svg.clock,
   position: relative;
 }
 
+/* Emergency badge styling - inline time format */
+.emergency-badge {
+  font-size: 10px;
+  color: #d9534f;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 4px; /* Space between time and "Emergency Only" */
+  white-space: nowrap;
+}
+
+/* Time slot content wrapper for inline display */
+.time-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.timeslot-time {
+  display: inline-block;
+  font-weight: 600;
+}
+
+/* Make emergency slots display time inline */
+.time-slot.emergency-slot .timeslot-time {
+  display: inline;
+  margin-right: 0;
+}
+
 .time-slot.emergency-slot:hover:not(:disabled) {
   background: #ffe5e5;
   transform: scale(1.03);
@@ -6452,4 +6485,168 @@ svg.clock,
   .sub-message {
     font-size: 0.8rem !important;
   }
+}
+
+/* ===== APPOINTMENT DATE DISPLAY ===== */
+.appointment-date-display {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .appointment-date-display {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+/* ===== TODAY'S APPOINTMENTS HIGHLIGHT ===== */
+.appointments-section:first-of-type .section-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border-left: 4px solid var(--primary);
+}
+
+[data-theme="dark"] .appointments-section:first-of-type .section-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
+}
+
+/* ===== RESPONSIVE - STACK SECTIONS ON MOBILE ===== */
+@media (max-width: 968px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .appointments-section {
+    margin-bottom: var(--space-lg);
+  }
+}
+
+/* ===== MAIN CONTENT - TWO COLUMN LAYOUT ===== */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: var(--space-xl);
+  padding: 0 var(--space-xl) var(--space-2xl);
+  max-width: 1400px;
+  margin: 0 auto;
+  background: transparent;
+}
+
+/* ===== LEFT COLUMN - APPOINTMENTS ===== */
+.appointments-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* ===== TODAY'S APPOINTMENTS HIGHLIGHT ===== */
+.today-appointments .section-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border-left: 4px solid var(--primary);
+}
+
+[data-theme="dark"] .today-appointments .section-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
+  border-left-color: var(--primary-light);
+}
+
+/* ===== MY APPOINTMENTS SECTION ===== */
+.my-appointments .section-header {
+  background: var(--bg-secondary);
+}
+
+/* ===== APPOINTMENT DATE DISPLAY ===== */
+.appointment-date-display {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  font-weight: 500;
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .appointment-date-display {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  border-color: var(--border-medium);
+}
+
+/* ===== QUEUE SECTION STICKY POSITIONING ===== */
+.queue-section {
+  height: fit-content;
+  position: sticky;
+  top: var(--space-xl);
+}
+
+/* ===== RESPONSIVE - STACK ON TABLET AND MOBILE ===== */
+@media (max-width: 968px) {
+  .main-content {
+    grid-template-columns: 1fr;
+    padding: 0 var(--space-md) var(--space-xl);
+  }
+  
+  .appointments-column {
+    gap: var(--space-lg);
+  }
+  
+  .queue-section {
+    position: static;
+    margin-top: var(--space-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    gap: var(--space-lg);
+  }
+  
+  .appointments-column {
+    gap: var(--space-md);
+  }
+}
+
+/* Force alignment for photo upload label */
+.profile-options .photo-upload {
+  margin-bottom: 0 !important;
+}
+
+.profile-options .photo-upload label.option-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  padding: var(--space-md) !important;
+}
+
+/* ===== DARK MODE MONTH TITLE FIX (Add at end of file) ===== */
+[data-theme="dark"] .calendar-navigation .month-title {
+  color: #60a5fa !important;
+}
+
+.waiting-list-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.waiting-list-actions button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.doctor-fully-booked-warning,
+.doctor-fully-booked-message {
+  padding: 20px;
+  text-align: center;
 }
