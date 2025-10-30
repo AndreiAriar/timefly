@@ -1,29 +1,30 @@
 /* ===================================================
-   ✅ PATIENT FOOTER - MATCHING STAFF DASHBOARD + LIGHT BLUE TITLE + DARK MODE
+    PATIENT FOOTER - MATCHING STAFF DASHBOARD + LIGHT BLUE TITLE + DARK MODE
    =================================================== */
 
 .app-footer {
-  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #e3f2fd 0%);
   border-top: 1px solid var(--border-light);
-  padding: 2rem 0;
-  margin-top: 4rem;
+  padding: 2.5rem 1rem;
+  margin-top: 0; /*Remove gap from top */
   transition: background 0.4s ease, color 0.3s ease, filter 0.3s ease;
+  width: 100%; /*Fill full width */
 }
 
-/* ✅ Center all content */
+/*Center all content */
 .footer-content {
-  max-width: 1400px;
+  max-width: 100%; /*  Full width coverage */
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 0.75rem;
+  gap: 0.5rem; /* Ã¢Å“â€¦ Reduce gap */
 }
 
-/* ✅ Brand section: logo + title */
+/* Brand section: logo + title */
 .footer-brand {
   display: flex;
   align-items: center;
@@ -31,7 +32,7 @@
   gap: 0.5rem;
 }
 
-/* ✅ Logo styling */
+/* Logo styling */
 .footer-logo {
   width: 40px;
   height: 40px;
@@ -47,10 +48,10 @@
   filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.6));
 }
 
-/* ✅ Title next to logo */
+/* Title next to logo */
 .footer-title {
   font-size: 1.35rem;
-  color: #42a5f5; /* ✅ Light blue title */
+  color: #42a5f5; /*Light blue title */
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
@@ -64,7 +65,7 @@
   animation: glowPulse 1.5s infinite ease-in-out;
 }
 
-/* ✅ Tagline below */
+/* Tagline below */
 .footer-tagline {
   margin: 0;
   font-size: 0.9rem;
@@ -72,7 +73,7 @@
   line-height: 1.4;
 }
 
-/* ✅ Copyright */
+/* Copyright */
 .footer-copyright {
   text-align: center;
 }
@@ -84,13 +85,14 @@
 }
 
 /* ===================================================
-   🌙 DARK MODE VARIANT
+   ðŸŒ™ DARK MODE VARIANT
    =================================================== */
 [data-theme="dark"] .app-footer {
   background: linear-gradient(135deg, #071223 0%, #0d1f33 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%; /* Ensure full width in dark mode */
+  margin-top: 0; /*  Remove any gaps */
 }
-
 [data-theme="dark"] .footer-logo {
   filter: drop-shadow(0 0 8px rgba(144, 202, 249, 0.6));
 }
@@ -100,7 +102,7 @@
 }
 
 [data-theme="dark"] .footer-title {
-  color: #90caf9; /* ✅ Light blue for dark mode */
+  color: #90caf9; /*Light blue for dark mode */
   text-shadow: 0 0 8px rgba(144, 202, 249, 0.8);
 }
 
@@ -115,7 +117,7 @@
 }
 
 /* ===================================================
-   🌟 GLOW PULSE ANIMATION
+   ðŸŒŸ GLOW PULSE ANIMATION
    =================================================== */
 @keyframes glowPulse {
   0% {
@@ -129,17 +131,26 @@
   }
 }
 
-/* ===================================================
-   📱 RESPONSIVE DESIGN
-   =================================================== */
 @media (max-width: 768px) {
+  .app-footer {
+    padding: 2rem 1rem; /*Adjust padding for mobile */
+    margin-top: 0;
+  }
+
   .footer-content {
     flex-direction: column;
     text-align: center;
+    padding: 0 1rem;
+    gap: 0.5rem;
   }
 
   .footer-title {
     font-size: 1.2rem;
+  }
+
+  .footer-logo {
+    width: 35px;
+    height: 35px;
   }
 
   .footer-copyright {

@@ -64,7 +64,7 @@
 .doctor-dashboard-page .doctor-navbar-logo-text {
   font-size: 24px;
   font-weight: 700;
-  color: #1e293b;
+  color: #42a5f5;
   margin: 0;
 }
 
@@ -97,7 +97,7 @@
   color: #1e293b;
 }
 
-
+/* ✅ Active state - Blue background with white text (Desktop) */
 .doctor-dashboard-page .doctor-nav-link.doctor-nav-active {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
@@ -106,6 +106,90 @@
 
 .doctor-dashboard-page .doctor-nav-link.doctor-nav-active:hover {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white; /* ✅ Keep white text on hover */
+}
+
+/* ✅ Ensure icons stay white in active state */
+.doctor-dashboard-page .doctor-nav-link.doctor-nav-active svg {
+  color: white !important;
+  stroke: white !important;
+}
+
+/* ===== MOBILE FIX: Prevent White Background on Click ===== */
+@media (max-width: 768px) {
+  /* ✅ Normal state - Transparent background, dark text */
+  .doctor-dashboard-page .doctor-nav-link {
+    background: transparent !important;
+    color: #1e293b !important;
+  }
+  
+  /* ✅ Hover state - Light gray background */
+  .doctor-dashboard-page .doctor-nav-link:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #1e293b !important;
+  }
+  
+  /* ✅ Active state - Blue background with white text */
+  .doctor-dashboard-page .doctor-nav-link.doctor-nav-active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+  
+  /* ✅ Active hover state */
+  .doctor-dashboard-page .doctor-nav-link.doctor-nav-active:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    color: white !important;
+  }
+  
+  /* ✅ Icons in normal state - Dark */
+  .doctor-dashboard-page .doctor-nav-link svg {
+    color: #1e293b !important;
+    stroke: #1e293b !important;
+  }
+  
+  /* ✅ Icons in active state - White */
+  .doctor-dashboard-page .doctor-nav-link.doctor-nav-active svg {
+    color: white !important;
+    stroke: white !important;
+  }
+  
+  /* ✅ Remove any focus/active pseudo-states that might add white */
+  .doctor-dashboard-page .doctor-nav-link:focus,
+  .doctor-dashboard-page .doctor-nav-link:active {
+    background: transparent !important;
+    color: #1e293b !important;
+    outline: none !important;
+  }
+  
+  /* ✅ Active link focus/active states */
+  .doctor-dashboard-page .doctor-nav-link.doctor-nav-active:focus,
+  .doctor-dashboard-page .doctor-nav-link.doctor-nav-active:active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: white !important;
+    outline: none !important;
+  }
+}
+
+/* ===== SMALLER MOBILE DEVICES ===== */
+@media (max-width: 640px) {
+  .doctor-dashboard-page .doctor-nav-link {
+    background: transparent !important;
+  }
+  
+  .doctor-dashboard-page .doctor-nav-link.doctor-nav-active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .doctor-dashboard-page .doctor-nav-link {
+    background: transparent !important;
+  }
+  
+  .doctor-dashboard-page .doctor-nav-link.doctor-nav-active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  }
 }
 
 /* Right Section */
@@ -552,4 +636,42 @@
   .doctor-dashboard-page .doctor-nav-link {
     padding: 8px;
   }
+}
+
+/* ===================================================
+   ✅ PREVENT WHITE BACKGROUND ON NAV CLICK - ALL DEVICES
+   =================================================== */
+
+/* Remove any browser default button styles */
+.doctor-dashboard-page .doctor-nav-link {
+  -webkit-tap-highlight-color: transparent; /* ✅ Remove tap highlight on mobile */
+  -webkit-touch-callout: none; /* ✅ Disable iOS callout */
+}
+
+/* Ensure no white flash on click */
+.doctor-dashboard-page .doctor-nav-link::before,
+.doctor-dashboard-page .doctor-nav-link::after {
+  display: none !important;
+}
+
+/* Remove any pseudo-element backgrounds */
+.doctor-dashboard-page .doctor-nav-link::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/* Override any global button resets */
+.doctor-dashboard-page button.doctor-nav-link,
+.doctor-dashboard-page a.doctor-nav-link {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Active state always has gradient */
+.doctor-dashboard-page button.doctor-nav-link.doctor-nav-active,
+.doctor-dashboard-page a.doctor-nav-link.doctor-nav-active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: white !important;
 }

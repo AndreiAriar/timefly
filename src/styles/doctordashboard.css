@@ -2,12 +2,38 @@
 
 .doctor-dashboard-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: #ffffff; /* ✅ White background for all sections */
   display: flex;
   flex-direction: column;
-  width: 100%;  /* ADD THIS */
-  margin: 0;     /* ADD THIS */
-  padding: 0;    /* ADD THIS */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* ✅ Prevent horizontal scroll */
+}
+
+/* ✅ Keep hero section with dark background */
+.hero-section-doctor {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* ✅ Ensure white backgrounds throughout */
+.doctor-dashboard-page .queue-status-section,
+.doctor-dashboard-page .appointments-section {
+  background: #ffffff !important;
+  width: 100%;
+  margin: 0;
+  padding: 40px 20px;
+}
+
+/* ✅ Mobile: Remove any dark backgrounds */
+@media (max-width: 768px) {
+  .doctor-dashboard-container {
+    background: #ffffff !important;
+  }
+  
+  body.doctor-dashboard-page {
+    background: #ffffff !important;
+  }
 }
 
 .doctor-dashboard-container {
@@ -139,13 +165,14 @@
   background: #f3f4f6;
   color: #374151;
 }
+
 /* Hero Section - Full Page Background */
 .hero-section-doctor {
   position: relative;
   min-height: 100vh;
   width: 100%;
   background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
+    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), /* ✅ Lighter overlay - was 0.75 */
     url('/images/doctorbg.jpg');
   background-size: cover;
   background-position: center;
@@ -159,16 +186,17 @@
   margin: 0;
   overflow: hidden;
   z-index: 0;
+  filter: brightness(1.15); /* ✅ Increase photo brightness */
 }
 
-/* Darker Overlay for Better Text Visibility - Additional Layer */
+/* Lighter Overlay for Better Photo Visibility */
 .hero-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.65); /* Additional darkening */
+  background: rgba(0, 0, 0, 0.35); /* ✅ Reduced from 0.65 to 0.35 */
   z-index: 1;
   pointer-events: none;
 }
@@ -252,6 +280,33 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
+
+.greeting-icon {
+  vertical-align: middle;
+  margin-right: 8px;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+/* 🌅 Morning - Soft Gold */
+.greeting-icon.morning {
+  color: #facc15; /* yellow-400 */
+}
+
+/* 🌞 Afternoon - Warm Orange */
+.greeting-icon.afternoon {
+  color: #fb923c; /* orange-400 */
+}
+
+/* 🌙 Evening - Calm Blue */
+.greeting-icon.evening {
+  color: #60a5fa; /* blue-400 */
+}
+
+/* Optional: subtle hover animation */
+.hero-greeting:hover .greeting-icon {
+  transform: rotate(10deg) scale(1.1);
+}
+
 /* ============================
    DOCTOR DASHBOARD - STATS SECTION
    ============================ */
@@ -836,19 +891,20 @@
   gap: 16px;
 }
 
-/* Queue Item Cards */
+/* ✅ Queue Item Cards - Updated 3-Column Grid */
 .doctor-dashboard-page .todays-queue-item {
   display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  gap: 12px 16px;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto;
+  gap: 16px;
   padding: 16px 20px;
   background: #ffffff;
   border-radius: 12px;
   border-left: 4px solid transparent;
-  border: 1px solid #000000; /* ✅ black border */
+  border: 1px solid #000000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
+  align-items: center;
 }
 
 .doctor-dashboard-page .todays-queue-item:hover {
@@ -857,47 +913,230 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
 }
 
-.doctor-dashboard-page .queue-actions-bottom {
-  grid-column: 2;
-  grid-row: 2;
+/* ✅ Avatar Column (Column 1) */
+.doctor-dashboard-page .todays-queue-item .patient-avatar {
+  grid-column: 1;
+  grid-row: 1;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: #f3f4f6;
   display: flex;
-  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #9ca3af;
+  color: #000000;
+  flex-shrink: 0;
+}
+
+.doctor-dashboard-page .todays-queue-item .patient-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ✅ Details Column (Column 2) */
+.doctor-dashboard-page .todays-queue-item .patient-details {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.doctor-dashboard-page .patient-name,
+.doctor-dashboard-page .patient-age,
+.doctor-dashboard-page .patient-condition,
+.doctor-dashboard-page .patient-date,
+.doctor-dashboard-page .patient-time {
+  font-size: 14px;
+  color: #222222;
+}
+
+/* ✅ Actions Column (Column 3) - Vertical Stack */
+.doctor-dashboard-page .queue-actions-bottom {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  padding-top: 0;
-  border-top: none;
-  margin-top: -58px;
+  justify-content: center;
+  padding-left: 16px;
+  border-left: 1px solid #e5e7eb;
+  min-width: 140px;
 }
 
-/* Buttons */
-.doctor-dashboard-page .action-btn {
-  padding: 7px 10px;
-  border-radius: 8px;
-  border: 1px solid #000000; /* ✅ black border */
-  cursor: pointer;
+/* ✅ Priority & Status Badges */
+.doctor-dashboard-page .priority-status,
+.doctor-dashboard-page .queue-status {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s;
-  color: #000000; /* ✅ black text */
-  background: #ffffff;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-/* ✅ Remove background of eye icon */
+/* ✅ Eye Icon Button */
 .doctor-dashboard-page .view-btn {
-  background: none !important; /* ❌ remove background */
-  color: #000000 !important; /* ✅ black icon/text */
+  background: none !important;
+  color: #000000 !important;
   border: none !important;
   box-shadow: none !important;
+  padding: 8px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .doctor-dashboard-page .view-btn:hover {
-  transform: scale(1.1);
-  color: #3b82f6; /* ✅ subtle hover color */
+  transform: scale(1.15);
+  color: #3b82f6 !important;
+}
+
+/* ✅ MOBILE: Enhanced Layout with Centered Queue + Avatar, Left-Aligned Details */
+@media (max-width: 768px) {
+  .doctor-dashboard-page .todays-queue-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    text-align: left;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  /* ✅ Row 1: Queue Number + Avatar (Centered) */
+  .doctor-dashboard-page .todays-queue-item .queue-number-avatar-row {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .doctor-dashboard-page .todays-queue-item .queue-number {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000000;
+    background: #f3f4f6;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid #9ca3af;
+  }
+
+  .doctor-dashboard-page .todays-queue-item .patient-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0;
+  }
+
+  /* ✅ Row 2: Patient Details (Left-Aligned) */
+  .doctor-dashboard-page .todays-queue-item .patient-details {
+    grid-column: 1;
+    grid-row: 2;
+    align-items: flex-start;
+    text-align: left;
+    gap: 8px;
+  }
+
+  .doctor-dashboard-page .patient-name {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .doctor-dashboard-page .patient-age,
+  .doctor-dashboard-page .patient-condition,
+  .doctor-dashboard-page .patient-date,
+  .doctor-dashboard-page .patient-time {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ✅ Row 3: Actions - Horizontal (Priority, Status, Eye Icon) */
+  .doctor-dashboard-page .queue-actions-bottom {
+    grid-column: 1;
+    grid-row: 3;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    padding-left: 0;
+    border: none;
+    border-left: none;
+    margin-top: 8px;
+    min-width: auto;
+  }
+
+  /* ✅ Equal sizing for Priority, Status, and Eye Icon */
+  .doctor-dashboard-page .queue-actions-bottom .priority-status,
+  .doctor-dashboard-page .queue-actions-bottom .queue-status {
+    flex: 1;
+    min-height: 38px;
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .doctor-dashboard-page .queue-actions-bottom .view-btn {
+    flex: 0 0 38px;
+    min-width: 38px;
+    min-height: 38px;
+    background: #f3f4f6 !important;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .doctor-dashboard-page .queue-actions-bottom .view-btn:hover {
+    background: #e5e7eb !important;
+  }
+}
+
+/* ✅ Extra Small Mobile */
+@media (max-width: 480px) {
+  .doctor-dashboard-page .todays-queue-item {
+    padding: 16px;
+  }
+
+  .doctor-dashboard-page .todays-queue-item .patient-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .doctor-dashboard-page .queue-actions-bottom {
+    gap: 8px;
+  }
+
+  .doctor-dashboard-page .queue-actions-bottom .priority-status,
+  .doctor-dashboard-page .queue-actions-bottom .queue-status {
+    font-size: 11px;
+    padding: 6px 12px;
+    min-height: 36px;
+  }
+
+  .doctor-dashboard-page .queue-actions-bottom .view-btn {
+    flex: 0 0 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
 }
 
 /* No Patient + Empty Queue */
@@ -962,15 +1201,25 @@
   background: #f0f0f0;
   transform: scale(1.1);
 }
+
 /* Appointments Section */
 .doctor-dashboard-page .appointments-section {
   padding: 40px;
-  background: #ffffff; /* ✅ White background */
+  background: #ffffff !important; /* ✅ Force white background */
   min-height: 100vh;
   margin: 0;
   border: none !important;
   border-radius: 0 !important;
   width: 100%;
+}
+
+/* ✅ Remove any inherited dark backgrounds */
+.doctor-dashboard-page .appointments-section * {
+  background: transparent;
+}
+
+.doctor-dashboard-page .appointments-section .appointment-card {
+  background: #ffffff !important;
 }
 
 .doctor-dashboard-page .appointments-section .section-header {
@@ -1205,6 +1454,169 @@
 .doctor-dashboard-page .action-btn.view-btn:hover {
   color: #4b5563;
   transform: scale(1.2);
+}
+
+/* ✅ Empty State */
+.doctor-dashboard-page .empty-state {
+  padding: 80px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 16px;
+  background: #f9fafb;
+  border-radius: 16px;
+  border: 1px solid #d1d5db;
+}
+
+/* ✅ Responsive: Mobile - Queue + Avatar Centered, Details Left, Eye Icon Inline */
+@media (max-width: 768px) {
+  .doctor-dashboard-page .appointments-section {
+    padding: 30px 20px;
+  }
+
+  .doctor-dashboard-page .appointment-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  /* ✅ Row 1: Queue Badge + Avatar (Centered) */
+  .doctor-dashboard-page .patient-avatar-section {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start!important;
+    justify-content: left !important;
+    gap: 12px;
+  }
+
+  .doctor-dashboard-page .queue-badge {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  .doctor-dashboard-page .appointment-avatar {
+    width: 90px;
+    height: 90px;
+  }
+
+  /* ✅ Row 2: Appointment Details + Booking Source (Left-Aligned) */
+  .doctor-dashboard-page .appointment-details {
+    grid-column: 1;
+    grid-row: 2;
+    align-items: flex-start!important;
+    text-align: left!important;
+    gap: 10px;
+  }
+
+  .doctor-dashboard-page .appointment-name-line {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .doctor-dashboard-page .appointment-info-line {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1f2937;
+  }
+
+  /* ✅ Booking Source - Left Aligned */
+  .doctor-dashboard-page .booking-source {
+    margin-top: 8px;
+    align-self: flex-start;
+  }
+
+  /* ✅ Row 3: Priority, Status, Eye Icon (Horizontal Inline) */
+  .doctor-dashboard-page .appointment-meta-actions {
+    grid-column: 1;
+    grid-row: 3;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    align-self: auto;
+    margin-top: 8px;
+  }
+
+  .doctor-dashboard-page .appointment-priority,
+  .doctor-dashboard-page .appointment-status {
+    flex: 1;
+    padding: 8px 14px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .doctor-dashboard-page .action-btn.view-btn {
+    flex: 0 0 40px;
+    min-width: 40px;
+    min-height: 40px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .doctor-dashboard-page .action-btn.view-btn:hover {
+    background: #e5e7eb;
+  }
+}
+
+/* ✅ Responsive: Small Phones */
+@media (max-width: 480px) {
+  .doctor-dashboard-page .appointments-section {
+    padding: 20px 16px;
+  }
+
+  .doctor-dashboard-page .section-title {
+    font-size: 22px;
+  }
+
+  .doctor-dashboard-page .appointment-card {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .doctor-dashboard-page .appointment-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .doctor-dashboard-page .appointment-name-line {
+    font-size: 17px;
+  }
+
+  .doctor-dashboard-page .appointment-info-line {
+    font-size: 14px;
+  }
+
+  .doctor-dashboard-page .appointment-meta-actions {
+    gap: 8px;
+  }
+
+  .doctor-dashboard-page .appointment-priority,
+  .doctor-dashboard-page .appointment-status {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .doctor-dashboard-page .action-btn.view-btn {
+    flex: 0 0 38px;
+    min-width: 38px;
+    min-height: 38px;
+    font-size: 20px;
+  }
+
+  .doctor-dashboard-page .empty-state {
+    padding: 50px 20px;
+    font-size: 14px;
+  }
 }
 
 /* ✅ Empty State */
@@ -1823,45 +2235,53 @@
     height: 100px;
   }
 }
-
-/* Footer - Compact Design */
-.dashboard-footer {
-  background: #ffffff; /* ✅ changed to white */
-  color: #000000; /* ✅ default text color black */
+/* ===== DOCTOR DASHBOARD FOOTER - FIXED ALIGNMENT ===== */
+.doctor-dashboard-page .dashboard-footer {
+  background: #ffffff !important;
+  color: #000000;
   padding: 30px 20px;
-  margin-top: 0; /* Remove gap */
+  margin-top: 0;
   width: 100%;
-  border-top: 1px solid #e5e7eb; /* optional subtle divider line */
+  border-top: 1px solid #e5e7eb;
+  overflow: hidden; /* ✅ Fix scrollbar issue */
 }
 
-.footer-content {
+.doctor-dashboard-page .footer-content {
   max-width: 1200px;
   margin: 0 auto;
   text-align: center;
+  overflow: visible; /* ✅ Fix scrollbar issue */
 }
 
-.footer-logo {
+.doctor-dashboard-page .footer-logo {
   display: flex;
-  align-items: center;
+  align-items: center; /* ✅ Vertically center logo and text */
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 0.75rem; /* ✅ Increased from 12px for better spacing */
+  margin: 0 auto 12px auto; /* ✅ Center the entire logo+text block */
 }
 
-.footer-logo-image {
-  width: 32px;
-  height: 32px;
+.doctor-dashboard-page .footer-logo-image {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0; /* ✅ Prevent logo from shrinking */
+  display: block;
 }
 
-.footer-logo-text {
+.doctor-dashboard-page .footer-logo-text {
   font-size: 24px;
-  font-weight: 700;
-  color: #000000; /* ✅ black text */
+  font-weight: 650;
+  color: #42a5f5;
+  line-height: 1; /* ✅ KEY FIX: Remove extra line height */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center; /* ✅ Ensure text is vertically centered */
 }
 
-.footer-tagline {
+.doctor-dashboard-page .footer-tagline {
   font-size: 14px;
-  color: #444444; /* ✅ medium gray for readability */
+  color: #444444;
   margin-bottom: 16px;
   max-width: 400px;
   margin-left: auto;
@@ -1869,9 +2289,9 @@
   line-height: 1.5;
 }
 
-.footer-copyright {
+.doctor-dashboard-page .footer-copyright {
   font-size: 12px;
-  color: #666666; /* ✅ softer gray */
+  color: #666666;
   margin-top: 12px;
 }
 
@@ -2512,5 +2932,197 @@
   .modal-content {
     max-height: 90vh;
     overflow-y: auto;
+  }
+}
+
+/* ✅ Remove scrollbar from footer */
+.doctor-dashboard-page .dashboard-footer {
+  overflow: hidden !important;
+  width: 100%;
+  margin: 0;
+  padding: 30px 20px;
+}
+
+.doctor-dashboard-page .footer-content {
+  overflow: visible !important;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* ✅ Fix current queue scrolling issues */
+.doctor-dashboard-page .queue-status-section {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.doctor-dashboard-page .todays-queue-list {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* ✅ Mobile: Force white backgrounds everywhere */
+@media (max-width: 768px) {
+  .doctor-dashboard-page,
+  .doctor-dashboard-page body,
+  .doctor-dashboard-container {
+    background: #ffffff !important;
+  }
+  
+  .doctor-dashboard-page .queue-status-section,
+  .doctor-dashboard-page .appointments-section {
+    background: #ffffff !important;
+    padding: 30px 20px;
+  }
+  
+  .doctor-dashboard-page .dashboard-footer,
+  .doctor-dashboard-page .app-footer {
+    background: #ffffff !important;
+    margin-top: 0 !important;
+    padding: 24px 16px;
+    overflow: hidden;
+  }
+  
+  /* ✅ Remove any lingering dark gradients */
+  .doctor-dashboard-page * {
+    background-image: none !important;
+  }
+  
+  /* ✅ Keep only hero section dark */
+  .doctor-dashboard-page .hero-section-doctor {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
+                      url('/images/doctorbg.jpg') !important;
+  }
+}
+
+/* ===================================================
+   ✅ MOBILE NAVIGATION ICON FIX - WHITE BOX ISSUE
+   =================================================== */
+
+/* Remove white background from nav icons on mobile */
+@media (max-width: 768px) {
+  .doctor-navbar,
+  .patient-navbar {
+    background: transparent !important;
+  }
+  
+  .doctor-navbar .nav-links a,
+  .patient-navbar .nav-links a {
+    background: transparent !important;
+    color: #ffffff !important; /* ✅ White text for visibility */
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  /* ✅ Fix nav icon colors on mobile */
+  .doctor-navbar .nav-links a svg,
+  .patient-navbar .nav-links a svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    fill: none !important;
+  }
+  
+  /* ✅ Remove white box from hamburger menu items */
+  .doctor-navbar .nav-menu,
+  .patient-navbar .nav-menu {
+    background: rgba(30, 41, 55, 0.95) !important; /* ✅ Dark semi-transparent */
+     -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  
+  /* ✅ Hover state for mobile nav items */
+  .doctor-navbar .nav-links a:hover,
+  .patient-navbar .nav-links a:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #60a5fa !important;
+  }
+  
+  .doctor-navbar .nav-links a:hover svg,
+  .patient-navbar .nav-links a:hover svg {
+    color: #60a5fa !important;
+    stroke: #60a5fa !important;
+  }
+}
+
+/* ✅ Mobile: Fix profile button white box */
+@media (max-width: 768px) {
+  .doctor-navbar .profile-btn,
+  .patient-navbar .profile-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #ffffff !important;
+  }
+  
+  .doctor-navbar .profile-btn:hover,
+  .patient-navbar .profile-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .doctor-navbar .profile-avatar,
+  .patient-navbar .profile-avatar {
+    border: 2px solid #ffffff !important;
+  }
+}
+
+/* ✅ Mobile: Search icon fix */
+@media (max-width: 768px) {
+  .doctor-navbar .search-icon,
+  .patient-navbar .search-icon {
+    color: #ffffff !important;
+    background: transparent !important;
+  }
+  
+  .doctor-navbar .search-icon:hover,
+  .patient-navbar .search-icon:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+/* ✅ Fix navigation bar container on mobile */
+@media (max-width: 768px) {
+  .doctor-navbar,
+  .patient-navbar {
+    padding: 1rem !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .doctor-navbar .nav-container,
+  .patient-navbar .nav-container {
+    background: transparent !important;
+  }
+}
+
+/* ===================================================
+   ✅ CURRENT QUEUE TAB - MOBILE NAV ICON FIX
+   =================================================== */
+
+@media (max-width: 768px) {
+  /* ✅ Remove white background from Current Queue nav button */
+  .doctor-dashboard-page .nav-links a[href*="current-queue"],
+  .patient-dashboard-page .nav-links a[href*="current-queue"] {
+    background: transparent !important;
+    color: #ffffff !important;
+  }
+  
+  /* ✅ Fix icon color inside Current Queue button */
+  .doctor-dashboard-page .nav-links a[href*="current-queue"] svg,
+  .patient-dashboard-page .nav-links a[href*="current-queue"] svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    fill: none !important;
+  }
+  
+  /* ✅ Active/selected state */
+  .doctor-dashboard-page .nav-links a[href*="current-queue"].active,
+  .patient-dashboard-page .nav-links a[href*="current-queue"].active {
+    background: rgba(96, 165, 250, 0.15) !important;
+    color: #60a5fa !important;
+  }
+  
+  .doctor-dashboard-page .nav-links a[href*="current-queue"].active svg,
+  .patient-dashboard-page .nav-links a[href*="current-queue"].active svg {
+    color: #60a5fa !important;
+    stroke: #60a5fa !important;
   }
 }

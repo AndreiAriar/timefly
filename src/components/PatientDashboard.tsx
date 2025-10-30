@@ -675,6 +675,7 @@ const calculateDoctorDailySlots = (doctor: Doctor): number => {
   
   return slots > 0 ? slots : 10; // Fallback to 10 if calculation fails
 };
+
 // ✅ Generate time slots (with block + emergency logic + fallback for new doctors + lunch break filter)
 const generateTimeSlots = () => {
   const slots: TimeSlot[] = [];
@@ -855,23 +856,29 @@ if (!selectedDoctor || !dateToUse) {
       total: todayAppointments.length
     };
   };
-
-  const getCurrentQueue = () => {
-    const today = getTodayDate();
-    const todayAppointments = appointments.filter(apt => {
-      return apt.date === today && ['confirmed', 'pending', 'in-progress'].includes(apt.status);
-    });
-    return todayAppointments.sort((a, b) => {
-      const priorityOrder = { emergency: 3, urgent: 2, normal: 1 };
-      const aPriority = priorityOrder[a.priority] || 1;
-      const bPriority = priorityOrder[b.priority] || 1;
-      if (aPriority !== bPriority) return bPriority - aPriority;
-      const aQueue = a.queueNumber || 999;
-      const bQueue = b.queueNumber || 999;
-      if (aQueue !== bQueue) return aQueue - bQueue;
-      return a.time.localeCompare(b.time);
-    });
-  };
+const getCurrentQueue = () => {
+  const today = getTodayDate();
+  const todayAppointments = appointments.filter(apt => {
+    return apt.date === today && ['confirmed', 'pending', 'in-progress'].includes(apt.status);
+  });
+  
+  // ✅ Sort by: status → appointment time → priority
+  return todayAppointments.sort((a, b) => {
+    // 1️⃣ Confirmed status comes first
+    if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
+    if (b.status === 'confirmed' && a.status !== 'confirmed') return 1;
+    
+    // 2️⃣ Sort by appointment time
+    const timeComparison = a.time.localeCompare(b.time);
+    if (timeComparison !== 0) return timeComparison;
+    
+    // 3️⃣ Priority as tiebreaker
+    const priorityOrder = { emergency: 3, urgent: 2, normal: 1 };
+    const aPriority = priorityOrder[a.priority] || 1;
+    const bPriority = priorityOrder[b.priority] || 1;
+    return bPriority - aPriority;
+  });
+};
 
 
   const getNextPatient = () => {
@@ -981,17 +988,6 @@ const isDailyLimitReached = (doctorId: string, date: string): boolean => {
   return bookedCount >= maxSlots;
 };
 
-const isTimeSlotAvailable = (date: string, time: string, doctorId: string, excludeId?: string): boolean => {
-  const conflictingAppointment = appointments.find(apt =>
-    apt.date === date &&
-    apt.time === time &&
-    apt.doctorId === doctorId && 
-    apt.status !== 'cancelled' &&
-    (excludeId ? apt.id !== excludeId : true)
-  );
-  return !conflictingAppointment;
-};
-
 const handleSubmit = async () => {
   if (!formData.fullName || !formData.age || !formData.date || !formData.time || !formData.doctor || !currentUser) {
     addNotification('error', 'Please fill in all required fields including age');
@@ -1004,7 +1000,7 @@ const handleSubmit = async () => {
     return;
   }
 
-  // ✅ NEW: Check if daily limit is reached and offer waiting list
+  // ✅ Check if daily limit is reached and offer waiting list
   if (!editingAppointment && isDailyLimitReached(formData.doctor, formData.date)) {
     const userChoice = window.confirm(
       `${selectedDoctorInfo.name} is fully booked on ${formData.date}.\n\n` +
@@ -1084,14 +1080,28 @@ const handleSubmit = async () => {
     adjustedTime = `${newHour12}:${newMinute.toString().padStart(2, '0')} ${newIsPM ? 'PM' : 'AM'}`;
   }
 
-  // Check availability with the adjusted time
-  if (!isTimeSlotAvailable(formData.date, adjustedTime, selectedDoctorInfo.id, editingAppointment?.id)) {
-    addNotification('error', 'This time slot is no longer available. Please select another time.');
-    return;
-  }
-
   try {
     addNotification('info', editingAppointment ? 'Updating appointment...' : 'Booking appointment...');
+
+    // ✅ RACE CONDITION FIX: Final check right before creation
+    if (!editingAppointment) {
+      const lastSecondCheck = await getDocs(query(
+        collection(db, 'appointments'),
+        where('doctorId', '==', selectedDoctorInfo.id),
+        where('date', '==', formData.date),
+        where('time', '==', adjustedTime),
+        where('status', '!=', 'cancelled')
+      ));
+      
+      if (!lastSecondCheck.empty) {
+        console.log('⚠️ Race condition prevented: Slot was taken during booking process');
+        addNotification('error', 'This time slot was just taken by another user! Please refresh and choose another time.');
+        
+        // Force refresh time slots
+        setFormData(prev => ({ ...prev, time: '' }));
+        return;
+      }
+    }
 
     const appointmentData = {
       name: formData.fullName,
@@ -1114,7 +1124,7 @@ const handleSubmit = async () => {
     };
 
     if (editingAppointment) {
-      // ✅ NEW: Check daily limit when updating (excluding current appointment)
+      // ✅ Check daily limit when updating (excluding current appointment)
       const customSlotKey = `${formData.doctor}_${formData.date}`;
       const maxSlots = doctorSlotSettings[customSlotKey] || 
         (() => {
@@ -1138,17 +1148,18 @@ const handleSubmit = async () => {
       await updateDoc(appointmentRef, appointmentData);
       addNotification("success", "Appointment rescheduled successfully!");
       setEditingAppointment(null);
-      // ... email sending code
     } else {
       const queueNumber = await getNextQueueNumber(formData.date);
+      
+      // ✅ Create appointment immediately after final check
       const docRef = await addDoc(collection(db, "appointments"), {
         ...appointmentData,
         queueNumber,
         createdAt: serverTimestamp(),
       });
+      
       console.log("Appointment created with Firebase ID:", docRef.id);
       addNotification("success", "Appointment booked successfully!");
-      // ... email sending code
     }
 
     setShowBookingForm(false);
@@ -1798,38 +1809,66 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </section>
   </div>
 
-  {/* Right Column - Current Queue */}
-  <section className="queue-section">
-    <div className="section-header">
-      <div className="section-title">
-        <Clock size={20} />
-        Current Queue
-      </div>
-      <div className="section-subtitle">
-        Real-time queue status - All appointments for today
-      </div>
+ {/* Right Column - Current Queue */}
+<section className="queue-section">
+  <div className="section-header">
+    <div className="section-title">
+      <Clock size={20} />
+      Current Queue
     </div>
-    {/* Now Serving */}
-    <div className="queue-summary">
-      <span className="serving-label">Now Serving</span>
-      <span className="serving-number">
-        #{currentPatient?.queueNumber || 'None'}
-      </span>
+    <div className="section-subtitle">
+      Real-time queue status - All appointments for today
     </div>
-    {/* Next Patient */}
-    {nextPatient && (
-      <div className="queue-summary next-patient">
-        <span className="serving-label">Up Next</span>
-        <span className="serving-number">#{nextPatient.queueNumber}</span>
-      </div>
-    )}
-    {/* Queue List */}
-    <div className="queue-list">
-      <div className="queue-header">
-        <span>Queue showing all appointments</span>
-      </div>
-      {queue.length > 0 ? (
-        queue.map((patient) => (
+  </div>
+  {/* Now Serving */}
+  <div className="queue-summary">
+    <span className="serving-label">Now Serving</span>
+    <span className="serving-number">
+      #{currentPatient?.queueNumber || 'None'}
+    </span>
+  </div>
+  {/* Next Patient */}
+  {nextPatient && (
+    <div className="queue-summary next-patient">
+      <span className="serving-label">Up Next</span>
+      <span className="serving-number">#{nextPatient.queueNumber}</span>
+    </div>
+  )}
+  {/* Queue List */}
+  <div className="queue-list">
+    <div className="queue-header">
+      <span>Queue showing all appointments</span>
+    </div>
+    {queue.length > 0 ? (
+      queue.map((patient) => {
+        // ✅ Calculate wait time for each patient
+        const calculateWaitTime = () => {
+          if (patient.status === 'confirmed') {
+            return 'Being Served';
+          }
+
+          const now = new Date();
+          const currentTime = now.getHours() * 60 + now.getMinutes();
+
+          // Parse appointment time
+          const [time, period] = patient.time.split(' ');
+          let [hours, minutes] = time.split(':').map(Number);
+
+          if (period === 'PM' && hours !== 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+
+          const appointmentTimeInMinutes = hours * 60 + minutes;
+          const waitMinutes = Math.max(0, appointmentTimeInMinutes - currentTime);
+
+          if (waitMinutes >= 60) {
+            const hrs = Math.floor(waitMinutes / 60);
+            const mins = waitMinutes % 60;
+            return `Wait: ${hrs}h ${mins}min`;
+          }
+          return `Wait: ${waitMinutes}min`;
+        };
+
+        return (
           <div
             key={patient.id}
             className={`queue-card 
@@ -1873,16 +1912,23 @@ const handleCancelAppointment = async (id: string, reason: string) => {
                   {patient.priority === 'normal' && 'Normal'}
                 </span>
               </div>
+
+              {/* ✅ NEW: Wait Time Display */}
+              <div className="queue-wait-time">
+                <Clock size={14} aria-hidden="true" />
+                <span>{calculateWaitTime()}</span>
+              </div>
             </div>
           </div>
-        ))
-      ) : (
-        <div className="empty-queue">
-          <p>No patients in queue for today</p>
-        </div>
-      )}
-    </div>
-  </section>
+        );
+      })
+    ) : (
+      <div className="empty-queue">
+        <p>No patients in queue for today</p>
+      </div>
+    )}
+  </div>
+</section>
 </div>
 {/* ✅ Close main-content div here */}
 {/* Cancel Appointment Modal */}
@@ -2284,113 +2330,116 @@ const handleCancelAppointment = async (id: string, reason: string) => {
   )}
 </div>
 
-        {/* === STEP 3: TIME SLOT SELECTION (UNCHANGED) === */}
-        <div className="wizard-step step-timeslots">
-          <button
-            className="wizard-back-btn"
-            onClick={() => {
-              setCalendarWizardStep(2);
-              setSelectedCalendarDoctor(null);
-              setFormData(prev => ({
-                ...prev,
-                doctor: '',
-                time: ''
-              }));
-            }}
-          >
-            <ChevronLeft size={20} />
-            Back to Doctors
-          </button>
+       {/* === STEP 3: TIME SLOT SELECTION === */}
+<div className="wizard-step step-timeslots">
+  <button
+    className="wizard-back-btn"
+    onClick={() => {
+      setCalendarWizardStep(2);
+      setSelectedCalendarDoctor(null);
+      setFormData(prev => ({
+        ...prev,
+        doctor: '',
+        time: ''
+      }));
+    }}
+  >
+    <ChevronLeft size={20} />
+    Back to Doctors
+  </button>
 
-          {selectedCalendarDoctor && (
-            <>
-              <div className="selected-doctor-info">
-                <div className="doctor-avatar-small">
-                  {selectedCalendarDoctor?.photo ? (
-                    <img
-                      src={selectedCalendarDoctor.photo}
-                      alt={selectedCalendarDoctor.name}
-                      className="doctor-avatar-image-small"
-                    />
-                  ) : (
-                    <User size={24} />
-                  )}
-                </div>
-                <div>
-                  <h4>{selectedCalendarDoctor.name}</h4>
-                  <p>{selectedCalendarDoctor?.specialty || 'General Practitioner'}</p>
-                  <p className="working-hours-info">
-                    Hours: {selectedCalendarDoctor.workingHours.start} - {selectedCalendarDoctor.workingHours.end}
-                  </p>
-                </div>
-              </div>
-
-              <div className="timeslots-grid-wizard">
-                {(() => {
-                  const slots = generateTimeSlots();
-
-                  if (slots.length === 0) {
-                    return (
-                      <div className="no-slots-available">
-                        <Clock size={48} />
-                        <p>
-                          No time slots available for {selectedCalendarDoctor.name} on{' '}
-                          {selectedCalendarDate}
-                        </p>
-                        <button
-                          className="btn-secondary"
-                          onClick={() => {
-                            setCalendarWizardStep(2);
-                            setSelectedCalendarDoctor(null);
-                            setFormData(prev => ({
-                              ...prev,
-                              doctor: '',
-                              time: ''
-                            }));
-                          }}
-                        >
-                          Choose Another Doctor
-                        </button>
-                      </div>
-                    );
-                  }
-
-                  return slots.map((slot) => (
-                    <button
-                      key={slot.time}
-                      className={`timeslot-btn-wizard ${
-                        !slot.available ? 'booked' : ''
-                      }`}
-                      onClick={() => {
-                        if (slot.available) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            date: selectedCalendarDate,
-                            time: slot.time,
-                            doctor: selectedCalendarDoctor.id,
-                          }));
-                          setShowCalendarView(false);
-                          setShowBookingForm(true);
-                          setCalendarWizardStep(1);
-                          setSelectedCalendarDate('');
-                          setSelectedCalendarDoctor(null);
-                        }
-                      }}
-                      disabled={!slot.available}
-                      aria-label={`${slot.time} - ${slot.available ? 'Available' : 'Booked'}`}
-                    >
-                      <Clock size={16} />
-                      <span className="timeslot-time">{slot.time}</span>
-                      {!slot.available && (
-                        <span className="booked-badge">Booked</span>
-                      )}
-                    </button>
-                  ));
-                })()}
-              </div>
-            </>
+  {selectedCalendarDoctor && (
+    <>
+      <div className="selected-doctor-info">
+        <div className="doctor-avatar-small">
+          {selectedCalendarDoctor?.photo ? (
+            <img
+              src={selectedCalendarDoctor.photo}
+              alt={selectedCalendarDoctor.name}
+              className="doctor-avatar-image-small"
+            />
+          ) : (
+            <User size={24} />
           )}
         </div>
+        <div>
+          <h4>{selectedCalendarDoctor.name}</h4>
+          <p>{selectedCalendarDoctor?.specialty || 'General Practitioner'}</p>
+          <p className="working-hours-info">
+            Hours: {selectedCalendarDoctor.workingHours.start} - {selectedCalendarDoctor.workingHours.end}
+          </p>
+        </div>
+      </div>
+
+      <div className="timeslots-grid-wizard">
+        {(() => {
+          const slots = generateTimeSlots();
+
+          if (slots.length === 0) {
+            return (
+              <div className="no-slots-available">
+                <Clock size={48} />
+                <p>
+                  No time slots available for {selectedCalendarDoctor.name} on{' '}
+                  {selectedCalendarDate}
+                </p>
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setCalendarWizardStep(2);
+                    setSelectedCalendarDoctor(null);
+                    setFormData(prev => ({
+                      ...prev,
+                      doctor: '',
+                      time: ''
+                    }));
+                  }}
+                >
+                  Choose Another Doctor
+                </button>
+              </div>
+            );
+          }
+
+          // ✅ FILTER OUT EMERGENCY BUFFER SLOTS - ONLY SHOW REGULAR 30-MIN SLOTS
+          const regularSlotsOnly = slots.filter(slot => !slot.emergency);
+
+          return regularSlotsOnly.map((slot) => (
+            <button
+              key={slot.time}
+              className={`timeslot-btn-wizard ${
+                !slot.available ? 'booked' : ''
+              }`}
+              onClick={() => {
+                if (slot.available) {
+                  setFormData((prev) => ({
+                    ...prev,
+                    date: selectedCalendarDate,
+                    time: slot.time,
+                    doctor: selectedCalendarDoctor.id,
+                  }));
+                  setShowCalendarView(false);
+                  setShowBookingForm(true);
+                  setCalendarWizardStep(1);
+                  setSelectedCalendarDate('');
+                  setSelectedCalendarDoctor(null);
+                }
+              }}
+              disabled={!slot.available}
+              aria-label={`${slot.time} - ${slot.available ? 'Available' : 'Booked'}`}
+            >
+              <Clock size={16} />
+              <span className="timeslot-time">{slot.time}</span>
+              {!slot.available && (
+                <span className="booked-badge">Booked</span>
+              )}
+            </button>
+          ));
+        })()}
+      </div>
+    </>
+  )}
+</div>
       </div>
     </div>
   </div>

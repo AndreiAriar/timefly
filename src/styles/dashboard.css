@@ -214,23 +214,37 @@ body {
 /* Page*/
 .page-wrapper {
   min-height: 100vh;
-  background: var(--bg-secondary);
+  background: #ffffff; /* ✅ Match dashboard background */
   margin: 0;
   padding: 0;
 }
 
-
 /* Light Mode */
 .dashboard-container {
   min-height: 100vh;
-  background: #ffffff; /* Plain white background */
+  background: #ffffff;
   margin: 0;
   padding: 0;
 }
 
 /* Dark Mode */
+[data-theme="dark"] .page-wrapper {
+  background: #0f172a; /* ✅ Dark mode background */
+}
+
 [data-theme="dark"] .dashboard-container {
-  background: #0f172a; /* Matches dark blue tone of header/footer */
+  background: #0f172a;
+}
+
+/* ✅ Remove any body background that creates gap */
+body {
+  background-color: #ffffff !important;
+  margin: 0;
+  padding: 0;
+}
+
+[data-theme="dark"] body {
+  background-color: #0f172a !important;
 }
 
 
@@ -574,6 +588,21 @@ body {
   justify-content: center !important;
   font-size: 1.2rem !important;
   font-weight: bold !important;
+}
+
+/* Mobile: Position X button in top right corner */
+@media (max-width: 768px) {
+  .modal-header {
+    position: relative;
+    padding-right: 3.5rem; /* Space for X button */
+  }
+  
+  .modal-close {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    z-index: 10 !important;
+  }
 }
 
 .modal-close:hover {
@@ -1468,11 +1497,17 @@ border-radius: var(--radius-xl);
 .main-content {
   display: grid;
   grid-template-columns: 1fr 400px;
-  gap: var(--space-xl);
-  padding: 0 var(--space-xl) var(--space-2xl);
-  max-width: 1400px;
-  margin: 0 auto;
-  background: transparent; /* Ensure it uses parent background */
+  gap: 0 !important; /* Force no gap */
+  padding: 0 !important; /* Force no padding */
+  max-width: 100% !important;
+  margin: 0 !important;
+  background: transparent;
+}
+
+/* Add spacing to sections instead */
+.appointments-section,
+.queue-section {
+  margin: var(--space-md) !important;
 }
 
 /* ===== APPOINTMENTS SECTION ===== */
@@ -1837,8 +1872,16 @@ border-radius: var(--radius-xl);
 .serving-booking.staff { background: rgba(16, 185, 129, 0.1); color: #065f46; }
 
 .queue-list {
-  max-height: 400px;
-  overflow-y: auto;
+  /* Remove max-height to allow natural scrolling */
+  overflow-y: visible; /* Changed from auto */
+}
+
+/* Remove queue section sticky on mobile to allow natural scroll */
+@media (max-width: 968px) {
+  .queue-section {
+    position: static !important;
+    height: auto !important;
+  }
 }
 
 .queue-header {
@@ -5806,12 +5849,42 @@ svg.clock,
   }
 }
 
-/* Main Content - Mobile */
+/* ===== RESPONSIVE LAYOUT - MOBILE FIRST ===== */
 @media (max-width: 968px) {
   .main-content {
     grid-template-columns: 1fr;
-    padding: 0 var(--space-md) var(--space-xl);
-    gap: var(--space-md);
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+  
+  .appointments-section,
+  .queue-section {
+    margin: var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+  
+  /* Remove sticky positioning on mobile */
+  .queue-section {
+    position: static !important;
+    height: auto !important;
+    top: auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    margin: var(--space-md);
+  }
+  
+  .stats-section {
+    padding: var(--space-md);
+  }
+  
+  /* Remove all internal gaps */
+  .appointments-list,
+  .queue-list {
+    overflow-y: visible !important;
+    max-height: none !important;
   }
 }
 
@@ -6525,16 +6598,6 @@ svg.clock,
   }
 }
 
-/* ===== MAIN CONTENT - TWO COLUMN LAYOUT ===== */
-.main-content {
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: var(--space-xl);
-  padding: 0 var(--space-xl) var(--space-2xl);
-  max-width: 1400px;
-  margin: 0 auto;
-  background: transparent;
-}
 
 /* ===== LEFT COLUMN - APPOINTMENTS ===== */
 .appointments-column {
@@ -6650,3 +6713,33 @@ svg.clock,
   padding: 20px;
   text-align: center;
 }
+
+/* ✅ Queue Wait Time Display */
+.queue-wait-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(66, 165, 245, 0.1);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.queue-wait-time svg {
+  flex-shrink: 0;
+  color: #1976d2;
+}
+
+/* Being Served styling */
+.queue-card.status-confirmed .queue-wait-time {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+}
+
+.queue-card.status-confirmed .queue-wait-time svg {
+  color: #2e7d32;
+}
+

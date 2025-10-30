@@ -1,97 +1,96 @@
 /* ===================================================
-   STAFF DASHBOARD - MOBILE RESPONSIVE STYLES
+   TIMEFLY STAFF DASHBOARD - MOBILE RESPONSIVE STYLES
+   Complete mobile optimization for phones & tablets
    =================================================== */
 
-/* ===== HAMBURGER MENU BUTTON ===== */
-.hamburger-menu {
-  display: none; /* Hidden by default on desktop */
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  color: var(--text-dark);
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  margin-left: auto;
-}
+/* ===== MOBILE BREAKPOINTS ===== */
+/* Small phones: 320px - 480px */
+/* Large phones: 481px - 768px */
+/* Tablets: 769px - 1024px */
 
-.hamburger-menu:hover {
-  background: var(--primary-blue);
-  color: var(--dark-blue);
-}
-
-/* ===== TABLET STYLES (768px - 1024px) ===== */
+/* ===================================================
+   TABLET STYLES (769px - 1024px)
+   =================================================== */
 @media (max-width: 1024px) {
   .staff-header-container {
     padding: 0 1.5rem;
-    gap: 1rem;
   }
 
-  .staff-header-nav {
-    gap: 4px;
-  }
-
-  .staff-nav-link {
-    padding: 8px 12px;
-    font-size: 0.875rem;
-  }
-
-  .staff-search-container input {
-    min-width: 200px;
-  }
-
-  /* Adjust content padding */
-  .dashboard-content,
-  .appointments-content,
-  .queue-content,
-  .doctors-content,
-  .waiting-list-content {
-    padding: 1.5rem;
-  }
-
-  /* Stats grid - 2 columns */
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Doctors grid - 2 columns */
   .doctors-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Appointment cards stack better */
   .appointment-main {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .queue-header {
+    grid-template-columns: 1fr;
   }
 }
-/* ===== MOBILE STYLES (max-width: 768px) ===== */
+
+/* ===================================================
+   MOBILE STYLES (MAX-WIDTH: 768px)
+   =================================================== */
 @media (max-width: 768px) {
-  /* ===== HEADER & NAVIGATION ===== */
-  .hamburger-menu {
-    display: flex; /* Show hamburger on mobile */
-    align-items: center;
-    justify-content: center;
-    z-index: 1001;
+  
+  /* ===== BASE LAYOUT ===== */
+  .staff-dashboard {
+    overflow-x: hidden;
+  }
+
+  .main-content-full {
+    padding: 0;
+    margin-top: 0;
+  }
+
+  /* ===== HEADER - MOBILE VERSION ===== */
+  .staff-main-header {
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+    background: rgba(255, 255, 255, 0.98);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
   }
 
   .staff-header-container {
-    padding: 0 1rem;
-    height: 60px;
-    flex-wrap: nowrap;
-    position: relative;
+    padding: 0.75rem 1rem;
+    height: auto;
+    min-height: 60px;
+    gap: 0.75rem;
+  }
+
+  /* Show hamburger menu */
+  .hamburger-menu {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    z-index: 2001;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  /* Hamburger icon animation */
+  .hamburger-menu svg {
+    transition: transform 0.3s ease;
+  }
+  
+  /* Rotate X icon when menu is open */
+  body.mobile-menu-open .hamburger-menu svg {
+    transform: rotate(90deg);
   }
 
-  /* LEFT GROUP stays together */
-  .staff-header-left {
-    gap: 0.5rem;
-  }
-
+  /* Logo adjustments */
   .staff-header-logo {
-    padding: 4px;
+    gap: 8px;
+    padding: 6px;
   }
 
   .staff-logo-icon {
@@ -102,113 +101,132 @@
   .staff-logo-text {
     font-size: 1.25rem;
   }
-/* ===================================================
-   âœ… MOBILE NAVIGATION & SEARCH (SIMPLIFIED LINE STYLE - FINAL FIX)
-   =================================================== */
 
-/* Mobile Navigation - Slide from right */
+/* ===================================================
+   MOBILE NAVIGATION & SEARCH (SIMPLIFIED LINE STYLE - FINAL FIX)
+   =================================================== */
 .staff-header-nav {
   position: fixed;
-  top: 60px;
-  right: -100%;
-  width: 100%;
-  height: calc(100vh - 60px);
-  background: rgba(255, 255, 255, 0.98);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  margin-top: 0;
+  left: -100%;
+  margin-bottom: -2px;
+  height: 100vh;
+  width: 75%;
+  max-width: 320px;
+  background: #ffffff;
   flex-direction: column;
-  align-items: stretch;
-  padding: 1rem;
-  gap: 0.5rem;
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
-  transition: right 0.3s ease;
-  z-index: 999;
+  padding: 60px 0 1.5rem 0;  /* ✅ Changed from 80px to 60px (matches header height) */
+  gap: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2100;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+  display: flex !important;
+
+
+  /* ===================================================
+   ✅ Hide Scrollbar - Cross-Browser
+   =================================================== */
+.scrollable {
+  /* IE/Edge 10–18 (Legacy) */
+  -ms-overflow-style: none;
+
+  /* Smooth scrolling for modern browsers */
+  scroll-behavior: smooth;
+}
+
+/* ✅ Firefox (64+) only — hide scrollbar */
+@supports (scrollbar-width: none) {
+  .scrollable {
+    scrollbar-width: none;
+  }
+}
+
+/* ✅ iOS Safari only — enable momentum scrolling */
+@supports (-webkit-overflow-scrolling: touch) {
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+}
+/* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge 79+) */
+.staff-header-nav::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Ensure nav is scrollable when open */
+.staff-header-nav.mobile-open {
+  left: 0;
   overflow-y: auto;
 }
 
+.staff-header-nav::-webkit-scrollbar {
+  display: none;
+}
+
 .staff-header-nav.mobile-open {
-  right: 0;
+  left: 0;
 }
 
 .staff-nav-link {
   width: 100%;
-  padding: 12px 16px;
+  padding: 1rem 1.5rem;
   justify-content: flex-start;
-  border-radius: 8px;
+  font-size: 1rem;
+  border-radius: 0;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  background: transparent;
+  flex-shrink: 0;
 }
 
-/* Header Right - Compact on mobile */
-.staff-header-right {
-  gap: 0.5rem;
-  margin-left: auto;
-  position: relative;
-  z-index: 10; /* higher than search */
+.staff-nav-link:hover {
+  background: rgba(66, 165, 245, 0.1);
+  border-left-color: #1e40af;
 }
 
-/* ===================================================
-   âœ… MOBILE SEARCH - INLINE LINE STYLE (ALWAYS VISIBLE, NO OVERLAP)
-   =================================================== */
-@media (max-width: 768px) {
-  .staff-search-container.expanded {
-    position: static;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 220px;
-    background: transparent;
-    padding: 0;
-    transform: none;
-    box-shadow: none;
-    z-index: 1; /* stay below profile dropdown */
-  }
+.staff-nav-link.active {
+  background: rgba(66, 165, 245, 0.15);
+  border-left-color: #1e40af;
+  color: #1e40af;
+  font-weight: 600;
+}
 
-  /* âœ… Always show the bottom line (even if not focused) */
-  .staff-search-container.expanded input {
-    width: 100%;
-    border: none;
-    border-bottom: 2px solid var(--border-light) !important;
-    background: transparent;
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    padding: 4px 8px;
-    transition: border-color 0.3s ease;
-  }
+.staff-nav-link svg {
+  margin-right: 12px;
+  flex-shrink: 0;
+}
 
-  /* Highlight when focused */
-  .staff-search-container.expanded input:focus {
-    outline: none;
-    border-bottom: 2px solid var(--dark-blue) !important;
-  }
+/* Dark Overlay */
+.mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2050;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 
-  .staff-search-container.expanded input::placeholder {
-    color: var(--text-light);
-    opacity: 0.7;
-  }
+body.mobile-menu-open .mobile-menu-overlay {
+  display: block;
+  opacity: 1;
+}
 
-  /* Ensure search never overlaps dropdown */
-  .staff-header-right,
-  .staff-profile-dropdown {
-    position: relative;
-    z-index: 1001;
-  }
+body.mobile-menu-open {
+  overflow: hidden;
+  position: fixed; /* ✅ Prevent background scroll */
+  width: 100%;
+  height: 100%;
+}
 
-  /* Sticky header background */
-  .staff-main-header {
-    position: sticky;
-    top: 0;
-    z-index: 2000;
-    background: rgba(255, 255, 255, 0.95);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-  }
-
-  .staff-header-container {
-    position: relative;
-    overflow: visible;
-    z-index: 1;
-  }
-
+  /* Profile button adjustments */
   .staff-profile-button {
     width: 36px;
     height: 36px;
@@ -219,25 +237,31 @@
     height: 32px;
   }
 
-  /* Profile dropdown stays above everything */
+  /* Profile dropdown mobile positioning */
   .staff-profile-dropdown {
-    position: absolute;
-    right: 0;
-    top: 50px;
     width: 260px;
-    z-index: 3000 !important;
+    right: -10px;
   }
-}
 
+  /* ===== SEARCH BAR MOBILE ===== */
+  .tab-search-container {
+    max-width: 100%;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
 
-  /* ===== DASHBOARD ===== */
+  /* ===== DASHBOARD CONTENT ===== */
+  .dashboard-content-wrapper {
+    min-height: calc(100vh - 60px);
+  }
+
   .dashboard-content {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .dashboard-welcome {
     margin-bottom: 2rem;
-    padding: 1rem 0;
+    padding: 1.5rem 0;
   }
 
   .dashboard-welcome h1 {
@@ -245,14 +269,15 @@
   }
 
   .dashboard-welcome h2 {
-    font-size: 2rem;
+    font-size: 2.25rem;
   }
 
   .dashboard-welcome p {
     font-size: 1rem;
+    padding: 0 1rem;
   }
 
-  /* Stats Grid - Single column */
+  /* Stats grid - single column */
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -271,7 +296,7 @@
     font-size: 2rem;
   }
 
-  /* Quick Actions - Stack */
+  /* Quick actions - stack vertically */
   .quick-actions-section {
     flex-direction: column;
     gap: 0.75rem;
@@ -280,25 +305,27 @@
   .quick-action-btn {
     width: 100%;
     justify-content: center;
+    padding: 1rem 1.5rem;
   }
 
-  /* Recent Appointments - Compact */
+  /* Recent appointments */
   .recent-appointments {
-    padding: 1rem;
+    padding: 1.5rem;
   }
 
   .section-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 1rem;
   }
 
-  .appointments-table {
-    overflow-x: auto;
+  .section-header h3 {
+    font-size: 1.25rem;
   }
 
+  /* Table - stack vertically */
   .table-header {
-    display: none; /* Hide headers on mobile */
+    display: none; /* Hide header on mobile */
   }
 
   .table-row {
@@ -308,18 +335,20 @@
   }
 
   .patient-info {
-    flex-direction: row;
+    margin-bottom: 0.5rem;
   }
 
   .table-actions {
     justify-content: flex-start;
+    margin-top: 0.5rem;
   }
 
   /* ===== APPOINTMENTS TAB ===== */
   .appointments-content {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
 
+  /* Filters - stack vertically */
   .filters-section {
     padding: 1rem;
   }
@@ -327,19 +356,45 @@
   .filters-row {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
   }
 
   .filters-row select,
   .filters-row input,
   .filters-row .btn-primary {
     width: 100%;
+    max-width: none;
     margin-left: 0;
   }
 
-  /* Appointment Cards - Stack */
+  /* Appointment cards */
+  .appointments-list {
+    gap: 1rem;
+  }
+
+  .appointment-card {
+    padding: 1.25rem;
+  }
+
   .appointment-main {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .patient-section {
+    max-width: 100%;
+  }
+
+  .appointment-info {
+    border-top: 1px solid var(--border-light);
+    padding-top: 1rem;
+  }
+
+  .appointment-right {
+    border-top: 1px solid var(--border-light);
+    padding-top: 1rem;
+    align-items: flex-start;
+    justify-self: start;
   }
 
   .appointment-status {
@@ -354,16 +409,24 @@
 
   /* ===== QUEUE TAB ===== */
   .queue-content {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .queue-header {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.5rem;
   }
 
   .current-serving {
     padding: 1.5rem;
+  }
+
+  .current-serving h3 {
+    font-size: 1.25rem;
+  }
+
+  .serving-display {
+    min-height: 100px;
   }
 
   .current-patient {
@@ -378,45 +441,58 @@
 
   .queue-stats {
     flex-direction: row;
-    justify-content: space-around;
+    gap: 0.75rem;
   }
 
   .stat {
+    flex: 1;
     padding: 1rem;
   }
 
-  /* Queue Items - Stack */
+  .stat .value {
+    font-size: 1.5rem;
+  }
+
+  /* Queue list */
+  .queue-list {
+    gap: 1rem;
+  }
+
   .queue-item {
-    grid-template-columns: auto 1fr;
-    gap: 0.75rem;
-    padding: 1rem;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem;
   }
 
-  .queue-item .patient-avatar {
-    grid-row: 1 / 3;
+  .queue-position {
+    font-size: 1.25rem;
+    text-align: center;
   }
 
   .queue-item .patient-details {
-    grid-column: 2;
+    text-align: center;
+    min-width: auto;
   }
 
-  .queue-priority,
+  .queue-priority {
+    text-align: center;
+  }
+
   .queue-time {
-    grid-column: 1 / -1;
-    justify-self: start;
-    text-align: left;
+    text-align: center;
+    align-items: center;
   }
 
   .queue-actions {
-    grid-column: 1 / -1;
     flex-direction: row;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
+    flex-wrap: wrap;
   }
 
   /* ===== DOCTORS TAB ===== */
   .doctors-content {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .doctors-header {
@@ -425,12 +501,20 @@
     gap: 1rem;
   }
 
-  .doctors-title {
-    font-size: 1.5rem;
+  .doctors-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .doctors-header-actions .tab-search-container {
+    max-width: none;
+    margin-top: 0;
   }
 
   .doctors-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 
   .doctor-card {
@@ -443,11 +527,7 @@
   }
 
   .calendar-header {
-    padding: 1rem 0;
-  }
-
-  .calendar-navigation {
-    gap: 1rem;
+    margin-bottom: 1rem;
   }
 
   .month-display {
@@ -469,20 +549,28 @@
   }
 
   .day-appointments {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 
-  /* Calendar Modal - Full screen on mobile */
+  /* Calendar modal */
   .modal-content.calendar-modal {
-    width: 100%;
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-    margin: 0;
+    width: 95%;
+    max-height: 85vh;
   }
 
   .doctor-schedule-card {
     padding: 1rem;
+  }
+
+  .doctor-schedule-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .availability-toggle {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .time-slots-grid {
@@ -490,22 +578,15 @@
     gap: 0.5rem;
   }
 
-  /* ===== REPORTS TAB ===== */
-  .report-summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .report-section {
-    padding: 1rem;
-  }
-
-  .priority-cards-grid {
-    grid-template-columns: 1fr;
+  .time-slot {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+    min-height: 60px;
   }
 
   /* ===== WAITING LIST TAB ===== */
   .waiting-list-content {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .waiting-list-header {
@@ -515,101 +596,174 @@
   }
 
   .waiting-list-stats {
+    flex-direction: row;
     width: 100%;
-    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .stat-badge {
+    flex: 1;
+    padding: 0.75rem 1rem;
+  }
+
+  .stat-badge .value {
+    font-size: 1.25rem;
+  }
+
+  .waiting-list-grid {
+    gap: 1.25rem;
   }
 
   .waiting-list-card {
     grid-template-columns: 1fr;
+    padding: 1.25rem;
     gap: 1rem;
   }
 
   .waiting-position {
-    text-align: left;
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  .waiting-patient-info {
+    flex-direction: row;
+  }
+
+  .waiting-details {
+    border-top: 1px solid var(--border-light);
+    padding-top: 1rem;
   }
 
   .waiting-actions {
-    flex-direction: row;
-    gap: 8px;
+    flex-direction: column;
+    width: 100%;
   }
 
   .waiting-actions button {
-    flex: 1;
-    padding: 10px;
-    font-size: 0.875rem;
-  }
-
-  /* ===== MODALS ===== */
-  .modal-overlay {
-    padding: 0;
-  }
-
-  .modal-content {
     width: 100%;
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-    margin: 0;
   }
 
-  .modal-header {
-    padding: 1rem 1.5rem;
+  /* ===== REPORTS TAB ===== */
+  .reports-content {
+    padding: 1.5rem 1rem;
   }
 
-  .modal-header h3 {
-    font-size: 1.125rem;
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-  }
-
-  .modal-footer {
-    padding: 1rem 1.5rem;
-    flex-wrap: wrap;
-  }
-
-  /* Form Grid - Single column */
-  .form-grid {
+  .report-summary-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  /* Time Slots - 3 columns */
-  .time-slots-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+  .report-card {
+    padding: 1.25rem;
   }
 
-  .time-slot {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
+  .report-section {
+    margin-bottom: 2rem;
   }
 
-  /* Photo Upload */
-  .photo-upload-box {
-    padding: 2rem 1.5rem;
+  .report-section-header h3 {
+    font-size: 1.25rem;
   }
 
-  /* Details Modal */
-  .details-content {
-    padding: 1.5rem;
+  /* ===== MODALS ===== */
+  .modal-overlay {
+    padding: 1rem;
   }
 
-  .detail-grid {
-    grid-template-columns: 1fr;
+  .modal-content {
+    width: 95%;
+    max-width: 95%;
+    max-height: 90vh;
+    margin: 0;
   }
 
-  .detail-actions {
-    flex-direction: column;
+  .modal-header {
+    padding: 1.25rem 1rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem 1rem;
+  }
+
+  .modal-footer {
+    padding: 1rem;
+    flex-wrap: wrap;
     gap: 0.75rem;
   }
 
-  .detail-action-btn {
-    width: 100%;
+  .modal-footer .btn-secondary,
+  .modal-footer .btn-primary {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  /* Form grids */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .form-group label {
+    font-size: 0.875rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 1rem;
+    padding: 0.875rem;
+  }
+
+  /* Time slots in modal */
+  .time-slots-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Photo upload */
+  .photo-upload-container {
+    min-height: 150px;
+  }
+
+  .photo-upload-box {
+    padding: 2rem 1.5rem;
+    min-width: 200px;
+  }
+
+  .photo-preview {
+    width: 100px;
+    height: 100px;
+  }
+
+  /* Detail grids */
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Confirmation modals */
+  .confirm-modal {
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+
+  .confirm-modal h3 {
+    font-size: 1.25rem;
+  }
+
+  .confirm-modal .modal-actions {
+    flex-direction: column;
   }
 
   /* ===== FOOTER ===== */
+  .staff-footer {
+    padding: 1.5rem 0;
+    margin-top: 3rem;
+  }
+
   .staff-footer-content {
     padding: 0 1rem;
   }
@@ -620,205 +774,1294 @@
   }
 
   .staff-footer-title {
-    font-size: 1.125rem;
+    font-size: 1.1rem;
   }
 
   .staff-footer-tagline {
     font-size: 0.85rem;
   }
+
+  /* ===== NOTIFICATIONS ===== */
+  .notifications-container {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+  }
+
+  .notification {
+    padding: 0.875rem 1rem;
+  }
+
+  .notification-message {
+    font-size: 0.875rem;
+  }
 }
 
-
-/* ===== SMALL MOBILE (max-width: 480px) ===== */
+/* ===================================================
+   SMALL MOBILE STYLES (MAX-WIDTH: 480px)
+   =================================================== */
 @media (max-width: 480px) {
-  /* Extra compact for very small screens */
+  
+  /* ===== HEADER ===== */
   .staff-header-container {
-    padding: 0 0.75rem;
-    height: 56px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .staff-logo-icon {
+    width: 24px;
+    height: 24px;
   }
 
   .staff-logo-text {
-    font-size: 1.125rem;
+    font-size: 1.1rem;
   }
 
-  .staff-header-nav {
-    width: 100%;
-    top: 56px;
-    height: calc(100vh - 56px);
+  .staff-profile-button {
+    width: 32px;
+    height: 32px;
   }
 
-  /* Dashboard */
+  .staff-user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* ===== DASHBOARD ===== */
+  .dashboard-content {
+    padding: 1rem 0.75rem;
+  }
+
   .dashboard-welcome h1 {
     font-size: 1.5rem;
   }
 
   .dashboard-welcome h2 {
-    font-size: 1.75rem;
+    font-size: 2rem;
   }
 
   .dashboard-welcome p {
     font-size: 0.9rem;
   }
 
-  .stat-value {
-    font-size: 1.75rem;
+  .stat-card {
+    padding: 1rem;
   }
 
-  /* Appointment Cards */
-  .patient-avatar img {
+  .stat-icon {
     width: 45px;
     height: 45px;
   }
 
-  .appointment-card {
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .stat-detail {
+    font-size: 0.8rem;
+  }
+
+  /* ===== CONTENT AREAS ===== */
+  .appointments-content,
+  .queue-content,
+  .doctors-content,
+  .waiting-list-content,
+  .reports-content {
+    padding: 1rem 0.75rem;
+  }
+
+  /* ===== CARDS ===== */
+  .appointment-card,
+  .queue-item,
+  .doctor-card,
+  .waiting-list-card {
     padding: 1rem;
   }
 
-  /* Queue */
+  /* Patient info */
+  .patient-avatar img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .patient-details h4 {
+    font-size: 1rem;
+  }
+
+  .patient-details p,
+  .patient-contact {
+    font-size: 0.8rem;
+  }
+
+  /* Info items */
+  .info-item {
+    font-size: 0.85rem;
+  }
+
+  /* Status badges */
+  .appointment-status span,
+  .priority-badge,
+  .status-badge {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+
+  /* Action buttons */
+  .icon-btn {
+    padding: 5px;
+  }
+
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ===== FILTERS ===== */
+  .filters-section {
+    padding: 0.875rem;
+  }
+
+  .filters-row select,
+  .filters-row input {
+    font-size: 0.875rem;
+    padding: 0.75rem;
+  }
+
+  /* ===== QUEUE ===== */
   .queue-number {
     font-size: 2rem;
   }
 
-  /* Time Slots - 2 columns on very small screens */
-  .time-slots-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Modal Actions - Stack */
-  .modal-footer {
+  .queue-stats {
     flex-direction: column;
   }
 
-  .modal-footer button {
-    width: 100%;
+  .stat {
+    padding: 0.875rem;
   }
 
-  /* Calendar Grid - Smaller */
-  .calendar-grid {
-    gap: 0.25rem;
+  .stat .value {
+    font-size: 1.25rem;
+  }
+
+  /* ===== CALENDAR ===== */
+  .month-display {
+    font-size: 1.25rem;
+    min-width: 120px;
   }
 
   .calendar-day {
     padding: 0.4rem 0;
     font-size: 0.8rem;
   }
-}
 
-/* ===== LANDSCAPE MODE (Mobile in landscape) ===== */
-@media (max-height: 500px) and (orientation: landscape) {
+  .day-number {
+    font-size: 0.9rem;
+  }
+
+  .day-appointments {
+    font-size: 0.65rem;
+  }
+
+  /* Time slots */
+  .time-slots-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+
+  .time-slot {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.75rem;
+    min-height: 55px;
+  }
+
+  .emergency-buffer-label,
+  .unavailable-indicator,
+  .booked-indicator {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  /* ===== MODALS ===== */
   .modal-content {
-    max-height: 100vh;
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    padding: 1rem 0.875rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
   }
 
   .modal-body {
-    max-height: calc(100vh - 150px);
+    padding: 1.25rem 0.875rem;
   }
 
-  .staff-header-nav.mobile-open {
-    height: calc(100vh - 60px);
+  .modal-footer {
+    padding: 0.875rem;
+  }
+
+  /* Form elements */
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.75rem;
+  }
+
+  /* Photo upload */
+  .photo-upload-box {
+    padding: 1.5rem 1rem;
+    min-width: 180px;
+  }
+
+  .upload-text {
+    font-size: 0.85rem;
+  }
+
+  .upload-hint {
+    font-size: 0.7rem;
+  }
+
+  .photo-preview {
+    width: 90px;
+    height: 90px;
+  }
+
+  /* Detail items */
+  .detail-item label {
+    font-size: 0.75rem;
+  }
+
+  .detail-item span {
+    font-size: 0.875rem;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn-primary,
+  .btn-secondary,
+  .quick-action-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .action-btn {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  /* ===== FOOTER ===== */
+  .staff-footer-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .staff-footer-title {
+    font-size: 1rem;
+  }
+
+  .staff-footer-tagline {
+    font-size: 0.8rem;
+  }
+
+  .staff-footer-copyright p {
+    font-size: 0.75rem;
+  }
+
+  /* ===== NOTIFICATIONS ===== */
+  .notification {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.85rem;
+  }
+
+  .notification-icon svg {
+    width: 14px;
+    height: 14px;
   }
 }
 
-/* ===== TOUCH DEVICE IMPROVEMENTS ===== */
-@media (hover: none) and (pointer: coarse) {
-  /* Increase touch targets */
-  .staff-nav-link,
-  .btn-primary,
-  .btn-secondary,
-  .action-btn,
-  .icon-btn,
-  .time-slot,
-  .calendar-day {
-    min-height: 44px;
-    min-width: 44px;
+/* ===================================================
+   EXTRA SMALL DEVICES (MAX-WIDTH: 360px)
+   =================================================== */
+@media (max-width: 360px) {
+  
+  .staff-logo-text {
+    font-size: 1rem;
   }
 
-  /* Remove hover effects on touch */
+  .dashboard-welcome h1 {
+    font-size: 1.35rem;
+  }
+
+  .dashboard-welcome h2 {
+    font-size: 1.75rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .month-display {
+    font-size: 1.1rem;
+  }
+
+  .time-slots-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn-secondary,
+  .modal-footer .btn-primary {
+    width: 100%;
+  }
+}
+
+/* ===================================================
+   LANDSCAPE MODE FIXES (PHONES IN LANDSCAPE)
+   =================================================== */
+@media (max-height: 600px) and (orientation: landscape) {
+  
+  .staff-header-nav.mobile-open {
+    padding: 1rem;
+  }
+
+  .staff-nav-link {
+    padding: 0.75rem 1rem;
+  }
+
+  .dashboard-welcome {
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-welcome h2 {
+    font-size: 2rem;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .modal-body {
+    max-height: calc(95vh - 140px);
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .current-serving {
+    padding: 1.25rem;
+  }
+}
+
+/* ===================================================
+   TOUCH DEVICE OPTIMIZATIONS
+   =================================================== */
+@media (hover: none) and (pointer: coarse) {
+  
+  /* Larger touch targets */
+  .icon-btn,
+  .btn-icon,
+  .action-btn-sm {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  .staff-nav-link {
+    min-height: 48px;
+  }
+
+  /* Remove hover effects on touch devices */
   .appointment-card:hover,
-  .queue-item:hover,
   .doctor-card:hover,
-  .stat-card:hover {
+  .queue-item:hover {
     transform: none;
   }
 
-  /* Larger tap areas for small buttons */
-  .action-btn-sm {
-    width: 40px;
-    height: 40px;
+  /* Make buttons more prominent */
+  .btn-primary,
+  .btn-secondary {
+    padding: 1rem 1.5rem;
+  }
+
+  /* Easier to tap checkboxes/switches */
+  .switch {
+    width: 54px;
+    height: 30px;
+  }
+
+  .slider:before {
+    height: 24px;
+    width: 24px;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
   }
 }
 
-/* ===== DARK MODE SUPPORT (Optional) ===== */
-@media (prefers-color-scheme: dark) {
+/* ===================================================
+   SAFE AREA INSETS (IPHONE X, 11, 12, 13, 14)
+   =================================================== */
+@supports (padding: max(0px)) {
+  
+  .staff-main-header {
+    padding-left: max(env(safe-area-inset-left), 0);
+    padding-right: max(env(safe-area-inset-right), 0);
+  }
+
+  .staff-header-container {
+    padding-left: max(env(safe-area-inset-left), 1rem);
+    padding-right: max(env(safe-area-inset-right), 1rem);
+  }
+
+  .dashboard-content,
+  .appointments-content,
+  .queue-content,
+  .doctors-content,
+  .waiting-list-content,
+  .reports-content {
+    padding-left: max(env(safe-area-inset-left), 1rem);
+    padding-right: max(env(safe-area-inset-right), 1rem);
+    padding-bottom: max(env(safe-area-inset-bottom), 2rem);
+  }
+
+  .staff-footer {
+    padding-left: max(env(safe-area-inset-left), 0);
+    padding-right: max(env(safe-area-inset-right), 0);
+    padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
+  }
+
+  .staff-header-nav.mobile-open {
+    padding-left: max(env(safe-area-inset-left), 1rem);
+    padding-right: max(env(safe-area-inset-right), 1rem);
+    padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
+  }
+}
+
+/* ===================================================
+   ACCESSIBILITY IMPROVEMENTS FOR MOBILE
+   =================================================== */
+@media (max-width: 768px) {
+  
+  /* Larger focus indicators */
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 3px solid var(--dark-blue);
+    outline-offset: 3px;
+  }
+
+/* ✅ Apply only if supported to avoid warnings */
+@supports (text-size-adjust: 100%) {
+  body {
+    /* Standard property (future-proof) */
+    text-size-adjust: 100%;
+  }
+}
+
+
+/* Additional mobile text rendering optimization */
+@media (max-width: 768px) {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+  /* Prevent zoom on focus (iOS) */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ===================================================
+   PRINT STYLES (FOR MOBILE PRINTING)
+   =================================================== */
+@media print {
+  
+  .staff-main-header,
+  .hamburger-menu,
+  .staff-header-nav,
+  .staff-profile-dropdown-wrapper,
+  .staff-footer,
+  .notifications-container,
+  .filters-section,
+  .quick-actions-section,
+  .appointment-actions,
+  .queue-actions,
+  .doctor-actions,
+  .waiting-actions {
+    display: none !important;
+  }
+
+  .modal-overlay {
+    position: static;
+    background: transparent;
+  }
+
+  .modal-content {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  body {
+    background: white;
+  }
+
+  .appointment-card,
+  .queue-item,
+  .doctor-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* ===================================================
+   PERFORMANCE OPTIMIZATIONS
+   =================================================== */
+@media (max-width: 768px) {
+  
+  /* Use GPU acceleration for animations */
+  .staff-header-nav.mobile-open,
+  .modal-overlay,
+  .notification {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  /* Disable transitions during scroll for better performance */
+  .scroll-freeze * {
+    transition: none !important;
+    animation: none !important;
+  }
+/* ===================================================
+   ✅ Optimize Images - Cross-Browser Support
+   =================================================== */
+img {
+  /* ✅ Edge 79+, Chrome, Safari (WebKit-based) */
+  image-rendering: -webkit-optimize-contrast;
+
+  /* Legacy Edge / IE */
+  -ms-interpolation-mode: nearest-neighbor;
+
+  /* Fallback */
+  image-rendering: pixelated;
+}
+
+/* ✅ Apply only in Firefox */
+@supports (-moz-appearance: none) {
+  img {
+    image-rendering: -moz-crisp-edges;
+  }
+}
+
+/* ✅ Apply only where crisp-edges is supported */
+@supports (image-rendering: crisp-edges) {
+  img {
+    image-rendering: crisp-edges;
+  }
+}
+
+/* ===================================================
+   ✅ Reduce Motion for Accessibility
+   =================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+}
+
+/* ===================================================
+   DARK MODE SUPPORT (MOBILE)
+   =================================================== */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  
+  .staff-main-header {
+    background: rgba(30, 30, 30, 0.98);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
   .staff-header-nav.mobile-open {
     background: rgba(30, 30, 30, 0.98);
   }
 
-  .hamburger-menu:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-}
-
-/* ===== REDUCED MOTION ===== */
-@media (prefers-reduced-motion: reduce) {
-  .staff-header-nav {
-    transition: none;
-  }
-
-  .hamburger-menu,
-  .staff-nav-link {
-    transition: none;
-  }
-}
-
-/* ===== SAFE AREA INSETS (iPhone notch support) ===== */
-@supports (padding: max(0px)) {
-  .staff-header-container {
-    padding-left: max(1rem, env(safe-area-inset-left));
-    padding-right: max(1rem, env(safe-area-inset-right));
-  }
-
-  .staff-header-nav.mobile-open {
-    padding-right: max(1rem, env(safe-area-inset-right));
+  .stat-card,
+  .appointment-card,
+  .queue-item,
+  .doctor-card,
+  .waiting-list-card {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
   }
 
   .modal-content {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    background: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: #2a2a2a;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
   }
 }
+
+/* ===================================================
+   MOBILE-SPECIFIC UTILITY CLASSES
+   =================================================== */
 @media (max-width: 768px) {
-  /* âœ… Inline Search - Compact on mobile */
-  .staff-search-container-inline {
-    width: 100%;
-    max-width: 200px;
+  
+  /* Hide on mobile */
+  .hide-mobile {
+    display: none !important;
   }
 
-  .staff-search-container-inline input {
-    width: 100%;
-    min-width: 0;
-    font-size: 0.85rem;
-    padding: 8px 6px;
+  /* Show only on mobile */
+  .show-mobile {
+    display: block !important;
   }
 
-  .staff-header-right {
-    flex: 1;
-    justify-content: flex-end;
+  /* Full width on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+
+  /* Stack on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+
+  /* Center on mobile */
+  .mobile-center {
+    text-align: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Smaller text on mobile */
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+
+  /* Larger touch target */
+  .mobile-touch {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* No padding on mobile */
+  .mobile-no-padding {
+    padding: 0 !important;
+  }
+
+  /* Smaller padding on mobile */
+  .mobile-padding-sm {
+    padding: 0.5rem !important;
+  }
+
+  /* No margin on mobile */
+  .mobile-no-margin {
+    margin: 0 !important;
+  }
+
+  /* Smaller margin on mobile */
+  .mobile-margin-sm {
+    margin: 0.5rem !important;
   }
 }
 
-@media (max-width: 480px) {
-  /* Extra compact for very small screens */
-  .staff-search-container-inline {
-    max-width: 150px;
+/* ===================================================
+   MOBILE MENU ANIMATION VARIANTS
+   =================================================== */
+@media (max-width: 768px) {
+  
+  /* Slide from left (default) */
+  .staff-header-nav {
+    transform: translateX(-100%);
   }
 
-  .staff-search-container-inline input {
-    font-size: 0.8rem;
-    padding: 6px 4px;
+  .staff-header-nav.mobile-open {
+    transform: translateX(0);
   }
 
-  .staff-search-icon {
+  /* Fade in navigation items */
+  .staff-header-nav.mobile-open .staff-nav-link {
+    animation: fadeInUp 0.3s ease-out forwards;
+    opacity: 0;
+  }
+
+  .staff-header-nav.mobile-open .staff-nav-link:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+
+  .staff-header-nav.mobile-open .staff-nav-link:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  .staff-header-nav.mobile-open .staff-nav-link:nth-child(3) {
+    animation-delay: 0.15s;
+  }
+
+  .staff-header-nav.mobile-open .staff-nav-link:nth-child(4) {
+    animation-delay: 0.2s;
+  }
+
+  .staff-header-nav.mobile-open .staff-nav-link:nth-child(5) {
+    animation-delay: 0.25s;
+  }
+
+  .staff-header-nav.mobile-open .staff-nav-link:nth-child(6) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ===================================================
+   MOBILE SCROLLBAR STYLING - CROSS-BROWSER
+   =================================================== */
+@media (max-width: 768px) {
+  
+ /* Scrollbar styling - Progressive enhancement */
+
+/* Webkit browsers (Chrome, Safari, Edge 79+, Opera) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox 64+ */
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+}
+
+/* Fallback for older browsers */
+html {
+  overflow: auto;
+  /* IE/Old Edge */
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+/* Chrome 121+ (standard properties) */
+@supports (scrollbar-width: thin) {
+  html {
+    scrollbar-width: thin;
+  }
+}
+  /* Fallback for older browsers */
+  html {
+    overflow: auto;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+  }
+}
+
+/* ===================================================
+   MOBILE LOADING STATES
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .loading-state {
+    padding: 3rem 1rem;
+  }
+
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+
+  /* Skeleton loaders for mobile */
+  .skeleton-mobile {
+    background: linear-gradient(
+      90deg,
+      #f0f0f0 25%,
+      #e0e0e0 50%,
+      #f0f0f0 75%
+    );
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
+
+/* ===================================================
+   MOBILE ERROR STATES
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .error-state-mobile {
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .error-state-mobile svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+  }
+
+  .error-state-mobile h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .error-state-mobile p {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+  }
+
+  .error-state-mobile button {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+/* ===================================================
+   MOBILE PULL-TO-REFRESH INDICATOR
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .pull-to-refresh {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    padding: 0.75rem 1.5rem;
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1998;
+    transition: transform 0.3s ease;
+  }
+
+  .pull-to-refresh.active {
+    transform: translateX(-50%) translateY(10px);
+  }
+
+  .pull-to-refresh .spinner-mini {
     width: 16px;
     height: 16px;
+    border: 2px solid var(--secondary-blue);
+    border-top-color: var(--dark-blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
   }
-}                    
+}
+
+/* ===================================================
+   MOBILE BOTTOM SHEET (ALTERNATIVE TO MODAL)
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 2000;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bottom-sheet.active {
+    transform: translateY(0);
+  }
+
+  .bottom-sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border-light);
+    border-radius: 2px;
+    margin: 0.75rem auto;
+  }
+
+  .bottom-sheet-header {
+    padding: 0 1rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .bottom-sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .bottom-sheet-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-light);
+    background: var(--light-gray);
+  }
+}
+
+/* ===================================================
+   MOBILE FAB (FLOATING ACTION BUTTON)
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .fab-mobile {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--dark-blue);
+    color: var(--white);
+    border: none;
+    box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+
+  .fab-mobile:active {
+    transform: scale(0.95);
+  }
+
+  .fab-mobile svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* FAB with label */
+  .fab-mobile.extended {
+    width: auto;
+    padding: 0 20px;
+    border-radius: 28px;
+    gap: 8px;
+  }
+
+  .fab-mobile.extended span {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+}
+
+/* ===================================================
+   MOBILE SWIPE GESTURES VISUAL FEEDBACK
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .swipeable {
+    position: relative;
+    touch-action: pan-y;
+  }
+
+  .swipeable::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(66, 165, 245, 0.1)
+    );
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+
+  .swipeable.swiping::after {
+    opacity: 1;
+  }
+}
+
+/* ===================================================
+   MOBILE INLINE SEARCH RESULTS
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .search-results-mobile {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  .search-result-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .search-result-item:last-child {
+    border-bottom: none;
+  }
+
+  .search-result-item:active {
+    background: var(--primary-blue);
+  }
+
+  .search-no-results {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-light);
+  }
+}
+
+/* ===================================================
+   MOBILE TABS (ALTERNATIVE STYLE)
+   =================================================== */
+@media (max-width: 768px) {
+  
+ .tabs-mobile {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--white);
+  border-bottom: 1px solid var(--border-light);
+  
+  /* Smooth scrolling for modern browsers */
+  scroll-behavior: smooth;
+
+  /* IE/Edge (legacy) */
+  -ms-overflow-style: none;
+}
+
+/* Hide scrollbar - WebKit browsers (Chrome, Safari, Edge) */
+.tabs-mobile::-webkit-scrollbar {
+  display: none;
+}
+
+  .tabs-mobile::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+  }
+
+  .tab-mobile {
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 20px;
+    color: var(--text-light);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .tab-mobile.active {
+    background: var(--dark-blue);
+    color: var(--white);
+  }
+}
+
+/* ===================================================
+   MOBILE CHIP/TAG STYLES
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .chip-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--primary-blue);
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dark-blue);
+  }
+
+  .chip-mobile-closeable {
+    padding-right: 0.375rem;
+  }
+
+  .chip-close-btn {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--dark-blue);
+    border-radius: 50%;
+  }
+
+  .chip-close-btn:active {
+    background: rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* ===================================================
+   MOBILE EMPTY STATES
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .empty-state-mobile {
+    padding: 3rem 1.5rem;
+    text-align: center;
+  }
+
+  .empty-state-mobile svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+    color: var(--text-light);
+  }
+
+  .empty-state-mobile h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+  }
+
+  .empty-state-mobile p {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+
+  .empty-state-mobile button {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+/* ===================================================
+   MOBILE TOAST NOTIFICATIONS (BOTTOM)
+   =================================================== */
+@media (max-width: 768px) {
+  
+  .toast-mobile {
+    position: fixed;
+    bottom: 24px;
+    left: 16px;
+    right: 16px;
+    background: var(--text-dark);
+    color: var(--white);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 2001;
+    animation: slideUpToast 0.3s ease-out;
+  }
+
+  @keyframes slideUpToast {
+    from {
+      transform: translateY(100px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .toast-mobile.success {
+    background: var(--success);
+  }
+
+  .toast-mobile.error {
+    background: var(--error);
+  }
+
+  .toast-mobile.warning {
+    background: var(--warning);
+  }
+
+  .toast-mobile-message {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+
+  .toast-mobile-close {
+    background: none;
+    border: none;
+    color: var(--white);
+    padding: 0.25rem;
+    cursor: pointer;
+    display: flex;
+  }
+}
+
+/* ===================================================
+   END OF MOBILE STYLES
+   =================================================== */

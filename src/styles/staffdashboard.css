@@ -34,6 +34,7 @@
   color: var(--text-dark);
   position: relative;
   width: 100%;
+  overflow-x: hidden; /* ✅ Prevent horizontal scroll on dashboard */
 }
 
 /* === Background Image with Better Visibility === */
@@ -44,7 +45,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/images/staffbg.png'); /* âœ… correct path (inside public/images) */
+  background-image: url('/images/staffbg.png'); /*correct path (inside public/images) */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -389,7 +390,7 @@
 }
 
 /* ===================================================
-   âœ… MOBILE FIXES FOR SEARCH BAR ALIGNMENT
+   MOBILE FIXES FOR SEARCH BAR ALIGNMENT
    =================================================== */
 @media (max-width: 768px) {
   .staff-search-container.expanded {
@@ -473,7 +474,7 @@
   color: var(--dark-blue);
 }
 /* ===================================================
-   âœ… FIXED PROFILE DROPDOWN - TOP RIGHT POSITIONED
+   FIXED PROFILE DROPDOWN - TOP RIGHT POSITIONED
    =================================================== */
 
 .staff-profile-dropdown-wrapper {
@@ -634,7 +635,7 @@
   color: var(--error);
 }
 /* ===================================================
-   âœ… NEW STAFF FOOTER - MATCHING PATIENT DASHBOARD
+    NEW STAFF FOOTER - MATCHING PATIENT DASHBOARD
    =================================================== */
 
 .staff-footer {
@@ -644,7 +645,7 @@
   margin-top: 4rem;
 }
 
-/* âœ… Center entire footer content */
+/* Center entire footer content */
 .staff-footer-content {
   max-width: 1400px;
   margin: 0 auto;
@@ -657,7 +658,7 @@
   gap: 0.75rem;
 }
 
-/* âœ… Brand section: logo beside title */
+/* Brand section: logo beside title */
 .staff-footer-brand {
   display: flex;
   align-items: center;
@@ -665,7 +666,7 @@
   gap: 0.5rem;
 }
 
-/* âœ… Logo styling with hover effect */
+/* Logo styling with hover effect */
 .staff-footer-logo {
   width: 40px;
   height: 40px;
@@ -680,7 +681,7 @@
   filter: drop-shadow(0 0 8px rgba(33, 150, 243, 0.4));
 }
 
-/* âœ… Title next to logo */
+/* Title next to logo */
 .staff-footer-title {
   font-size: 1.25rem;
   color: var(--dark-blue);
@@ -689,7 +690,7 @@
   margin: 0;
 }
 
-/* âœ… Tagline centered below */
+/* Tagline centered below */
 .staff-footer-tagline {
   margin: 0;
   font-size: 0.9rem;
@@ -697,7 +698,7 @@
   line-height: 1.4;
 }
 
-/* âœ… Copyright */
+/*  Copyright */
 .staff-footer-copyright {
   text-align: center;
 }
@@ -942,8 +943,8 @@
 }
 
 .dashboard-welcome h1 {
-  font-size: 2.5rem;
-  font-weight: 300;
+  font-size: 3rem;
+  font-weight: 700;
   color: black;
   margin-bottom: 0.5rem;
 }
@@ -1574,9 +1575,9 @@
 /* === CARD STRUCTURE - Using CSS Grid === */
 .appointment-main {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) minmax(150px, 1fr) 1fr;
+  grid-template-columns: minmax(250px, 2fr) minmax(200px, 1.5fr) minmax(180px, 1fr);
   gap: 1.5rem;
-  align-items: start;
+  align-items: center; /* Changed from 'start' to 'center' */
   max-width: 100%;
   overflow: hidden;
 }
@@ -2004,7 +2005,7 @@
 
 .queue-priority {
   flex-shrink: 0;
-  align-self: center; /* âœ… Added to center the priority badge */
+  align-self: center; /* Added to center the priority badge */
 }
 
 .queue-priority .priority-badge {
@@ -2023,8 +2024,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  align-self: center; /* âœ… Changed to center for vertical centering */
-  align-items: flex-end; /* âœ… Added to align text to the right */
+  align-self: center; /*  Changed to center for vertical centering */
+  align-items: flex-end; /* Added to align text to the right */
 }
 
 .queue-time .appointment-time {
@@ -2216,20 +2217,33 @@
 }
 
 .btn-primary {
-  background: var(--dark-blue);
+  background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
   color: var(--white);
+  box-shadow: 0 3px 12px rgba(66, 165, 245, 0.3);
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease;
 }
 
-.btn-primary:hover:not(.disabled) {
-  background: #1e88e5;
+.btn-primary:hover:not(.disabled):not(:disabled) {
+  background: linear-gradient(135deg, #64b5f6 0%, #2196f3 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(66, 165, 245, 0.3);
+  box-shadow: 0 6px 20px rgba(66, 165, 245, 0.4);
 }
 
-.btn-primary.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.btn-primary:active:not(.disabled):not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(66, 165, 245, 0.3);
+}
+
+.btn-primary.disabled,
+.btn-primary:disabled {
+  background: #cbd5e0 !important;
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .btn-secondary {
@@ -2674,14 +2688,15 @@
   cursor: not-allowed;
 }
 
-/* ===== EMERGENCY BUFFER STYLING ===== */
+/* ===== EMERGENCY-ONLY SLOT STYLING ===== */
 .time-slot.emergency-buffer {
-  border: 2px solid #ff6b6b;
+  border: 2px dashed #ff6b6b;
   background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
 }
 
 .time-slot.emergency-buffer:hover:not(.booked):not(.blocked) {
   border-color: #ef5350;
+  border-style: solid;
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(239, 83, 80, 0.3);
@@ -2691,6 +2706,27 @@
   border-color: #d32f2f;
   background: #ef5350;
   color: var(--white);
+}
+
+.emergency-buffer-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #d32f2f;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  white-space: nowrap;
+  border: 1px solid #ef5350;
+}
+
+.time-slot.emergency-buffer.selected .emergency-buffer-label {
+  color: var(--white);
+  background: rgba(211, 47, 47, 0.9);
+  border-color: var(--white);
 }
 
 /* ===== TIME SLOT LABELS - POSITIONED BELOW TIME ===== */
@@ -2833,7 +2869,7 @@
   transform: translateY(-2px);
 }
 
-/* âœ… Removed solid blue; now subtle highlight */
+/* Removed solid blue; now subtle highlight */
 .calendar-day.today {
   background: #eef2ff;
   color: #1e3a8a;
@@ -3480,7 +3516,7 @@ textarea:focus-visible {
   gap: 1rem;
 }
 
-/* âœ… Confirm Button */
+/*Confirm Button */
 .btn-confirm {
   background: #d9534f;
   color: #fff;
@@ -3529,7 +3565,7 @@ textarea:focus-visible {
   gap: 4px;
   align-items: flex-end;
   justify-content: center;
-  align-self: center; /* âœ… Center vertically */
+  align-self: center; /*Center vertically */
   margin-top: 0;
   position: relative;
   top: 0;
@@ -4237,7 +4273,7 @@ body {
 }
 
 @media (max-width: 768px) {
-  /* âœ… Expandable Search - Clean line stays in header on mobile */
+  /* Expandable Search - Clean line stays in header on mobile */
   .staff-search-container.expanded input {
     width: 180px;
     font-size: 0.85rem;
@@ -4712,4 +4748,43 @@ body {
 
 .btn-change-photo:hover svg {
   transform: scale(1.15);
+}
+
+/* ===== STAFF DASHBOARD GREETING ===== */
+.staff-greeting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 2.3rem; /* slightly larger to visually balance with 'Staff' */
+  font-weight: 900; /* increased for stronger boldness */
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  transition: color 0.3s ease;
+  letter-spacing: 0.5px; 
+}
+
+.staff-greeting-icon {
+  vertical-align: middle;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+/* 🌅 Morning - Gold */
+.staff-greeting-icon.morning {
+  color: #facc15;
+}
+
+/* 🌞 Afternoon - Orange */
+.staff-greeting-icon.afternoon {
+  color: #fb923c;
+}
+
+/* 🌙 Evening - Blue */
+.staff-greeting-icon.evening {
+  color: #60a5fa;
+}
+
+/* Optional hover animation */
+.staff-greeting:hover .staff-greeting-icon {
+  transform: rotate(10deg) scale(1.1);
 }

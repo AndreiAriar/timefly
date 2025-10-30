@@ -3,7 +3,7 @@
     "target": "ESNext",
     "lib": ["ESNext", "DOM"],
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",       
     "skipLibCheck": true,
     "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
@@ -20,6 +20,13 @@
     "jsx": "react-jsx",
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "src/**/*.tsx", "src/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "vite.config.ts",
+    "src/**/*.tsx",
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

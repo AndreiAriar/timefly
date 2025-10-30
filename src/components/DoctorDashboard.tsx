@@ -16,6 +16,9 @@ import {
   X,
   TrendingUp,
   History,
+  Sun,
+  CloudSun,
+  Moon
 } from 'lucide-react';
 
 import {
@@ -69,6 +72,7 @@ interface Doctor {
   available: boolean;
   bufferTime: number;
   maxAppointments: number;
+  consultationDuration?: number; 
   workingHours: {
     start: string;
     end: string;
@@ -131,6 +135,7 @@ const DoctorDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [currentDoctor, setCurrentDoctor] = useState<Doctor | null>(null);
+  const [doctorSlotSettings, setDoctorSlotSettings] = useState<{ [key: string]: number }>({});
   const [_doctors, setDoctors] = useState<Doctor[]>([]);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'queue' | 'appointments'>('home');
@@ -302,44 +307,139 @@ const DoctorDashboard = () => {
     return () => unsubscribe();
   }, [currentUser, userProfile]);
 
+// ✅ ADD THIS USEEFFECT - Listen to staff-controlled slot settings
+useEffect(() => {
+  if (!userProfile?.doctorId) return;
+
+  const fetchSlotSettings = async () => {
+    try {
+      const snap = await getDocs(collection(db, "doctorSlotSettings"));
+      const settings: { [key: string]: number } = {};
+
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        // Only load settings for THIS doctor
+        if (data.doctorId === userProfile.doctorId && typeof data.maxSlots === "number") {
+          settings[`${data.doctorId}_${data.date}`] = data.maxSlots;
+        }
+      });
+
+      setDoctorSlotSettings(settings);
+      console.log(`✅ Loaded ${Object.keys(settings).length} slot settings for doctor: ${userProfile.doctorId}`);
+    } catch (error) {
+      console.error("❌ Error fetching doctor slot settings:", error);
+    }
+  };
+
+  fetchSlotSettings();
+
+  // ✅ Real-time listener for slot changes
+  const unsubscribe = onSnapshot(
+    collection(db, "doctorSlotSettings"),
+    (snapshot) => {
+      const settings: { [key: string]: number } = {};
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.doctorId === userProfile.doctorId && typeof data.maxSlots === "number") {
+          settings[`${data.doctorId}_${data.date}`] = data.maxSlots;
+        }
+      });
+      setDoctorSlotSettings(settings);
+    }
+  );
+
+  return () => unsubscribe();
+}, [userProfile]);
+
+
   const handleLogout = async () => {
     addNotification('success', 'Logged out successfully');
   };
+// ✅ UPDATED - Reads dynamic slot settings from staff dashboard
+const getCalendarDays = (): DaySchedule[] => {
+  const year = calendarCurrentDate.getFullYear();
+  const month = calendarCurrentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days: DaySchedule[] = [];
+  const today = new Date();
+  const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-  const getCalendarDays = (): DaySchedule[] => {
-    const year = calendarCurrentDate.getFullYear();
-    const month = calendarCurrentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const days: DaySchedule[] = [];
-    const today = new Date();
-    const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+    if (dateStr < todayDateStr) continue;
 
-      if (dateStr < todayDateStr) continue;
+    const dayAppointments = appointments.filter(
+      apt => apt.date === dateStr && apt.status !== 'cancelled'
+    );
 
-      const dayAppointments = appointments.filter(
-        apt => apt.date === dateStr && apt.status !== 'cancelled'
-      );
+    // ✅ FIXED: Get slot count from staff-controlled settings
+    const maxAppointments = getDoctorSlotsForDate(userProfile?.doctorId || '', dateStr);
 
-      const maxAppointments = currentDoctor?.maxAppointments || 8;
+    days.push({
+      date: dateStr,
+      dayName,
+      dayNumber: day,
+      appointments: {
+        booked: dayAppointments.length,
+        total: maxAppointments // ✅ Now uses dynamic value from staff dashboard
+      },
+      doctorAppointments: dayAppointments
+    });
+  }
+  return days;
+};
 
-      days.push({
-        date: dateStr,
-        dayName,
-        dayNumber: day,
-        appointments: {
-          booked: dayAppointments.length,
-          total: maxAppointments
-        },
-        doctorAppointments: dayAppointments
-      });
-    }
-    return days;
+// ✅ ADD THIS HELPER FUNCTION - Calculate slots per date
+const calculateDoctorDailySlots = (doctor: Doctor): number => {
+  let workingHours = doctor.workingHours;
+  if (!workingHours || !workingHours.start || !workingHours.end) {
+    workingHours = { start: "9:00 AM", end: "5:00 PM" };
+  }
+
+  const parseTime = (timeStr: string): number => {
+    const [time, period] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    return hours * 60 + (minutes || 0);
   };
+
+  const startMinutes = parseTime(workingHours.start);
+  const endMinutes = parseTime(workingHours.end);
+  
+  const consultationDuration = doctor.consultationDuration || 30;
+  const bufferTime = doctor.bufferTime || 15;
+  const slotDuration = consultationDuration + bufferTime;
+  
+  const totalWorkMinutes = endMinutes - startMinutes;
+  const slots = Math.floor(totalWorkMinutes / slotDuration);
+  
+  return slots > 0 ? slots : 10;
+};
+
+// ✅ ADD THIS FUNCTION - Get slot count for specific date
+const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
+  if (!doctorId || !date) return 10;
+  
+  const key = `${doctorId}_${date}`;
+  
+  // Check if staff has set a custom value
+  if (doctorSlotSettings[key]) {
+    return doctorSlotSettings[key];
+  }
+  
+  // Otherwise calculate from working hours
+  if (currentDoctor) {
+    return calculateDoctorDailySlots(currentDoctor);
+  }
+  
+  return 10; // Ultimate fallback
+};
 
   const getTodayDate = (): string => {
     const today = new Date();
@@ -516,27 +616,53 @@ const formatDate = (dateString: string) => {
         {/* HOME VIEW */}
         {currentView === 'home' && (
           <>
-            {/* Hero Section with Background Image */}
-            <section className="hero-section-doctor">
-              <div className="hero-overlay"></div>
-              <div className="hero-content-doctor">
-                <p className="hero-greeting">Welcome back,</p>
-                <h2 className="hero-title-doctor">Dr. {userProfile?.name || "Doctor"}</h2>
-                <p className="hero-subtitle-doctor">
-                  Manage your eye care appointments and checkups with real-time queue updates
-                </p>
-                <div className="hero-actions-doctor">
-                  <button
-                    className="hero-btn-doctor hero-btn-primary"
-                    onClick={() => setShowCalendarView(true)}
-                    title="View calendar"
-                    aria-label="View calendar"
-                  >
-                    <CalendarDays size={20} />
-                    View Calendar
-                  </button>
-                </div>
-                
+   {/* Hero Section with Background Image */}
+<section className="hero-section-doctor">
+  <div className="hero-overlay"></div>
+  <div className="hero-content-doctor">
+    {(() => {
+      const hour = new Date().getHours();
+      let greeting = "Hello";
+      let IconComponent = null;
+      let iconClass = "greeting-icon";
+
+      if (hour < 12) {
+        greeting = "Good Morning";
+        IconComponent = <Sun size={24} className={`${iconClass} morning`} />;
+      } else if (hour < 18) {
+        greeting = "Good Afternoon";
+        IconComponent = <CloudSun size={24} className={`${iconClass} afternoon`} />;
+      } else {
+        greeting = "Good Evening";
+        IconComponent = <Moon size={24} className={`${iconClass} evening`} />;
+      }
+
+      return (
+        <p className="hero-greeting">
+          {IconComponent} {greeting},
+        </p>
+      );
+    })()}
+
+    <h2 className="hero-title-doctor">
+      Dr. {userProfile?.name || "Doctor"}
+    </h2>
+
+    <p className="hero-subtitle-doctor">
+      Manage your eye care appointments and checkups with real-time queue updates
+    </p>
+
+    <div className="hero-actions-doctor">
+      <button
+        className="hero-btn-doctor hero-btn-primary"
+        onClick={() => setShowCalendarView(true)}
+        title="View calendar"
+        aria-label="View calendar"
+      >
+        <CalendarDays size={20} />
+        View Calendar
+      </button>
+    </div>
                 {/* Stats Cards - Positioned Closer to Hero Button */}
                 <div className="stats-section">
                   <div className="stats-grid">
@@ -679,55 +805,64 @@ const formatDate = (dateString: string) => {
 
               {queue.length > 0 ? (
                 <div className="todays-queue-list">
-                  {queue.map((patient) => (
-                    <div
-                      key={patient.id}
-                      className={`todays-queue-item ${getPriorityColor(patient.priority)}`}
-                    >
-                      <div
-                        className="patient-avatar clickable"
-                        onClick={() => setPreviewPhoto(patient.photo ?? null)}
-                      >
-                        {patient.photo ? (
-                          <img src={patient.photo} alt={patient.name} />
-                        ) : (
-                          <User size={16} />
-                        )}
-                      </div>
+                {queue.map((patient) => (
+  <div
+    key={patient.id}
+    className={`todays-queue-item ${getPriorityColor(patient.priority)}`}
+  >
+    {/* ✅ Avatar - Column 1 */}
+    <div
+      className="patient-avatar clickable"
+      onClick={() => setPreviewPhoto(patient.photo ?? null)}
+    >
+      {patient.photo ? (
+        <img src={patient.photo} alt={patient.name} />
+      ) : (
+        <User size={16} />
+      )}
+    </div>
 
-                      <div className="patient-details">
-                        <span className="queue-number">Queue #{patient.queueNumber}</span>
-                        <span className="patient-name">Name: {patient.name}</span>
-                        {patient.age && <span className="patient-age">Age: {patient.age}</span>}
-                        <span className="patient-condition">Condition: {patient.type}</span>
-                        <span className="patient-date">Date: {formatDate(patient.date)}</span>
-                        <span className="patient-time">Time: {patient.time}</span>
-                        <div className={`booking-indicator booking-${patient.bookedBy}`}>
-                          {patient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
-                        </div>
-                      </div>
+    {/* ✅ Patient Details - Column 2 */}
+    <div className="patient-details">
+      <span className="queue-number">Queue #{patient.queueNumber}</span>
+      <span className="patient-name">Name: {patient.name}</span>
+      {patient.age && <span className="patient-age">Age: {patient.age}</span>}
+      <span className="patient-condition">Condition: {patient.type}</span>
+      <span className="patient-date">Date: {formatDate(patient.date)}</span>
+      <span className="patient-time">Time: {patient.time}</span>
+      <div className={`booking-indicator booking-${patient.bookedBy}`}>
+        {patient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
+      </div>
+    </div>
 
-                      <div className="queue-actions-bottom">
-                        <div className={`priority-status ${getPriorityColor(patient.priority)}`}>
-                          {getPriorityIcon(patient.priority)}
-                          <span>{patient.priority}</span>
-                        </div>
-                        <div className={`queue-status status-${patient.status}`}>
-                          {patient.status}
-                        </div>
-                        <button
-                          className="action-btn view-btn"
-                          onClick={() => {
-                            setSelectedAppointment(patient);
-                            setShowDetailsModal(true);
-                          }}
-                          title="View patient details"
-                        >
-                          <Eye size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+    {/* ✅ Actions Container - Column 3 (Priority + Status + Eye Icon) */}
+    <div className="queue-actions-bottom">
+      {/* Priority Badge */}
+      <div className={`priority-status ${getPriorityColor(patient.priority)}`}>
+        {getPriorityIcon(patient.priority)}
+        <span>{patient.priority}</span>
+      </div>
+      
+      {/* Status Badge */}
+      <div className={`queue-status status-${patient.status}`}>
+        {patient.status}
+      </div>
+      
+      {/* Eye Icon Button */}
+      <button
+        className="action-btn view-btn"
+        onClick={() => {
+          setSelectedAppointment(patient);
+          setShowDetailsModal(true);
+        }}
+        title="View patient details"
+        aria-label={`View ${patient.name}'s details`}
+      >
+        <Eye size={16} />
+      </button>
+    </div>
+  </div>
+))}
                 </div>
               ) : (
                 <div className="empty-queue">

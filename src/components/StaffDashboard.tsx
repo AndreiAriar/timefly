@@ -28,7 +28,10 @@ import {
   MessageSquare,
   CheckCircle,
   Menu,
-  Info
+  Info,
+  Sun,
+  CloudSun,
+  Moon,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -720,7 +723,7 @@ useEffect(() => {
     }
 
   };
- // Generate Time Slots - WITH EMERGENCY BUFFER, BLOCKED SLOT SUPPORT, AND LUNCH BREAK FILTER
+ // ✅ Generate Time Slots - WITH EMERGENCY BUFFER BETWEEN ALL SLOTS (SKIP ENTIRE LUNCH HOUR)
 const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
   if (!doctorId || !date) return [];
 
@@ -740,9 +743,12 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     return hours * 60 + minutes;
   };
 
-  // ðŸš« Helper function to check if time is lunch break (12:00 PM or 12:30 PM)
+  // 🚫 Helper function to check if time is lunch break (12:00 PM - 12:45 PM)
   const isLunchTime = (time12: string): boolean => {
-    return time12 === '12:00 PM' || time12 === '12:30 PM';
+    return time12 === '12:00 PM' || 
+           time12 === '12:15 PM' || 
+           time12 === '12:30 PM' || 
+           time12 === '12:45 PM';
   };
 
   const startTotalMinutes = parseTime12Hour(start);
@@ -750,12 +756,12 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
 
   // Get current date and time for filtering past slots
   const now = new Date();
-  const selectedDate = new Date(date);
-  const isToday = selectedDate.toDateString() === now.toDateString();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  
-  // Add 30 minute buffer to current time (avoid booking too soon)
-  const minimumBookingMinutes = isToday ? currentMinutes + 30 : 0;
+  const philippinesNow = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
+  );
+  const currentDateStr = philippinesNow.toISOString().split("T")[0];
+  const currentTotalMinutes =
+    philippinesNow.getHours() * 60 + philippinesNow.getMinutes();
 
   // Get ALL appointments for this doctor and date
   const existingAppointments = appointments.filter(
@@ -766,32 +772,39 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
   );
 
   console.log(`Generating slots for doctor ${doctorId} on ${date}`);
-  console.log(` Is today: ${isToday}, Current time: ${now.toLocaleTimeString()}`);
+  console.log(` Is today: ${date === currentDateStr}, Current time: ${philippinesNow.toLocaleTimeString()}`);
   console.log(` Found ${existingAppointments.length} existing appointments`);
   console.log(` Current form priority: ${appointmentForm.priority}`);
 
   const slots: TimeSlot[] = [];
-  const appointmentDuration = 30; // minutes per regular slot
-  const bufferDuration = 15; // minutes of emergency buffer slot
   
   // Check if current form has emergency priority selected
   const isCreatingEmergency = appointmentForm.priority === 'emergency';
 
-  for (let totalMinutes = startTotalMinutes; totalMinutes < endTotalMinutes; totalMinutes += appointmentDuration) {
+  // ✅ Generate slots every 15 minutes
+  for (let totalMinutes = startTotalMinutes; totalMinutes < endTotalMinutes; totalMinutes += 15) {
     const hour = Math.floor(totalMinutes / 60);
     const minute = totalMinutes % 60;
     const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
     const time12 = convertTo12Hour(time24);
 
-    // ðŸš« Skip lunch time slots (12:00 PM and 12:30 PM)
+    // 🚫 SKIP ENTIRE LUNCH HOUR (12:00 PM - 12:45 PM) - FOR ALL PRIORITIES
     if (isLunchTime(time12)) {
-      console.log(`â° Skipping lunch break: ${time12}`);
+      console.log(`⏰ Skipping lunch break: ${time12}`);
       continue;
     }
 
     // Skip past time slots if booking for today
-    if (isToday && totalMinutes < minimumBookingMinutes) {
-      console.log(`Skipping past slot: ${time12}`);
+    if (date === currentDateStr && totalMinutes < currentTotalMinutes) {
+      continue;
+    }
+
+    // ✅ Determine if this is an emergency buffer slot
+    // Emergency slots are at :15 and :45 minutes (9:15 AM, 9:45 AM, 10:15 AM, etc.)
+    const isEmergencySlot = minute === 15 || minute === 45;
+
+    // ✅ Skip emergency slots if NOT creating emergency appointment
+    if (isEmergencySlot && !isCreatingEmergency) {
       continue;
     }
 
@@ -805,64 +818,23 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     const slotKey = `${doctorId}_${date}_${time12}`;
     const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
-    // Add regular 30-minute slot
+    // Add slot (either regular or emergency)
     slots.push({
       time: time12,
       available: !isBooked && !isBlocked,
       booked: isBooked,
-      emergency: false
+      emergency: isEmergencySlot
     });
 
-    // Add emergency buffer slot (15-min) ONLY when emergency priority is selected
-    if (isCreatingEmergency && !isBooked && !isBlocked) {
-      const bufferStart = totalMinutes + appointmentDuration;
-      
-      // Make sure buffer doesn't exceed working hours
-      if (bufferStart < endTotalMinutes) {
-        const bufferHour = Math.floor(bufferStart / 60);
-        const bufferMinute = bufferStart % 60;
-        const bufferTime24 = `${bufferHour.toString().padStart(2, '0')}:${bufferMinute
-          .toString()
-          .padStart(2, '0')}`;
-        const bufferTime12 = convertTo12Hour(bufferTime24);
-
-        // ðŸš« Skip lunch break buffer slots too
-        if (isLunchTime(bufferTime12)) {
-          console.log(`â° Skipping lunch break buffer: ${bufferTime12}`);
-          // Don't add buffer duration here since we're skipping this slot
-        } else if (isToday && bufferStart < minimumBookingMinutes) {
-          // Skip past buffer slots if booking for today
-          console.log(`Skipping past buffer slot: ${bufferTime12}`);
-        } else {
-          // Check if buffer slot is already booked or blocked
-          const bufferAppointment = existingAppointments.find(
-            apt => apt.time === bufferTime12 && (editingAppointment ? apt.id !== editingAppointment.id : true)
-          );
-          
-          const isBufferBooked = !!bufferAppointment;
-          const bufferKey = `${doctorId}_${date}_${bufferTime12}`;
-          const isBufferBlocked = doctorAvailabilitySlots?.[bufferKey] === false;
-
-          slots.push({
-            time: bufferTime12,
-            available: !isBufferBooked && !isBufferBlocked,
-            booked: isBufferBooked,
-            emergency: true
-          });
-
-          console.log(
-            ` Added emergency buffer slot: ${bufferTime12} (${isBufferBooked ? 'booked' : isBufferBlocked ? 'blocked' : 'available'})`
-          );
-        }
-
-        // Skip the next 15-minute increment to account for buffer
-        totalMinutes += bufferDuration;
-      }
-    }
+    console.log(
+      ` ${isEmergencySlot ? '🚨' : '✅'} ${time12} - ${
+        isBooked ? 'Booked' : isBlocked ? 'Blocked' : 'Available'
+      }${isEmergencySlot ? ' (Emergency Buffer)' : ''}`
+    );
   }
 
   console.log(`Generated ${slots.length} total slots`);
-  console.log(`Emergency mode: ${isCreatingEmergency ? 'ON - showing emergency buffer slots' : 'OFF'}`);
+  console.log(`Emergency mode: ${isCreatingEmergency ? 'ON - showing emergency buffer slots' : 'OFF - regular slots only'}`);
 
   return slots;
 };
@@ -1029,7 +1001,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
     });
   }
 
-  console.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¢Ã‚Â Generated ${slots.length} time slots for ${doctor.name} on ${selectedDate}`);
+  console.log(` Generated ${slots.length} time slots for ${doctor.name} on ${selectedDate}`);
   return slots;
 };
 // === Toggle Doctor Availability for the Day ===
@@ -1239,40 +1211,63 @@ const checkAppointmentConflict = async (
       };
     }).sort((a, b) => b.totalPatients - a.totalPatients);
   };
-  
-  // Queue Management
- const getCurrentQueue = (): QueueItem[] => {
+const getCurrentQueue = (): QueueItem[] => {
   const today = getTodayDate();
   const todayAppointments = appointments.filter(apt =>
     apt.date === today && 
     apt.status !== 'cancelled' && 
-    apt.status !== 'completed' // Exclude completed appointments from queue
+    apt.status !== 'completed'
   );
   
-  // Sort by priority and queue number
+  // ✅ Sort by: status → appointment time → priority
   const sortedQueue = todayAppointments.sort((a, b) => {
-    // Confirmed appointments (being served) should come first
+    // 1️⃣ Confirmed status comes first (being served)
     if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
     if (b.status === 'confirmed' && a.status !== 'confirmed') return 1;
     
-    // Then by priority
-    if (a.priority === 'emergency' && b.priority !== 'emergency') return -1;
-    if (b.priority === 'emergency' && a.priority !== 'emergency') return 1;
-    if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
-    if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
+    // 2️⃣ Sort by appointment time
+    const timeComparison = a.time.localeCompare(b.time);
+    if (timeComparison !== 0) return timeComparison;
     
-    // Then by queue number
-    return (a.queueNumber || 0) - (b.queueNumber || 0);
+    // 3️⃣ Priority as tiebreaker
+    const priorityOrder = { emergency: 3, urgent: 2, normal: 1 };
+    const aPriority = priorityOrder[a.priority] || 1;
+    const bPriority = priorityOrder[b.priority] || 1;
+    return bPriority - aPriority;
   });
   
-  return sortedQueue.map((apt, index) => ({
-    ...apt,
-    estimatedWaitTime: index * 30,
-    isCurrentlyServing: apt.status === 'confirmed', // Ã¢Å“â€¦ All confirmed are "being served"
-    isOnHold: false
-  }));
+  // ✅ Calculate wait times based on actual appointment times
+  const now = new Date();
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+  
+  return sortedQueue.map((apt) => {
+    let waitMinutes = 0;
+    
+    if (apt.status === 'confirmed') {
+      // Currently being served - no wait time
+      waitMinutes = 0;
+    } else {
+      // Parse appointment time (e.g., "9:15 AM")
+      const [time, period] = apt.time.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      
+      const appointmentTimeInMinutes = hours * 60 + minutes;
+      
+      // Calculate difference from now
+      waitMinutes = Math.max(0, appointmentTimeInMinutes - currentTime);
+    }
+    
+    return {
+      ...apt,
+      estimatedWaitTime: waitMinutes,
+      isCurrentlyServing: apt.status === 'confirmed',
+      isOnHold: false
+    };
+  });
 };
-
   // Get doctor availability for a specific date - Fixed logic
   const getDoctorAvailability = (doctorId: string, date: string): boolean => {
     if (!date) return true; // Default available if no date selected
@@ -1563,85 +1558,71 @@ const handleCreateAppointment = async () => {
   try {
     addNotification('info', 'Creating appointment...');
     
-    //  CRITICAL: Check if daily limit is reached BEFORE creating
-    if (isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date)) {
-      addNotification('error', 'This doctor has reached their maximum appointments for this day. Please select another date or doctor.');
-      return;
-    }
-    // âœ… NEW: Check if doctor is fully booked
-const isDoctorFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
-
-if (isDoctorFullyBooked) {
-  // Offer to add to waiting list
-  const confirmWaitingList = window.confirm(
-    `This doctor is fully booked on ${appointmentForm.date}.\n\n` +
-    `Would you like to add ${appointmentForm.name} to the waiting list instead?`
-  );
-
-  if (!confirmWaitingList) {
-    addNotification('info', 'Please select another date or doctor.');
-    return;
-  }
-
-  // Add to waiting list
-  try {
-    const selectedDoctor = doctors.find(d => d.id === appointmentForm.doctorId);
+    // CRITICAL: Check if daily limit is reached BEFORE creating
+    const isDoctorFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
     
-    await addDoc(collection(db, 'waitingList'), {
-      patientName: appointmentForm.name,
-      patientEmail: appointmentForm.email,
-      patientPhone: appointmentForm.phone,
-      preferredDoctorId: appointmentForm.doctorId,
-      preferredDoctorName: selectedDoctor?.name || '',
-      preferredDate: appointmentForm.date,
-      priority: appointmentForm.priority,
-      addedAt: serverTimestamp(),
-      originalAppointmentData: {
-        name: appointmentForm.name,
-        age: appointmentForm.age,
-        email: appointmentForm.email,
-        phone: appointmentForm.phone,
-        gender: appointmentForm.gender,
-        type: appointmentForm.condition === 'custom' ? appointmentForm.customCondition : appointmentForm.condition,
-        photo: appointmentForm.photo,
-        notes: appointmentForm.notes
+    if (isDoctorFullyBooked) {
+      // Offer to add to waiting list
+      const confirmWaitingList = window.confirm(
+        `This doctor is fully booked on ${appointmentForm.date}.\n\n` +
+        `Would you like to add ${appointmentForm.name} to the waiting list instead?`
+      );
+
+      if (!confirmWaitingList) {
+        addNotification('info', 'Please select another date or doctor.');
+        return;
       }
-    });
 
-    addNotification('success', `${appointmentForm.name} has been added to the waiting list. They'll be notified when a slot opens.`);
-    setShowBookingForm(false);
-    resetAppointmentForm();
-    return;
-  } catch (error) {
-    console.error('Error adding to waiting list:', error);
-    addNotification('error', 'Failed to add to waiting list');
-    return;
-  }
-}
-    //  Double-check for time slot conflicts
-    const hasConflict = await checkAppointmentConflict(
-      appointmentForm.doctorId,
-      appointmentForm.date,
-      appointmentForm.time
-    );
-    
-    if (hasConflict) {
-      addNotification('error', 'This time slot is already booked by another appointment. Please select a different time.');
-      setAppointmentForm(prev => ({ ...prev, time: '' }));
-      return;
+      // Add to waiting list
+      try {
+        const selectedDoctor = doctors.find(d => d.id === appointmentForm.doctorId);
+        
+        await addDoc(collection(db, 'waitingList'), {
+          patientName: appointmentForm.name,
+          patientEmail: appointmentForm.email,
+          patientPhone: appointmentForm.phone,
+          preferredDoctorId: appointmentForm.doctorId,
+          preferredDoctorName: selectedDoctor?.name || '',
+          preferredDate: appointmentForm.date,
+          priority: appointmentForm.priority,
+          addedAt: serverTimestamp(),
+          originalAppointmentData: {
+            name: appointmentForm.name,
+            age: appointmentForm.age,
+            email: appointmentForm.email,
+            phone: appointmentForm.phone,
+            gender: appointmentForm.gender,
+            type: appointmentForm.condition === 'custom' ? appointmentForm.customCondition : appointmentForm.condition,
+            photo: appointmentForm.photo,
+            notes: appointmentForm.notes
+          }
+        });
+
+        addNotification('success', `${appointmentForm.name} has been added to the waiting list. They'll be notified when a slot opens.`);
+        setShowBookingForm(false);
+        resetAppointmentForm();
+        return;
+      } catch (error) {
+        console.error('Error adding to waiting list:', error);
+        addNotification('error', 'Failed to add to waiting list');
+        return;
+      }
     }
     
-    //  Additional real-time check by querying current appointments state
-    const localConflicts = appointments.filter(apt => 
-      apt.doctorId === appointmentForm.doctorId &&
-      apt.date === appointmentForm.date &&
-      apt.time === appointmentForm.time &&
-      apt.status !== 'cancelled'
-    );
+    // ✅ RACE CONDITION FIX: Final check right before creation
+    const lastSecondCheck = await getDocs(query(
+      collection(db, 'appointments'),
+      where('doctorId', '==', appointmentForm.doctorId),
+      where('date', '==', appointmentForm.date),
+      where('time', '==', appointmentForm.time),
+      where('status', '!=', 'cancelled')
+    ));
     
-    if (localConflicts.length > 0) {
-      console.log('Local conflict detected:', localConflicts);
-      addNotification('error', 'Time slot conflict detected. Please refresh and try again.');
+    if (!lastSecondCheck.empty) {
+      console.log('⚠️ Race condition prevented: Slot was taken during booking process');
+      addNotification('error', 'This time slot was just taken by another user! Please refresh and choose another time.');
+      
+      // Force refresh time slots
       setAppointmentForm(prev => ({ ...prev, time: '' }));
       return;
     }
@@ -1672,7 +1653,7 @@ if (isDoctorFullyBooked) {
       updatedAt: serverTimestamp()
     };
     
-    // Use addDoc to prevent race conditions
+    // ✅ Create appointment immediately after check
     await addDoc(collection(db, 'appointments'), appointmentData);
     
     addNotification('success', 'Appointment created successfully!');
@@ -1716,9 +1697,18 @@ const handleUpdateAppointment = async () => {
   if (!editingAppointment) return;
   
   try {
+    console.log('🔄 Update Appointment Started:', editingAppointment.id);
     addNotification('info', 'Updating appointment...');
     
-    // CRITICAL: Check if daily limit is reached (excluding current appointment)
+    // Validate required fields
+    if (!appointmentForm.name || !appointmentForm.email || !appointmentForm.phone || 
+        !appointmentForm.condition || !appointmentForm.doctorId || 
+        !appointmentForm.date || !appointmentForm.time) {
+      addNotification('error', 'Please fill in all required fields');
+      return;
+    }
+    
+    // Check if daily limit is reached (excluding current appointment)
     const customSlotKey = `${appointmentForm.doctorId}_${appointmentForm.date}`;
     const maxSlots = doctorSlotSettings[customSlotKey] || 
       (() => {
@@ -1730,7 +1720,7 @@ const handleUpdateAppointment = async () => {
       apt => apt.doctorId === appointmentForm.doctorId && 
              apt.date === appointmentForm.date && 
              apt.status !== 'cancelled' &&
-             apt.id !== editingAppointment.id // Ã¢Å“â€¦ Exclude current appointment from count
+             apt.id !== editingAppointment.id
     ).length;
     
     if (bookedCount >= maxSlots) {
@@ -1743,18 +1733,18 @@ const handleUpdateAppointment = async () => {
       appointmentForm.doctorId,
       appointmentForm.date,
       appointmentForm.time,
-      editingAppointment.id // Ã¢Å“â€¦ Pass the current appointment ID to exclude it
+      editingAppointment.id
     );
     
     if (hasConflict) {
       addNotification('error', 'This time slot is no longer available. Please select another time.');
       setAppointmentForm(prev => ({ ...prev, time: '' }));
-      addNotification('warning', 'Please select an available time slot.');
       return;
     }
     
     const doctor = doctors.find(d => d.id === appointmentForm.doctorId);
     const appointmentRef = doc(db, 'appointments', editingAppointment.id);
+    
     const updateData = {
       name: appointmentForm.name,
       age: appointmentForm.age,
@@ -1772,12 +1762,22 @@ const handleUpdateAppointment = async () => {
       updatedAt: serverTimestamp()
     };
     
+    console.log('📝 Updating with data:', updateData);
+    
     await updateDoc(appointmentRef, updateData);
+    
+    console.log('✅ Update successful');
     addNotification('success', 'Appointment updated successfully!');
     
+    // Send notification if contact info provided
     if (appointmentForm.email || appointmentForm.phone) {
       try {
-        await sendNotificationToPatient(appointmentForm.email, appointmentForm.phone, 'appointment_updated', updateData);
+        await sendNotificationToPatient(
+          appointmentForm.email, 
+          appointmentForm.phone, 
+          'appointment_updated', 
+          updateData
+        );
       } catch (notificationError) {
         console.error('Error sending notification:', notificationError);
         addNotification('warning', 'Appointment updated but notification failed to send');
@@ -1789,7 +1789,7 @@ const handleUpdateAppointment = async () => {
     resetAppointmentForm();
     
   } catch (error) {
-    console.error('Error updating appointment:', error);
+    console.error('❌ Error updating appointment:', error);
     
     if (error instanceof Error && 'code' in error) {
       const firebaseError = error as any;
@@ -1799,6 +1799,7 @@ const handleUpdateAppointment = async () => {
     }
   }
 };
+
 // Add this helper function near your other helper functions (around line 950)
 const isDailyLimitReached = (doctorId: string, date: string): boolean => {
   // Get custom slot setting or calculate from working hours
@@ -1837,7 +1838,7 @@ const handleAppointmentStatusChange = async (appointmentId: string, status: 'con
       updatedAt: serverTimestamp()
     });
     
-    // âœ… NEW: Check waiting list when appointment is cancelled
+    //  NEW: Check waiting list when appointment is cancelled
     if (status === 'cancelled') {
       const waitingListQuery = query(
         collection(db, 'waitingList'),
@@ -2227,7 +2228,7 @@ const response = await fetch("http://localhost:5000/send-reminder", {
     doctor: appointmentData.doctor,
     date: appointmentData.date,
     time: appointmentData.time,
-    queueNumber: appointmentData.queueNumber, // âœ… ADDED QUEUE NUMBER
+    queueNumber: appointmentData.queueNumber, // ADDED QUEUE NUMBER
     message: notificationContent.message,
     subject: notificationContent.subject,
   }),
@@ -2364,7 +2365,7 @@ const sendNotificationToPatientById = async (
   const totalQueue = activeAppointments.length;
 
   try {
-    // âœ… Send queue position notification to backend
+    //Send queue position notification to backend
     const response = await fetch("http://localhost:5000/send-queue-notification", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2380,7 +2381,7 @@ const sendNotificationToPatientById = async (
     const result = await response.json();
     if (result.success) {
       alert(
-        `âœ… Notification sent to ${appointment.name}: You are #${queueNumber} in the queue.`
+        `Notification sent to ${appointment.name}: You are #${queueNumber} in the queue.`
       );
     } else {
       alert(`âš ï¸ Failed to send notification: ${result.error}`);
@@ -2555,6 +2556,19 @@ const handleLogout = async () => {
             </div>
           ))}
         </div>
+        
+{/* Mobile Menu Overlay */}
+{showMobileMenu && (
+  <div 
+    className="mobile-menu-overlay"
+    onClick={() => {
+      setShowMobileMenu(false);
+      document.body.classList.remove('mobile-menu-open');
+    }}
+  />
+)}
+
+        
  {/* Main Content */}
 <main className={`main-content-full ${activeTab === 'dashboard' ? 'dashboard-active' : ''}`}>
   {/* Header with Navbar */}
@@ -2596,71 +2610,77 @@ const handleLogout = async () => {
         id="staff-main-nav"
         className={`staff-header-nav ${showMobileMenu ? 'mobile-open' : ''}`}
       >
-        <button
-          className={`staff-nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('appointments');
-            setShowMobileMenu(false);
-          }}
-        >
-          <Calendar size={18} aria-hidden="true" />
-          Appointments
-        </button>
+       <button
+  className={`staff-nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
+  onClick={() => {
+    setActiveTab('appointments');
+    setShowMobileMenu(false);
+    document.body.classList.remove('mobile-menu-open');
+  }}
+>
+  <Calendar size={18} aria-hidden="true" />
+  Appointments
+</button>
 
-        <button
-          className={`staff-nav-link ${activeTab === 'queue' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('queue');
-            setShowMobileMenu(false);
-          }}
-        >
-          <Clock size={18} aria-hidden="true" />
-          Current Queue
-        </button>
+<button
+  className={`staff-nav-link ${activeTab === 'queue' ? 'active' : ''}`}
+  onClick={() => {
+    setActiveTab('queue');
+    setShowMobileMenu(false);
+    document.body.classList.remove('mobile-menu-open');
+  }}
+>
+  <Clock size={18} aria-hidden="true" />
+  Current Queue
+</button>
 
-        <button
-          className={`staff-nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('doctors');
-            setShowMobileMenu(false);
-          }}
-        >
-          <Stethoscope size={18} aria-hidden="true" />
-          Doctors
-        </button>
+<button
+  className={`staff-nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
+  onClick={() => {
+    setActiveTab('doctors');
+    setShowMobileMenu(false);
+    document.body.classList.remove('mobile-menu-open');
+  }}
+>
+  <Stethoscope size={18} aria-hidden="true" />
+  Doctors
+</button>
 
-        <button
-          className={`staff-nav-link ${activeTab === 'calendar' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('calendar');
-            setShowMobileMenu(false);
-          }}
-        >
-          <CalendarDays size={18} aria-hidden="true" />
-          Calendar
-        </button>
+<button
+  className={`staff-nav-link ${activeTab === 'calendar' ? 'active' : ''}`}
+  onClick={() => {
+    setActiveTab('calendar');
+    setShowMobileMenu(false);
+    document.body.classList.remove('mobile-menu-open');
+  }}
+>
+  <CalendarDays size={18} aria-hidden="true" />
+  Calendar
+</button>
 
-        <button
-          className={`staff-nav-link ${activeTab === 'reports' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('reports');
-            setShowMobileMenu(false);
-          }}
-        >
-          <MessageSquare size={18} aria-hidden="true" />
-          Reports
-        </button>
+<button
+  className={`staff-nav-link ${activeTab === 'reports' ? 'active' : ''}`}
+  onClick={() => {
+    setActiveTab('reports');
+    setShowMobileMenu(false);
+    document.body.classList.remove('mobile-menu-open');
+  }}
+>
+  <MessageSquare size={18} aria-hidden="true" />
+  Reports
+</button>
 
-        <button
-          className={`staff-nav-link ${activeTab === 'waiting-list' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('waiting-list');
-            setShowMobileMenu(false);
-          }}
-        >
-          <Users size={18} aria-hidden="true" />
-          Waiting List
-        </button>
+<button
+  className={`staff-nav-link ${activeTab === 'waiting-list' ? 'active' : ''}`}
+  onClick={() => {
+    setActiveTab('waiting-list');
+    setShowMobileMenu(false);
+    document.body.classList.remove('mobile-menu-open');
+  }}
+>
+  <Users size={18} aria-hidden="true" />
+  Waiting List
+</button>
       </nav>
 
       <div className="staff-header-right">
@@ -2769,37 +2789,51 @@ const handleLogout = async () => {
       </div>
     </div>
   </header>
-  {/* Dashboard Tab */}
-  {activeTab === 'dashboard' && (
-    <div className="dashboard-content-wrapper">
-      {/* Background Image */}
-      <div className="dashboard-background">
-        <img
-          src="/images/staffbg.png"
-          alt=""
-          className="dashboard-bg-image"
-        />
-        <div className="dashboard-overlay"></div>
-      </div>
+ {/* Dashboard Tab */}
+{activeTab === 'dashboard' && (
+  <div className="dashboard-content-wrapper">
+    {/* Background Image */}
+    <div className="dashboard-background">
+      <img
+        src="/images/staffbg.png"
+        alt=""
+        className="dashboard-bg-image"
+      />
+      <div className="dashboard-overlay"></div>
+    </div>
 
-      {/* Content Over Background */}
-      <div className="dashboard-content">
-        {/* Welcome Section */}
-        <div className="dashboard-welcome">
-          {(() => {
-            const hour = new Date().getHours();
-            let greeting = "Good Evening";
-            if (hour < 12) greeting = "Good Morning";
-            else if (hour < 18) greeting = "Good Afternoon";
-            return (
-              <>
-                <h1>{greeting},</h1>
-                <h2>{staffProfile?.name || 'Staff'}</h2>
-                <p>Manage your eye care appointments and checkups with real-time queue updates</p>
-              </>
-            );
-          })()}
-        </div>
+    {/* Content Over Background */}
+    <div className="dashboard-content">
+      {/* Welcome Section */}
+      <div className="dashboard-welcome">
+        {(() => {
+          const hour = new Date().getHours();
+          let greeting = "Hello";
+          let IconComponent = null;
+          let iconClass = "staff-greeting-icon";
+
+          if (hour < 12) {
+            greeting = "Good Morning";
+            IconComponent = <Sun size={30} className={`${iconClass} morning`} />;
+          } else if (hour < 18) {
+            greeting = "Good Afternoon";
+            IconComponent = <CloudSun size={30} className={`${iconClass} afternoon`} />;
+          } else {
+            greeting = "Good Evening";
+            IconComponent = <Moon size={30} className={`${iconClass} evening`} />;
+          }
+
+          return (
+            <>
+              <h1 className="staff-greeting">
+                {IconComponent} {greeting},
+              </h1>
+              <h2>{staffProfile?.name || 'Staff'}</h2>
+              <p>Manage your eye care appointments and checkups with real-time queue updates</p>
+            </>
+          );
+        })()}
+      </div>
 
         {/* Stats Cards */}
         <div className="stats-grid">
@@ -3349,10 +3383,18 @@ const handleLogout = async () => {
           <div className="queue-time">
             <div className="appointment-time">{patient.time}</div>
             <div className="wait-time">
-              {patient.status === 'confirmed'
-                ? 'Being Served'
-                : `Wait: ${patient.estimatedWaitTime}min`}
-            </div>
+  {patient.status === 'confirmed'
+    ? 'Being Served'
+    : (() => {
+        const minutes = patient.estimatedWaitTime || 0;
+        if (minutes >= 60) {
+          const hours = Math.floor(minutes / 60);
+          const mins = minutes % 60;
+          return `Wait: ${hours}h ${mins}min`;
+        }
+        return `Wait: ${minutes}min`;
+      })()}
+</div>
           </div>
 
           {/* UPDATED CODE (Show Complete Button for All Confirmed) */}
@@ -4927,52 +4969,74 @@ const handleLogout = async () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <div className="modal-footer">
-        <button
-          className="btn-secondary"
-          onClick={() => {
-            setShowBookingForm(false);
-            setEditingAppointment(null);
-            resetAppointmentForm();
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          className={`btn-primary ${
-            !appointmentForm.name ||
-            !appointmentForm.email ||
-            !appointmentForm.phone ||
-            !appointmentForm.condition ||
-            (appointmentForm.condition === "custom" && !appointmentForm.customCondition) ||
-            !appointmentForm.doctorId ||
-            !appointmentForm.date ||
-            !appointmentForm.time
-              ? "disabled"
-              : ""
-          }`}
-          onClick={
-            editingAppointment
-              ? handleUpdateAppointment
-              : handleCreateAppointment
+{/* Footer */}
+<div className="modal-footer">
+  <button
+    className="btn-secondary"
+    onClick={() => {
+      setShowBookingForm(false);
+      setEditingAppointment(null);
+      resetAppointmentForm();
+    }}
+  >
+    Cancel
+  </button>
+  {(() => {
+    // Check if anything was edited
+    const hasChanges = editingAppointment ? (
+      appointmentForm.name !== editingAppointment.name ||
+      appointmentForm.age !== editingAppointment.age ||
+      appointmentForm.email !== editingAppointment.email ||
+      appointmentForm.phone !== editingAppointment.phone ||
+      appointmentForm.gender !== (editingAppointment.gender || '') ||
+      appointmentForm.condition !== editingAppointment.type ||
+      appointmentForm.priority !== editingAppointment.priority ||
+      appointmentForm.date !== editingAppointment.date ||
+      appointmentForm.time !== editingAppointment.time ||
+      appointmentForm.doctorId !== editingAppointment.doctorId ||
+      appointmentForm.notes !== (editingAppointment.notes || '') ||
+      appointmentForm.photo !== (editingAppointment.photo || '')
+    ) : true;
+    
+    const isFormValid = 
+      appointmentForm.name &&
+      appointmentForm.email &&
+      appointmentForm.phone &&
+      appointmentForm.condition &&
+      (appointmentForm.condition !== "custom" || appointmentForm.customCondition) &&
+      appointmentForm.doctorId &&
+      appointmentForm.date &&
+      appointmentForm.time;
+    
+    const shouldDisable = !isFormValid || (editingAppointment && !hasChanges);
+    
+    return (
+      <button
+        className={`btn-primary ${shouldDisable ? "disabled" : ""}`}
+        onClick={async (e) => {
+          e.preventDefault();
+          console.log('🔘 Button clicked:', editingAppointment ? 'UPDATE' : 'CREATE');
+          if (editingAppointment) {
+            await handleUpdateAppointment();
+          } else {
+            await handleCreateAppointment();
           }
-          disabled={
-            !appointmentForm.name ||
-            !appointmentForm.email ||
-            !appointmentForm.phone ||
-            !appointmentForm.condition ||
-            (appointmentForm.condition === "custom" && !appointmentForm.customCondition) ||
-            !appointmentForm.doctorId ||
-            !appointmentForm.date ||
-            !appointmentForm.time
-          }
-        >
-          <Save size={16} />
-          {editingAppointment ? "Update" : "Create"} Appointment
-        </button>
-      </div>
+        }}
+        disabled={shouldDisable || undefined}
+        title={
+          editingAppointment && !hasChanges 
+            ? "No changes detected" 
+            : shouldDisable 
+            ? "Please fill all required fields" 
+            : undefined
+        }
+      >
+        <Save size={16} />
+        {editingAppointment ? "Update" : "Create"} Appointment
+      </button>
+    );
+  })()}
+</div>
     </div>
   </div>
 )}
@@ -5054,32 +5118,112 @@ const handleLogout = async () => {
               placeholder="Phone number"
             />
           </div>
-
-          {/* Photo Upload - Updated with centered label and dashed border */}
-          <div className="form-group full-width">
-            <label htmlFor="doctorPhoto" className="centered-label">Photo</label>
-            <div className="photo-upload-container">
-              <input
-                type="file"
-                id="doctorPhoto"
-                accept="image/*"
-                onChange={(e) => handlePhotoUpload(e, 'doctor')}
-                className="photo-input"
-                disabled={uploadingImage}
-              />
-              <label htmlFor="doctorPhoto" className="photo-upload-box">
-                <Camera size={24} />
-                <span className="upload-text">
-                  {uploadingImage ? 'Uploading...' : (doctorForm.photo ? 'Change Photo' : 'Upload Photo')}
-                </span>
-              </label>
-              {doctorForm.photo && (
-                <div className="photo-preview-container">
-                  <img src={doctorForm.photo} alt="Preview" className="photo-preview" />
-                </div>
-              )}
-            </div>
-          </div>
+{/* ✅ UPDATED: Photo Upload - Matches Appointment Form Style */}
+<div className="form-group full-width">
+  <label htmlFor="doctorPhoto" className="centered-label">Photo</label>
+  <div className="photo-upload-container">
+    {!doctorForm.photo ? (
+      <>
+        <input
+          type="file"
+          id="doctorPhoto"
+          accept="image/*"
+          onChange={(e) => handlePhotoUpload(e, 'doctor')}
+          className="photo-input"
+          disabled={uploadingImage}
+          aria-label="Upload doctor photo"
+        />
+        <label 
+          htmlFor="doctorPhoto" 
+          className="photo-upload-box"
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = 'var(--dark-blue)';
+            e.currentTarget.style.background = 'var(--secondary-blue)';
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = 'var(--accent-blue)';
+            e.currentTarget.style.background = 'var(--primary-blue)';
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = 'var(--accent-blue)';
+            e.currentTarget.style.background = 'var(--primary-blue)';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+              const fakeEvent = {
+                target: { files: [file] }
+              } as any;
+              handlePhotoUpload(fakeEvent, 'doctor');
+            } else {
+              addNotification('error', 'Please drop a valid image file');
+            }
+          }}
+        >
+          <Camera size={24} aria-hidden="true" />
+          <span className="upload-text">
+            {uploadingImage 
+              ? 'Uploading...' 
+              : 'Click to upload or drag & drop'}
+          </span>
+          <span className="upload-hint">PNG, JPG up to 2MB</span>
+        </label>
+      </>
+    ) : (
+      <>
+        {/* Show preview and change button when photo exists */}
+        <div className="photo-preview-container">
+          <img 
+            src={doctorForm.photo} 
+            alt="Doctor preview" 
+            className="photo-preview" 
+          />
+          <button
+            type="button"
+            className="photo-remove-btn"
+            onClick={(e) => {
+              e.preventDefault();
+              setDoctorForm(prev => ({ ...prev, photo: '' }));
+            }}
+            aria-label="Remove photo"
+            title="Remove photo"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        
+        {/* Hidden file input for changing photo */}
+        <input
+          type="file"
+          id="doctorPhotoChange"
+          accept="image/*"
+          onChange={(e) => handlePhotoUpload(e, 'doctor')}
+          className="photo-input"
+          disabled={uploadingImage}
+          aria-label="Change doctor photo"
+        />
+        
+        {/* Change Photo Button */}
+        <button
+          type="button"
+          className="btn-change-photo"
+          onClick={() => {
+            const fileInput = document.getElementById('doctorPhotoChange');
+            if (fileInput) {
+              fileInput.click();
+            }
+          }}
+          disabled={uploadingImage}
+        >
+          <Camera size={16} aria-hidden="true" />
+          {uploadingImage ? 'Uploading...' : 'Change Photo'}
+        </button>
+      </>
+    )}
+  </div>
+</div>
         </div>
       </div>
 

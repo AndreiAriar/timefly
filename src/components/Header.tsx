@@ -82,31 +82,19 @@ const Header: React.FC<HeaderProps> = ({
     window.localStorage.setItem("theme", newTheme);
     document.documentElement.setAttribute("data-theme", newTheme);
   };
+/* ===== SEARCH AUTO-CLOSE BEHAVIOR - ESC KEY ONLY ===== */
+useEffect(() => {
+  const handleEsc = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      setSearchActive(false);
+    }
+  };
 
-  /* ===== SEARCH AUTO-CLOSE BEHAVIOR ===== */
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setSearchActive(false);
-      }
-    };
-
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setSearchActive(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, []);
+  document.addEventListener("keydown", handleEsc);
+  return () => {
+    document.removeEventListener("keydown", handleEsc);
+  };
+}, []);
 
   const handleProfilePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && auth.currentUser) {
