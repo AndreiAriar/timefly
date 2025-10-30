@@ -2000,18 +2000,18 @@ const handleCreateDoctor = async () => {
     setDoctors(prev => [...prev, newDoctor]);
 
     //  Step 2: Create Firebase Auth account + User document via backend
-    try {
-      const response = await fetch('http://localhost:5000/create-doctor-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: doctorForm.email,
-          name: doctorForm.name,
-          specialty: doctorForm.specialty,
-          doctorId: doctorDocRef.id,
-          phone: doctorForm.phone,
-        }),
-      });
+   try {
+  const response = await fetch('/api/create-doctor-account', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: doctorForm.email,
+      name: doctorForm.name,
+      specialty: doctorForm.specialty,
+      doctorId: doctorDocRef.id,
+      phone: doctorForm.phone,
+    }),
+  });
 
       const result = await response.json();
 
@@ -2218,8 +2218,8 @@ const sendNotificationToPatient = async (
     };
 
     const notificationContent = getNotificationMessage(type, appointmentData);
-// ðŸ”¥ Real email sending via backend
-const response = await fetch("http://localhost:5000/send-reminder", {
+// Real email sending via backend
+const response = await fetch("/api/send-reminder", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -2228,7 +2228,7 @@ const response = await fetch("http://localhost:5000/send-reminder", {
     doctor: appointmentData.doctor,
     date: appointmentData.date,
     time: appointmentData.time,
-    queueNumber: appointmentData.queueNumber, // ADDED QUEUE NUMBER
+    queueNumber: appointmentData.queueNumber,
     message: notificationContent.message,
     subject: notificationContent.subject,
   }),
@@ -2366,17 +2366,17 @@ const sendNotificationToPatientById = async (
 
   try {
     //Send queue position notification to backend
-    const response = await fetch("http://localhost:5000/send-queue-notification", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: appointment.name,
-        email,
-        phone,
-        queueNumber,
-        totalQueue,
-      }),
-    });
+   const response = await fetch("/api/send-queue-notification", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: appointment.name,
+    email,
+    phone,
+    queueNumber,
+    totalQueue,
+  }),
+});
 
     const result = await response.json();
     if (result.success) {
@@ -5491,19 +5491,18 @@ const handleLogout = async () => {
                 title="Notify Patient"
                 onClick={async () => {
                   try {
-                    const response = await fetch("http://localhost:5000/send-reminder", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        email: selectedAppointment.email,
-                        phone: selectedAppointment.phone,
-                        name: selectedAppointment.name,
-                        doctor: selectedAppointment.doctor,
-                        date: selectedAppointment.date,
-                        time: selectedAppointment.time,
-                      }),
-                    });
-
+                  const response = await fetch("/api/send-reminder", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: selectedAppointment.email,
+    phone: selectedAppointment.phone,
+    name: selectedAppointment.name,
+    doctor: selectedAppointment.doctor,
+    date: selectedAppointment.date,
+    time: selectedAppointment.time,
+  }),
+});
                     const data = await response.json();
                     if (response.ok && data.success) {
                       addNotification(

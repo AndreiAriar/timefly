@@ -69,11 +69,11 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const checkResponse = await fetch("http://localhost:5000/check-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail }),
-      });
+      const checkResponse = await fetch("/api/check-email", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email: normalizedEmail }),
+});
 
       const checkData = await checkResponse.json();
 
@@ -86,11 +86,11 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/send-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail }),
-      });
+     const response = await fetch("/api/send-code", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email: normalizedEmail }),
+});
 
       const data = await response.json();
 
@@ -129,11 +129,11 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedCode = inputCode.trim();
 
-      const response = await fetch("http://localhost:5000/verify-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail, code: normalizedCode }),
-      });
+    const response = await fetch("/api/verify-code", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email: normalizedEmail, code: normalizedCode }),
+});
 
       const data = await response.json();
       if (!response.ok || !data.success) throw new Error(data.error || "Invalid code.");
