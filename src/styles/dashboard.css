@@ -1398,15 +1398,12 @@ border-radius: var(--radius-xl);
 }
 
 .stat-card {
-  background: transparent !important;
-  padding: var(--space-lg);
-  border-radius: 20px; /* Rounded corners for card */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  border-radius: 16px;
+  transition: all 0.3s ease;
   border: 1px solid var(--border-light);
-  transition: var(--transition-normal);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-md);
+  background: transparent; /* made transparent */
+  color: black !important; /* force solid black text */
 }
 
 .stat-card:hover {
