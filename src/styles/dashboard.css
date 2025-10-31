@@ -1607,6 +1607,19 @@ select:active {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
+
+/* ✅ ADD THIS NEW RULE */
+.section-header .section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Adds spacing between icon and title text */
+}
+
+.section-header .section-title svg {
+  flex-shrink: 0; /* Prevents icon from shrinking */
+}
+
+
 /* Enhanced text readability */
 .section-title {
   color: var(--text-primary);
@@ -6954,13 +6967,53 @@ svg.clock,
     padding: var(--space-md);
   }
   
-  /* Glass effects - slightly less blur on mobile for performance */
-  .stat-card,
-  .appointments-section,
-  .queue-section {
-    -webkit-backdrop-filter: blur(15px) saturate(170%);
-     backdrop-filter: blur(15px) saturate(170%);
-  }
+ /* ===== FORCE GLASS EFFECT - HIGHEST PRIORITY ===== */
+body .stat-card,
+body .appointments-section,
+body .queue-section,
+.dashboard-container .stat-card,
+.dashboard-container .appointments-section,
+.dashboard-container .queue-section {
+  background: rgba(255, 255, 255, 0.3) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+  backdrop-filter: blur(30px) saturate(200%) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
+              0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Dark mode glass */
+[data-theme="dark"] body .stat-card,
+[data-theme="dark"] body .appointments-section,
+[data-theme="dark"] body .queue-section,
+[data-theme="dark"] .dashboard-container .stat-card,
+[data-theme="dark"] .dashboard-container .appointments-section,
+[data-theme="dark"] .dashboard-container .queue-section {
+  background: rgba(30, 41, 55, 0.35) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+  backdrop-filter: blur(30px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Individual cards inside sections */
+body .appointment-card,
+body .queue-card,
+.dashboard-container .appointment-card,
+.dashboard-container .queue-card {
+  background: rgba(255, 255, 255, 0.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="dark"] body .appointment-card,
+[data-theme="dark"] body .queue-card,
+[data-theme="dark"] .dashboard-container .appointment-card,
+[data-theme="dark"] .dashboard-container .queue-card {
+  background: rgba(30, 41, 55, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
   
   .appointment-card,
   .queue-card {
@@ -7013,4 +7066,27 @@ svg.clock,
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 
                0 0 2px rgba(255, 255, 255, 0.2) !important;
   font-weight: 600 !important;
+}
+
+/* ===== FORCE GLASS EFFECT - OVERRIDE ALL ===== */
+.stat-card,
+.appointments-section,
+.queue-section,
+.appointment-card,
+.queue-card {
+  background: rgba(255, 255, 255, 0.25) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+  backdrop-filter: blur(30px) saturate(200%) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .appointments-section,
+[data-theme="dark"] .queue-section,
+[data-theme="dark"] .appointment-card,
+[data-theme="dark"] .queue-card {
+  background: rgba(30, 41, 55, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
