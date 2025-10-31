@@ -967,7 +967,7 @@ border-radius: var(--radius-xl);
   gap: 0.5rem;
 }
 
-/* Greeting Wrapper */
+/* ðŸ‘‹ Greeting Wrapper */
 .hero-greeting {
   display: flex;
   align-items: center;
@@ -979,18 +979,18 @@ border-radius: var(--radius-xl);
   transition: color 0.3s ease;
 }
 
-/*  Greeting Icon (time-based color) */
+/* ðŸŒž Greeting Icon (time-based color) */
 .greeting-icon {
   font-size: 2rem;
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
-/* ¸ Morning */
+/* â˜€ï¸ Morning */
 [data-time="morning"] .greeting-icon {
   color: #ffdf5d; /* brighter yellow for visibility */
 }
 
-/*  Afternoon */
+/*Afternoon */
 [data-time="afternoon"] .greeting-icon {
   color: #ffb347; /* strong orange tone */
 }
@@ -1006,29 +1006,20 @@ border-radius: var(--radius-xl);
   filter: brightness(1.2);
 }
 
+/* Subtitle */
 .hero-subtitle {
-  font-size: clamp(1rem, 2vw, 1.25rem) !important;
-  margin-bottom: var(--space-2xl) !important;
-  margin-top: var(--space-md) !important;
-  opacity: 1 !important;
-  font-weight: 600 !important; /* increased boldness */
-  padding: 0.5rem 1rem !important; /* better spacing */
-  max-width: 600px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  color: var(--text-primary) !important;
-  text-align: center !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
-  transition: color 0.3s ease-in-out !important;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  margin-bottom: var(--space-2xl);
+  opacity: 0.9;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #ffffff;
+  text-align: center;
+  font-weight: 600 !important;
 }
 
-/* Dark mode subtitle visibility fix */
-[data-theme="dark"] .hero-subtitle {
-  color: #e5e7eb !important;
-}
-
-
-/* Action Buttons */
+/* ðŸŽ¯ Action Buttons */
 .hero-actions {
   display: flex;
   gap: var(--space-md);
@@ -1386,34 +1377,37 @@ border-radius: var(--radius-xl);
 
 /* ===== STATS SECTION ===== */
 .stats-section {
-  padding: var(--space-xl) !important;
-  margin-top: 1rem !important; /* adds gap below hero */
+  padding: var(--space-xl);
+  margin-top: -40px; /* âœ… Moved section slightly up */
 }
+
+/* ✅ Add spacing on mobile between hero and stats */
+@media (max-width: 768px) {
+  .stats-section {
+    padding: var(--space-md);
+    margin-top: var(--space-lg) !important; /* ✅ Increased spacing on mobile */
+  }
+}
+
 
 .stats-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
-  gap: var(--space-lg) !important;
-  max-width: 1200px !important;
-  margin: 1rem auto !important;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+  max-width: 1200px;
+  margin: -10px auto 0 auto; /* âœ… Slight upward lift of entire grid */
 }
 
-/* Glass-like stat cards */
 .stat-card {
-  background: rgba(255, 255, 255, 0.6) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
-  border-radius: 20px !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Dark mode glass effect */
-[data-theme="dark"] .stat-card {
-  background: rgba(30, 41, 59, 0.5) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  color: var(--text-primary) !important;
+  background: var(--bg-primary);
+  padding: var(--space-lg);
+  border-radius: 20px; /* Rounded corners for card */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-light);
+  transition: var(--transition-normal);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
 }
 
 .stat-card:hover {
@@ -6730,7 +6724,7 @@ svg.clock,
   text-align: center;
 }
 
-/*  Queue Wait Time Display */
+/* âœ… Queue Wait Time Display */
 .queue-wait-time {
   display: flex;
   align-items: center;
@@ -6759,44 +6753,88 @@ svg.clock,
   color: #2e7d32;
 }
 
-/* Glass-like iOS style cards */
-.appointment-card,
-.queue-card,
+/* ===== iOS GLASSMORPHISM EFFECT - TRANSPARENT CARDS ===== */
+
+/* Stats Cards - Glass Effect */
+.stat-card {
+  background: rgba(255, 255, 255, 0.65) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="dark"] .stat-card {
+  background: rgba(30, 41, 55, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Appointment & Queue Section Containers - Glass Effect */
 .appointments-section,
 .queue-section {
-  background: rgba(255, 255, 255, 0.55) !important;
-  -webkit-backdrop-filter: blur(15px) !important;
-  backdrop-filter: blur(15px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
-  transition: all 0.3s ease-in-out !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Dark mode glass cards */
-[data-theme="dark"] .appointment-card,
-[data-theme="dark"] .queue-card,
 [data-theme="dark"] .appointments-section,
 [data-theme="dark"] .queue-section {
-  background: rgba(15, 23, 42, 0.55) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  color: var(--text-primary) !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
 
+/* Individual Appointment Cards - Glass Effect */
+.appointment-card {
+  background: rgba(255, 255, 255, 0.6) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
 
-@media (max-width: 768px) {
-  .stats-section {
-    margin-top: 1.5rem !important;
-    padding-top: 1.5rem !important;
-  }
+[data-theme="dark"] .appointment-card {
+  background: rgba(30, 41, 55, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
 
-  .hero-section {
-    margin-bottom: 1rem !important;
-  }
+/* Queue Cards - Glass Effect */
+.queue-card {
+  background: rgba(255, 255, 255, 0.6) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
 
-  .stat-card,
-  .appointment-card,
-  .queue-card {
-    padding: 1rem !important;
-  }
+[data-theme="dark"] .queue-card {
+  background: rgba(30, 41, 55, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Queue Summary - Glass Effect */
+.queue-summary {
+  background: rgba(255, 255, 255, 0.7) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+    backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme="dark"] .queue-summary {
+  background: rgba(30, 41, 55, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Section Headers - Subtle Glass Effect */
+.section-header {
+  background: rgba(248, 250, 252, 0.85) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+  border: none !important;
+}
+
+[data-theme="dark"] .section-header {
+  background: rgba(30, 41, 55, 0.8) !important;
+  border: none !important;
 }
