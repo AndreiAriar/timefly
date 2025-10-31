@@ -6943,3 +6943,71 @@ svg.clock,
   font-size: 2rem;
   font-weight: 700;
 }
+
+
+/* ========================================
+   🚨 NUCLEAR FORCE CENTER - ACTION BUTTONS
+   Paste at BOTTOM of dashboard.css
+   ======================================== */
+
+/* Force center on ALL screen sizes */
+.appointment-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+/* Mobile specific override */
+@media (max-width: 768px) {
+  .appointment-card .appointment-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin: var(--space-md) auto 0 auto !important;
+    padding: 0 !important;
+    text-align: center !important;
+  }
+  
+  /* Force buttons to stay inline */
+  .appointment-actions .action-btn,
+  .appointment-actions .cancel-btn,
+  .appointment-actions .view-btn,
+  .appointment-actions .edit-btn {
+    display: inline-flex !important;
+    width: 40px !important;
+    height: 40px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .appointment-card .appointment-actions {
+    justify-content: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* Force center in appointment cards specifically */
+.appointments-list .appointment-card .appointment-actions,
+.queue-list .appointment-card .appointment-actions {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* ========================================
+   END NUCLEAR FORCE CENTER
+   ======================================== */
