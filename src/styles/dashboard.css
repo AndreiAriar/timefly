@@ -6127,6 +6127,7 @@ svg.clock,
     justify-content: center !important; /* ✅ CENTERED */
     gap: var(--space-md) !important;
     margin-top: var(--space-md) !important;
+    margin-left: 10px !important;
   }
   
   .action-btn,
