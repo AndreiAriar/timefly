@@ -1398,11 +1398,17 @@ border-radius: var(--radius-xl);
 }
 
 .stat-card {
-  background: var(--bg-primary);
+  /* iOS frosted glass notification style */
+  background: rgba(255, 255, 255, 0.75) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  
   padding: var(--space-lg);
-  border-radius: 20px; /* Rounded corners for card */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06),
+              0 1px 3px rgba(0, 0, 0, 0.08),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.3) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.2) !important;
   transition: var(--transition-normal);
   display: flex;
   align-items: flex-start;
@@ -1411,7 +1417,28 @@ border-radius: var(--radius-xl);
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  background: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08),
+              0 2px 6px rgba(0, 0, 0, 0.1),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Dark mode stat cards - iOS style */
+[data-theme="dark"] .stat-card {
+  background: rgba(44, 57, 75, 0.65) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25),
+              0 1px 3px rgba(0, 0, 0, 0.3),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .stat-card:hover {
+  background: rgba(44, 57, 75, 0.8) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3),
+              0 2px 6px rgba(0, 0, 0, 0.35),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.12) !important;
 }
 
 /* ===== ICON STYLES ===== */
@@ -1521,18 +1548,46 @@ border-radius: var(--radius-xl);
 
 /* ===== APPOINTMENTS SECTION ===== */
 .appointments-section, .queue-section {
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg); /* UPDATED: iOS style */
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+  /* iOS notification container glass effect */
+  background: rgba(255, 255, 255, 0.55) !important;
+  -webkit-backdrop-filter: blur(50px) saturate(200%) !important;
+  backdrop-filter: blur(50px) saturate(200%) !important;
+  
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06),
+              0 2px 8px rgba(0, 0, 0, 0.04),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.4) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.25) !important;
   overflow: hidden;
 }
 
+/* Dark mode sections - iOS style */
+[data-theme="dark"] .appointments-section,
+[data-theme="dark"] .queue-section {
+  background: rgba(28, 37, 54, 0.5) !important;
+  -webkit-backdrop-filter: blur(50px) saturate(200%) !important;
+  backdrop-filter: blur(50px) saturate(200%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3),
+              0 2px 8px rgba(0, 0, 0, 0.2),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Section headers with iOS glass effect */
 .section-header {
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0; /* ADDED: Rounded top corners only */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.3) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+[data-theme="dark"] .section-header {
+  background: rgba(44, 57, 75, 0.3) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .section-title {
@@ -1565,37 +1620,68 @@ border-radius: var(--radius-xl);
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   transition: var(--transition-fast);
-  margin: 0 var(--space-md); /* ADDED: Added margin */
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  margin: 0 var(--space-md) var(--space-xs);
+  border-radius: var(--radius-md);
+  
+  /* iOS notification glass effect */
+  background: rgba(255, 255, 255, 0.7) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05),
+              0 1px 3px rgba(0, 0, 0, 0.07),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.25) !important;
 }
 
 .appointment-card:hover {
-  background: var(--bg-secondary);
-  transform: translateY(-1px); /* ADDED: Hover effect */
-  box-shadow: var(--shadow-sm); /* ADDED: Hover effect */
+  background: rgba(255, 255, 255, 0.85) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 35px rgba(0, 0, 0, 0.07),
+              0 2px 5px rgba(0, 0, 0, 0.09),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
 }
 
 .appointment-card:last-child {
   border-bottom: none;
-  border-radius: 0 0 var(--radius-md) var(--radius-md); /* ADDED: Bottom rounded corners */
+  margin-bottom: 0;
 }
 
-.appointment-card:hover {
-  background: var(--bg-secondary);
+/* Dark mode appointment cards - iOS style */
+[data-theme="dark"] .appointment-card {
+  background: rgba(44, 57, 75, 0.6) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2),
+              0 1px 3px rgba(0, 0, 0, 0.25),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.06) !important;
 }
 
-.appointment-card:last-child {
-  border-bottom: none;
+[data-theme="dark"] .appointment-card:hover {
+  background: rgba(44, 57, 75, 0.75) !important;
+  box-shadow: 0 6px 35px rgba(0, 0, 0, 0.25),
+              0 2px 5px rgba(0, 0, 0, 0.3),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(96, 165, 250, 0.25) !important;
 }
 
+/* Mobile centering for appointment cards */
+@media (max-width: 768px) {
+  .appointment-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-md);
+    padding: var(--space-lg) var(--space-md);
+  }
+  
 .appointment-avatar-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
+    margin: 0 auto;
+  }
 
 .appointment-avatar {
   width: 50px;
@@ -1608,10 +1694,19 @@ border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
-.appointment-details {
-  flex: 1;
-  min-width: 0;
-}
+ .appointment-details {
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .appointment-name,
+  .appointment-type,
+  .appointment-doctor {
+    text-align: center;
+  }
 
 .queue-number {
   font-size: var(--font-size-xs);
@@ -1644,22 +1739,23 @@ border-radius: var(--radius-xl);
 }
 
 .appointment-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-sm);
-}
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+  }
 
 .appointment-time {
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--text-primary);
+  text-align: center; 
 }
 
-.appointment-tags {
-  display: flex;
-  gap: var(--space-sm);
-}
+ .appointment-tags {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 
 .appointment-status, .status-pill {
   padding: 4px 12px;
@@ -1702,9 +1798,11 @@ border-radius: var(--radius-xl);
 .priority-emergency { background: rgba(239, 68, 68, 0.1); color: #7f1d1d; }
 
 .appointment-actions {
-  display: flex;
-  gap: var(--space-xs);
-}
+    width: 100%;
+    justify-content: center;
+    gap: var(--space-sm);
+  }
+ }
 /* ===============================
    ACTION & CANCEL (DELETE) BUTTONS
    =============================== */
@@ -1823,15 +1921,40 @@ border-radius: var(--radius-xl);
 
 .queue-summary {
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
-  border-radius: var(--radius-md); /* ADDED: iOS style */
-  margin: var(--space-md); /* ADDED: Added margin */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-md);
+  margin: var(--space-md);
+  
+  /* iOS glass effect */
+  background: rgba(255, 255, 255, 0.7) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.25) !important;
 }
 
 .queue-summary.next-patient {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  background: rgba(255, 251, 235, 0.75) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
   border-left: 4px solid var(--warning);
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  border-radius: var(--radius-md);
+}
+
+/* Dark mode queue summary */
+[data-theme="dark"] .queue-summary {
+  background: rgba(44, 57, 75, 0.65) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .queue-summary.next-patient {
+  background: rgba(67, 56, 30, 0.7) !important;
 }
 
 .serving-label {
@@ -1904,20 +2027,51 @@ border-radius: var(--radius-xl);
 
 .queue-card {
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   transition: var(--transition-fast);
-  margin: 0 var(--space-md); /* ADDED: Added margin */
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  margin: 0 var(--space-md) var(--space-xs);
+  border-radius: var(--radius-md);
+  
+  /* iOS notification glass effect */
+  background: rgba(255, 255, 255, 0.7) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05),
+              0 1px 3px rgba(0, 0, 0, 0.07),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.25) !important;
 }
 
 .queue-card:hover {
-  background: var(--bg-secondary);
-  transform: translateY(-1px); /* ADDED: Hover effect */
+  background: rgba(255, 255, 255, 0.85) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 35px rgba(0, 0, 0, 0.07),
+              0 2px 5px rgba(0, 0, 0, 0.09),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.3) !important;
 }
 
 .queue-card:last-child {
   border-bottom: none;
-  border-radius: 0 0 var(--radius-md) var(--radius-md); /* ADDED: Bottom rounded corners */
+  margin-bottom: 0;
+}
+
+/* Dark mode queue cards - iOS style */
+[data-theme="dark"] .queue-card {
+  background: rgba(44, 57, 75, 0.6) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2),
+              0 1px 3px rgba(0, 0, 0, 0.25),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .queue-card:hover {
+  background: rgba(44, 57, 75, 0.75) !important;
+  box-shadow: 0 6px 35px rgba(0, 0, 0, 0.25),
+              0 2px 5px rgba(0, 0, 0, 0.3),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
 }
 
 .queue-top {
@@ -6752,3 +6906,42 @@ svg.clock,
   color: #2e7d32;
 }
 
+/* Enhanced text readability on glass */
+.stat-card .stat-title,
+.stat-card .stat-subtitle,
+.appointment-card .appointment-type,
+.appointment-card .appointment-age,
+.queue-card .queue-doctor,
+.section-subtitle {
+  color: var(--text-secondary) !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.stat-card .stat-value,
+.appointment-card .appointment-name,
+.queue-card .queue-name,
+.section-title {
+  color: var(--text-primary) !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+}
+
+/* Dark mode text enhancement */
+[data-theme="dark"] .stat-card .stat-title,
+[data-theme="dark"] .stat-card .stat-subtitle,
+[data-theme="dark"] .appointment-card .appointment-type,
+[data-theme="dark"] .appointment-card .appointment-age,
+[data-theme="dark"] .queue-card .queue-doctor,
+[data-theme="dark"] .section-subtitle {
+  color: var(--text-secondary) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .stat-card .stat-value,
+[data-theme="dark"] .appointment-card .appointment-name,
+[data-theme="dark"] .queue-card .queue-name,
+[data-theme="dark"] .section-title {
+  color: var(--text-primary) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
