@@ -214,7 +214,7 @@ body {
 /* Page*/
 .page-wrapper {
   min-height: 100vh;
-  background: #ffffff; /* âœ… Match dashboard background */
+  background: #ffffff; /* Ã¢Å“â€¦ Match dashboard background */
   margin: 0;
   padding: 0;
 }
@@ -229,14 +229,14 @@ body {
 
 /* Dark Mode */
 [data-theme="dark"] .page-wrapper {
-  background: #0f172a; /* âœ… Dark mode background */
+  background: #0f172a; /* Ã¢Å“â€¦ Dark mode background */
 }
 
 [data-theme="dark"] .dashboard-container {
   background: #0f172a;
 }
 
-/* âœ… Remove any body background that creates gap */
+/* Ã¢Å“â€¦ Remove any body background that creates gap */
 body {
   background-color: #ffffff !important;
   margin: 0;
@@ -931,7 +931,7 @@ border-radius: var(--radius-xl);
   background-color: var(--bg-secondary);
 }
 
-/* ðŸŒ… Hero Section Overlay */
+/* Ã°Å¸Å’â€¦ Hero Section Overlay */
 .hero-section::before {
   content: "";
   position: absolute;
@@ -944,7 +944,7 @@ border-radius: var(--radius-xl);
   border-radius: var(--border-radius-lg);
 }
 
-/* ðŸŒ¤ Hero Content */
+/* Ã°Å¸Å’Â¤ Hero Content */
 .hero-content {
   position: relative;
   z-index: 1;
@@ -954,7 +954,7 @@ border-radius: var(--radius-xl);
   padding: var(--space-xl) var(--space-md);
 }
 
-/* ðŸŒž Greeting and Title */
+/* Greeting and Title */
 .hero-title {
   font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 700;
@@ -967,7 +967,7 @@ border-radius: var(--radius-xl);
   gap: 0.5rem;
 }
 
-/* ðŸ‘‹ Greeting Wrapper */
+/*  Greeting Wrapper */
 .hero-greeting {
   display: flex;
   align-items: center;
@@ -979,23 +979,23 @@ border-radius: var(--radius-xl);
   transition: color 0.3s ease;
 }
 
-/* ðŸŒž Greeting Icon (time-based color) */
+/* Greeting Icon (time-based color) */
 .greeting-icon {
   font-size: 2rem;
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
-/* â˜€ï¸ Morning */
+/* Ã¢Ëœâ‚¬Ã¯Â¸Â Morning */
 [data-time="morning"] .greeting-icon {
   color: #ffdf5d; /* brighter yellow for visibility */
 }
 
-/* ðŸŒ‡ Afternoon */
+/*  Afternoon */
 [data-time="afternoon"] .greeting-icon {
   color: #ffb347; /* strong orange tone */
 }
 
-/*Evening */
+/*  Evening */
 [data-time="evening"] .greeting-icon {
   color: #7ab8ff; /* brighter soft blue */
 }
@@ -1006,7 +1006,7 @@ border-radius: var(--radius-xl);
   filter: brightness(1.2);
 }
 
-/* Subtitle */
+/*Subtitle */
 .hero-subtitle {
   font-size: clamp(1rem, 2vw, 1.25rem);
   margin-bottom: var(--space-2xl);
@@ -1019,7 +1019,7 @@ border-radius: var(--radius-xl);
   font-weight: 600 !important; /* ✅ Matches greeting weight */
 }
 
-/* ðŸŽ¯ Action Buttons */
+/* Ã°Å¸Å½Â¯ Action Buttons */
 .hero-actions {
   display: flex;
   gap: var(--space-md);
@@ -1211,7 +1211,7 @@ border-radius: var(--radius-xl);
   box-shadow: none;
 }
 
-/* âœ… Dark Mode Support */
+/* Ã¢Å“â€¦ Dark Mode Support */
 [data-theme="dark"] .btn-primary {
   background: var(--primary-light);
   border-color: var(--primary-light);
@@ -1378,7 +1378,7 @@ border-radius: var(--radius-xl);
 /* ===== STATS SECTION ===== */
 .stats-section {
   padding: var(--space-xl);
-  margin-top: -40px; /* âœ… Moved section slightly up */
+  margin-top: -40px; /*Moved section slightly up */
 }
 
 /* ✅ Add spacing on mobile between hero and stats */
@@ -1394,11 +1394,11 @@ border-radius: var(--radius-xl);
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-lg);
   max-width: 1200px;
-  margin: -10px auto 0 auto; /* âœ… Slight upward lift of entire grid */
+  margin: -10px auto 0 auto; /* Ã¢Å“â€¦ Slight upward lift of entire grid */
 }
 
 .stat-card {
-  background: transparent !important;
+  background: var(--bg-primary);
   padding: var(--space-lg);
   border-radius: 20px; /* Rounded corners for card */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -1521,7 +1521,7 @@ border-radius: var(--radius-xl);
 
 /* ===== APPOINTMENTS SECTION ===== */
 .appointments-section, .queue-section {
-  background: transparent !important;
+  background: var(--bg-primary);
   border-radius: var(--radius-lg); /* UPDATED: iOS style */
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
@@ -1531,7 +1531,7 @@ border-radius: var(--radius-xl);
 .section-header {
   padding: var(--space-lg);
   border-bottom: 1px solid var(--border-light);
-  background: transparent !important;
+  background: var(--bg-secondary);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0; /* ADDED: Rounded top corners only */
 }
 
@@ -1569,27 +1569,24 @@ border-radius: var(--radius-xl);
   transition: var(--transition-fast);
   margin: 0 var(--space-md); /* ADDED: Added margin */
   border-radius: var(--radius-md); /* ADDED: iOS style */
-  background: transparent !important;
 }
 
 .appointment-card:hover {
-  background: transparent !important;
+  background: var(--bg-secondary);
   transform: translateY(-1px); /* ADDED: Hover effect */
   box-shadow: var(--shadow-sm); /* ADDED: Hover effect */
 }
 
 .appointment-card:last-child {
-  background: transparent !important;
   border-bottom: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md); /* ADDED: Bottom rounded corners */
 }
 
 .appointment-card:hover {
- background: transparent !important;
+  background: var(--bg-secondary);
 }
 
 .appointment-card:last-child {
-  background: transparent !important;
   border-bottom: none;
 }
 
@@ -1754,7 +1751,7 @@ border-radius: var(--radius-xl);
   flex-shrink: 0; /* Prevent button from shrinking */
 }
 
-/* âœ… Remove circular browser focus outline */
+/* Ã¢Å“â€¦ Remove circular browser focus outline */
 .cancel-btn:focus,
 .cancel-btn:active,
 .action-btn:focus,
@@ -1780,7 +1777,7 @@ border-radius: var(--radius-xl);
 }
 
 /* ======================================
-   âœ… CANCEL (TRASH) ICON HOVER FIX
+   Ã¢Å“â€¦ CANCEL (TRASH) ICON HOVER FIX
    ====================================== */
 
 /* Light mode - change stroke only (no fill) */
@@ -1808,7 +1805,7 @@ border-radius: var(--radius-xl);
   color: var(--warning);
 }
 
-/* âœ… Red hover for delete button */
+/* Ã¢Å“â€¦ Red hover for delete button */
 .delete-btn:hover {
   color: var(--error); /* Red in light mode */
 }
@@ -1825,7 +1822,6 @@ border-radius: var(--radius-xl);
 }
 
 .queue-summary {
-  background: transparent !important;
   padding: var(--space-lg);
   border-bottom: 1px solid var(--border-light);
   border-radius: var(--radius-md); /* ADDED: iOS style */
@@ -1833,7 +1829,7 @@ border-radius: var(--radius-xl);
 }
 
 .queue-summary.next-patient {
- background: transparent !important;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
   border-left: 4px solid var(--warning);
   border-radius: var(--radius-md); /* ADDED: iOS style */
 }
@@ -1908,7 +1904,6 @@ border-radius: var(--radius-xl);
 
 .queue-card {
   padding: var(--space-md) var(--space-lg);
-  background: transparent !important;
   border-bottom: 1px solid var(--border-light);
   transition: var(--transition-fast);
   margin: 0 var(--space-md); /* ADDED: Added margin */
@@ -1916,12 +1911,11 @@ border-radius: var(--radius-xl);
 }
 
 .queue-card:hover {
-  background: transparent !important;
+  background: var(--bg-secondary);
   transform: translateY(-1px); /* ADDED: Hover effect */
 }
 
 .queue-card:last-child {
-  background: transparent !important;
   border-bottom: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md); /* ADDED: Bottom rounded corners */
 }
@@ -2113,7 +2107,7 @@ border-radius: var(--radius-xl);
   order: 2 !important;
 }
 
-/* âœ… Dark mode fix for month title */
+/* Ã¢Å“â€¦ Dark mode fix for month title */
 [data-theme="dark"] .month-title {
   color: #60a5fa !important;
 }
@@ -2127,21 +2121,21 @@ border-radius: var(--radius-xl);
   gap: 2rem !important;
   margin-bottom: 1.5rem !important;
   width: 100% !important;
-  background: var(--bg-secondary) !important; /* âœ… Match calendar dark blue */
+  background: var(--bg-secondary) !important; /* Ã¢Å“â€¦ Match calendar dark blue */
   border-radius: var(--radius-lg) !important;
   padding: 1rem 0 !important;
 }
 
 /* Dark mode */
 [data-theme="dark"] .calendar-navigation {
-  background: var(--bg-tertiary) !important; /* âœ… Even darker tone */
+  background: var(--bg-tertiary) !important; /* Ã¢Å“â€¦ Even darker tone */
   border: 1px solid var(--border-light) !important;
 }
 
 
 /* Last button (Next) */
 .calendar-navigation .nav-btn:last-child {
-  order: 3 !important; /* âœ… Force right position */
+  order: 3 !important; /* Ã¢Å“â€¦ Force right position */
 }
 
 .calendar-navigation .nav-btn:hover {
@@ -2529,14 +2523,14 @@ border-radius: var(--radius-xl);
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  border-radius: var(--radius-xl); /* âœ… 20px rounded corners */
+  border-radius: var(--radius-xl); /* Ã¢Å“â€¦ 20px rounded corners */
   background: var(--bg-primary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); /* âœ… soft shadow for depth */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); /* Ã¢Å“â€¦ soft shadow for depth */
   transition: all 0.3s ease-in-out;
 }
 
 .booking-modal .modal-content {
-  border-radius: var(--radius-xl); /* âœ… matches outer modal */
+  border-radius: var(--radius-xl); /* Ã¢Å“â€¦ matches outer modal */
   overflow: hidden;
   background: var(--bg-primary);
   box-shadow: var(--shadow-lg);
@@ -2545,7 +2539,7 @@ border-radius: var(--radius-xl);
 /* ===== BOOKING FORM ===== */
 .booking-form {
   padding: var(--space-xl);
-  border-radius: var(--radius-lg); /* âœ… smooth edges inside modal */
+  border-radius: var(--radius-lg); /* Ã¢Å“â€¦ smooth edges inside modal */
   background: var(--bg-primary);
   display: flex;
   flex-direction: column;
@@ -2558,7 +2552,7 @@ border-radius: var(--radius-xl);
 .booking-form .form-group input,
 .booking-form .form-group select,
 .booking-form .form-group textarea {
-  border-radius: var(--radius-md); /* âœ… 12px iOS rounded corners */
+  border-radius: var(--radius-md); /* Ã¢Å“â€¦ 12px iOS rounded corners */
   border: 1px solid var(--border-light);
   padding: var(--space-md);
   font-size: var(--font-size-base);
@@ -2812,7 +2806,7 @@ border-radius: var(--radius-xl);
   }
 }
 
-/* ===== TIME SLOTS (Booking Modal) â€” Updated for iOS Look ===== */
+/* ===== TIME SLOTS (Booking Modal) Ã¢â‚¬â€ Updated for iOS Look ===== */
 .time-slots-section {
   margin: var(--space-lg) 0;
 }
@@ -2827,25 +2821,25 @@ border-radius: var(--radius-xl);
 .time-slot {
   padding: var(--space-md);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg); /* âœ… iOS-style rounded corners */
+  border-radius: var(--radius-lg); /* Ã¢Å“â€¦ iOS-style rounded corners */
   background: var(--bg-primary);
   cursor: pointer;
-  transition: all 0.25s ease-in-out; /* âœ… smoother animation */
+  transition: all 0.25s ease-in-out; /* Ã¢Å“â€¦ smoother animation */
   text-align: center;
   font-size: var(--font-size-sm);
   position: relative;
-  box-shadow: var(--shadow-sm); /* âœ… subtle shadow for depth */
+  box-shadow: var(--shadow-sm); /* Ã¢Å“â€¦ subtle shadow for depth */
 }
 
 .time-slot:hover:not(.booked):not(:disabled):not(.blocked) {
   border-color: var(--primary);
   background: var(--bg-secondary);
-  transform: translateY(-3px); /* âœ… lift effect */
-  box-shadow: var(--shadow-md); /* âœ… stronger shadow on hover */
+  transform: translateY(-3px); /* Ã¢Å“â€¦ lift effect */
+  box-shadow: var(--shadow-md); /* Ã¢Å“â€¦ stronger shadow on hover */
 }
 
 .time-slot:active:not(.booked):not(:disabled):not(.blocked) {
-  transform: scale(0.97); /* âœ… subtle press-down effect */
+  transform: scale(0.97); /* Ã¢Å“â€¦ subtle press-down effect */
   box-shadow: var(--shadow-sm);
 }
 
@@ -2854,7 +2848,7 @@ border-radius: var(--radius-xl);
   background: rgba(59, 130, 246, 0.12);
   color: var(--primary);
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); /* âœ… soft blue glow */
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); /* Ã¢Å“â€¦ soft blue glow */
 }
 
 .time-slot.booked {
@@ -2865,7 +2859,7 @@ border-radius: var(--radius-xl);
   box-shadow: none;
 }
 
-/* ðŸ†• ===== BLOCKED SLOT (Staff Unavailable) ===== */
+/* Ã°Å¸â€ â€¢ ===== BLOCKED SLOT (Staff Unavailable) ===== */
 .time-slot.blocked {
   background: #f0f0f0;
   border-color: #ccc;
@@ -2926,7 +2920,7 @@ border-radius: var(--radius-xl);
   opacity: 0.7;
 }
 
-/* ðŸ†• Dark Mode for Blocked Slots */
+/* Ã°Å¸â€ â€¢ Dark Mode for Blocked Slots */
 [data-theme="dark"] .time-slot.blocked {
   background: var(--bg-primary);
   border-color: var(--border-medium);
@@ -2982,7 +2976,7 @@ border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* âœ… centers vertically */
+  justify-content: center; /* Ã¢Å“â€¦ centers vertically */
   padding: var(--space-2xl) var(--space-xl);
   border: 2px dashed var(--border-medium);
   border-radius: var(--radius-lg);
@@ -3000,7 +2994,7 @@ border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
 
-/* âœ… Drag Over Active Glow */
+/* Ã¢Å“â€¦ Drag Over Active Glow */
 .photo-upload-box.drag-over {
   border-color: var(--primary);
   background: rgba(59, 130, 246, 0.05);
@@ -3009,7 +3003,7 @@ border-radius: var(--radius-xl);
   transition: all 0.2s ease-in-out;
 }
 
-/* âœ… Centered circular camera icon */
+/* Ã¢Å“â€¦ Centered circular camera icon */
 .upload-icon {
   display: flex;
   align-items: center;
@@ -3037,7 +3031,7 @@ border-radius: var(--radius-xl);
   transform: scale(1.05);
 }
 
-/* âœ… Glow when dragging */
+/* Ã¢Å“â€¦ Glow when dragging */
 .photo-upload-box.drag-over .upload-icon {
   color: var(--primary);
   background: rgba(59, 130, 246, 0.15);
@@ -4946,7 +4940,7 @@ border-radius: var(--radius-xl);
 
 /* ===== CLOCK ICON COLOR FIX ===== */
 
-/* Light Mode â€“ keep clock icons dark */
+/* Light Mode Ã¢â‚¬â€œ keep clock icons dark */
 .clock,
 .stat-icon.clock,
 .status-icon.clock,
@@ -4956,7 +4950,7 @@ svg.clock,
   stroke: #1e293b !important;
 }
 
-/* Dark Mode â€“ make ALL clock icons white */
+/* Dark Mode Ã¢â‚¬â€œ make ALL clock icons white */
 [data-theme="dark"] .clock,
 [data-theme="dark"] .stat-icon.clock,
 [data-theme="dark"] .status-icon.clock,
@@ -5776,7 +5770,7 @@ svg.clock,
   overflow: visible !important;
 }
 
-/* ===== ðŸŒ™ Dark Mode Styles - Uses Dashboard Dark Blue Theme ===== */
+/* ===== Ã°Å¸Å’â„¢ Dark Mode Styles - Uses Dashboard Dark Blue Theme ===== */
 [data-theme="dark"] .profile-dropdown {
   background: var(--bg-secondary, #1e293b); /* Dark blue background */
   color: var(--text-primary, #f1f5f9);
@@ -6729,7 +6723,7 @@ svg.clock,
   text-align: center;
 }
 
-/* âœ… Queue Wait Time Display */
+/* Ã¢Å“â€¦ Queue Wait Time Display */
 .queue-wait-time {
   display: flex;
   align-items: center;
