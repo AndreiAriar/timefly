@@ -7090,3 +7090,144 @@ body .queue-card,
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
+
+/* ===== FORCE BACKGROUND PATTERN FOR GLASS EFFECT ===== */
+body {
+  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 25%, #e0e7ff 50%, #dbeafe 75%, #e0f2fe 100%) !important;
+  background-attachment: fixed !important;
+  background-size: 400% 400% !important;
+  animation: gradientShift 15s ease infinite !important;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+[data-theme="dark"] body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%) !important;
+}
+
+.dashboard-container {
+  background: transparent !important;
+}
+
+/* ===== ULTRA-STRONG GLASS EFFECT ===== */
+.stat-card,
+.appointments-section,
+.queue-section {
+  background: rgba(255, 255, 255, 0.25) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+  backdrop-filter: blur(30px) saturate(200%) !important;
+  box-shadow: 
+    0 8px 32px rgba(31, 38, 135, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add subtle shine effect */
+.stat-card::before,
+.appointments-section::before,
+.queue-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.stat-card:hover::before,
+.appointments-section:hover::before,
+.queue-section:hover::before {
+  left: 100%;
+}
+
+/* Individual cards */
+.appointment-card,
+.queue-card {
+  background: rgba(255, 255, 255, 0.35) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ===== DARK MODE GLASS ===== */
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .appointments-section,
+[data-theme="dark"] .queue-section {
+  background: rgba(30, 41, 55, 0.4) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+   backdrop-filter: blur(30px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .appointment-card,
+[data-theme="dark"] .queue-card {
+  background: rgba(30, 41, 55, 0.5) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+   backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ===== TEXT READABILITY ===== */
+.stat-title,
+.stat-subtitle,
+.appointment-name,
+.queue-name,
+.section-title,
+.section-subtitle {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="dark"] .stat-title,
+[data-theme="dark"] .stat-subtitle,
+[data-theme="dark"] .appointment-name,
+[data-theme="dark"] .queue-name,
+[data-theme="dark"] .section-title,
+[data-theme="dark"] .section-subtitle {
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ===== FALLBACK FOR BROWSERS WITHOUT BACKDROP-FILTER ===== */
+@supports not (backdrop-filter: blur(30px)) {
+  .stat-card,
+  .appointments-section,
+  .queue-section {
+    background: rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 1px rgba(255, 255, 255, 1) !important;
+  }
+  
+  .appointment-card,
+  .queue-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+  }
+  
+  [data-theme="dark"] .stat-card,
+  [data-theme="dark"] .appointments-section,
+  [data-theme="dark"] .queue-section {
+    background: rgba(30, 41, 55, 0.85) !important;
+  }
+  
+  [data-theme="dark"] .appointment-card,
+  [data-theme="dark"] .queue-card {
+    background: rgba(30, 41, 55, 0.9) !important;
+  }
+}
