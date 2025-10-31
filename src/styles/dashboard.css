@@ -917,20 +917,19 @@ select:active {
   }
 }
 
-/* ===== HERO SECTION - UPDATED ===== */
 .hero-section {
   position: relative;
   padding: var(--space-xl) var(--space-xl);
   background: url('/images/eye_center.png') center/cover no-repeat;
+  background-color: rgba(15, 23, 42, 0.85); /* Fallback if image doesn't load */
   color: #ffffff;
   text-align: center;
   border-radius: var(--radius-xl);
   overflow: hidden;
   margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
-  background-color: var(--bg-secondary);
+  min-height: 300px;
 }
 
-/*  Hero Section Overlay - INCREASED BLUR FOR TEXT READABILITY */
 .hero-section::before {
   content: "";
   position: absolute;
@@ -938,9 +937,9 @@ select:active {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.65); /* âœ… Darker overlay (was 0.55) */
-  -webkit-backdrop-filter: blur(8px); /* âœ… Increased from 2px to 8px */
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.65);
+  -webkit-backdrop-filter: blur(8px);
+   backdrop-filter: blur(8px);
   z-index: 0;
   border-radius: var(--radius-lg);
 }
@@ -7091,143 +7090,128 @@ body .queue-card,
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* ===== FORCE BACKGROUND PATTERN FOR GLASS EFFECT ===== */
-body {
-  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 25%, #e0e7ff 50%, #dbeafe 75%, #e0f2fe 100%) !important;
-  background-attachment: fixed !important;
-  background-size: 400% 400% !important;
-  animation: gradientShift 15s ease infinite !important;
-}
+/* ===== iOS FROSTED GLASS EFFECT ===== */
 
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+/* Page background - subtle pattern instead of solid color */
+body {
+  background: 
+    linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%),
+    radial-gradient(circle at 20% 50%, rgba(147, 197, 253, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(191, 219, 254, 0.2) 0%, transparent 50%),
+    linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
 }
 
 [data-theme="dark"] body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%) !important;
+  background: 
+    linear-gradient(135deg, rgba(15, 23, 42, 0.3) 0%, transparent 100%),
+    radial-gradient(circle at 20% 50%, rgba(30, 58, 138, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(30, 64, 175, 0.2) 0%, transparent 50%),
+    linear-gradient(to bottom, #0f172a 0%, #1e293b 100%) !important;
 }
 
 .dashboard-container {
   background: transparent !important;
 }
 
-/* ===== ULTRA-STRONG GLASS EFFECT ===== */
+/* ===== TRUE iOS FROSTED GLASS CARDS ===== */
 .stat-card,
 .appointments-section,
 .queue-section {
-  background: rgba(255, 255, 255, 0.25) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-  backdrop-filter: blur(30px) saturate(200%) !important;
+  background: rgba(255, 255, 255, 0.7) !important; /* More opaque base */
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.1) !important;
+    backdrop-filter: blur(40px) saturate(180%) brightness(1.1) !important;
   box-shadow: 
-    0 8px 32px rgba(31, 38, 135, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  position: relative;
-  overflow: hidden;
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  border-radius: var(--radius-lg) !important;
 }
 
-/* Add subtle shine effect */
-.stat-card::before,
-.appointments-section::before,
-.queue-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.stat-card:hover::before,
-.appointments-section:hover::before,
-.queue-section:hover::before {
-  left: 100%;
-}
-
-/* Individual cards */
+/* Inner cards - even more transparent */
 .appointment-card,
 .queue-card {
-  background: rgba(255, 255, 255, 0.35) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+   backdrop-filter: blur(30px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
-/* ===== DARK MODE GLASS ===== */
+/* ===== DARK MODE iOS GLASS ===== */
 [data-theme="dark"] .stat-card,
 [data-theme="dark"] .appointments-section,
 [data-theme="dark"] .queue-section {
-  background: rgba(30, 41, 55, 0.4) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-   backdrop-filter: blur(30px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+   background: rgba(30, 41, 55, 0.6) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(0.9) !important;
+  backdrop-filter: blur(40px) saturate(180%) brightness(0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.6),
-    inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2) !important;
 }
 
 [data-theme="dark"] .appointment-card,
 [data-theme="dark"] .queue-card {
   background: rgba(30, 41, 55, 0.5) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-   backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
-/* ===== TEXT READABILITY ===== */
+/* ===== TEXT CONTRAST FOR READABILITY ===== */
 .stat-title,
 .stat-subtitle,
 .appointment-name,
 .queue-name,
 .section-title,
 .section-subtitle {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  color: var(--text-primary) !important;
   font-weight: 600 !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-[data-theme="dark"] .stat-title,
-[data-theme="dark"] .stat-subtitle,
-[data-theme="dark"] .appointment-name,
-[data-theme="dark"] .queue-name,
-[data-theme="dark"] .section-title,
-[data-theme="dark"] .section-subtitle {
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+/* Remove shine effect - too distracting for iOS style */
+.stat-card::before,
+.appointments-section::before,
+.queue-section::before {
+  display: none !important;
 }
 
-/* ===== FALLBACK FOR BROWSERS WITHOUT BACKDROP-FILTER ===== */
-@supports not (backdrop-filter: blur(30px)) {
-  .stat-card,
-  .appointments-section,
-  .queue-section {
-    background: rgba(255, 255, 255, 0.85) !important;
-    box-shadow: 
-      0 10px 40px rgba(0, 0, 0, 0.15),
-      inset 0 1px 1px rgba(255, 255, 255, 1) !important;
-  }
-  
-  .appointment-card,
-  .queue-card {
-    background: rgba(255, 255, 255, 0.9) !important;
-  }
-  
-  [data-theme="dark"] .stat-card,
-  [data-theme="dark"] .appointments-section,
-  [data-theme="dark"] .queue-section {
-    background: rgba(30, 41, 55, 0.85) !important;
-  }
-  
-  [data-theme="dark"] .appointment-card,
-  [data-theme="dark"] .queue-card {
-    background: rgba(30, 41, 55, 0.9) !important;
-  }
+/* ===== HOVER EFFECTS ===== */
+.stat-card:hover,
+.appointments-section:hover,
+.queue-section:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  transform: translateY(-2px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .stat-card:hover,
+[data-theme="dark"] .appointments-section:hover,
+[data-theme="dark"] .queue-section:hover {
+  background: rgba(30, 41, 55, 0.7) !important;
+}
+
+.appointment-card:hover,
+.queue-card:hover {
+  background: rgba(255, 255, 255, 0.65) !important;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] .appointment-card:hover,
+[data-theme="dark"] .queue-card:hover {
+  background: rgba(30, 41, 55, 0.65) !important;
 }
