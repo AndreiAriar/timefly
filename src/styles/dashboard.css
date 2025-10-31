@@ -6945,38 +6945,3 @@ svg.clock,
 }
 
 
-/* ========================================
-   🎯 PRECISE FIX - CENTER ACTION BUTTONS ONLY
-   Paste at BOTTOM of dashboard.css
-   ======================================== */
-
-/* Force appointment-actions to take full width and center its content */
-.appointment-actions {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  gap: 12px !important;
-}
-
-/* Mobile specific */
-@media (max-width: 768px) {
-  .appointment-card .appointment-actions {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 0 0 100% !important;
-    align-self: center !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-}
-
-/* ========================================
-   END PRECISE FIX
-   ======================================== */
