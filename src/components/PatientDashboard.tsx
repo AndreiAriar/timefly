@@ -1595,96 +1595,107 @@ try {
             );
           }
           
-          return todayAppointments.map((appointment) => (
-            <div key={appointment.id} className="appointment-card">
-              {/* Avatar */}
-              <button
-                className="appointment-avatar-btn"
-                onClick={() => {
-                  setSelectedProfile(appointment);
-                  setShowDetailsModal(true);
-                }}
-                aria-label={`View profile for ${appointment.name}`}
-                title={`View profile for ${appointment.name}`}
-              >
-                <div className="appointment-avatar">
-                  {appointment.photo ? (
-                    <img
-                      src={appointment.photo}
-                      alt={appointment.name}
-                      className="avatar-image"
-                    />
-                  ) : (
-                    <User size={20} />
-                  )}
-                </div>
-              </button>
+         return todayAppointments.map((appointment) => (
+  <div key={appointment.id} className="appointment-card">
+    {/* Avatar */}
+    <button
+      className="appointment-avatar-btn"
+      onClick={() => {
+        setSelectedProfile(appointment);
+        setShowDetailsModal(true);
+      }}
+      aria-label={`View profile for ${appointment.name}`}
+      title={`View profile for ${appointment.name}`}
+    >
+      <div className="appointment-avatar">
+        {appointment.photo ? (
+          <img
+            src={appointment.photo}
+            alt={appointment.name}
+            className="avatar-image"
+          />
+        ) : (
+          <User size={20} />
+        )}
+      </div>
+    </button>
 
-              {/* Patient Details (Left Side) */}
-              <div className="appointment-details">
-                <div className="queue-number">#{appointment.queueNumber}</div>
-                <div className="appointment-name">
-                  {appointment.name}
-                  {appointment.age && (
-                    <span className="appointment-age"> (Age: {appointment.age})</span>
-                  )}
-                </div>
-                <div className="appointment-type">{appointment.type}</div>
-                <div className="appointment-doctor">{appointment.doctor}</div>
-              </div>
+    {/* Queue Number - MOVED OUTSIDE appointment-details */}
+    <div className="queue-number">#{appointment.queueNumber}</div>
 
-              {/* Meta Info (Right Side) */}
-              <div className="appointment-meta">
-                <div className="appointment-time">{appointment.time}</div>
+    {/* Patient Details */}
+    <div className="appointment-details">
+      <div className="appointment-name">
+        {appointment.name}
+        {appointment.age && (
+          <span className="appointment-age"> (Age: {appointment.age})</span>
+        )}
+      </div>
+      <div className="appointment-type">{appointment.type}</div>
+      <div className="appointment-doctor">{appointment.doctor}</div>
+    </div>
 
-                <div className="appointment-tags">
-                  <div className={`appointment-status status-${appointment.status}`}>
-                    {appointment.status}
-                  </div>
-                  <div
-                    className={`appointment-priority ${getPriorityColor(
-                      appointment.priority
-                    )}`}
-                  >
-                    {getPriorityIcon(appointment.priority)} {appointment.priority}
-                  </div>
-                </div>
+    {/* Meta Info with inline date/time */}
+    <div className="appointment-meta">
+      <div className="appointment-time">{appointment.time}</div>
+      <div className="appointment-date-display">
+        {(() => {
+          const [year, month, day] = appointment.date.split('-');
+          const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+          return dateObj.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        })()}
+      </div>
+    </div>
 
-                <div className="appointment-actions">
-                  <button
-                    className="action-btn view-btn"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setShowDetailsModal(true);
-                    }}
-                    aria-label={`View details for ${appointment.name}`}
-                    title={`View details for ${appointment.name}`}
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    className="action-btn edit-btn"
-                    onClick={() => handleReschedule(appointment)}
-                    aria-label={`Reschedule appointment for ${appointment.name}`}
-                    title={`Reschedule appointment for ${appointment.name}`}
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    className="action-btn cancel-btn"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setShowCancelModal(true);
-                    }}
-                    aria-label={`Cancel appointment for ${appointment.name}`}
-                    title={`Cancel appointment for ${appointment.name}`}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ));
+    {/* Tags */}
+    <div className="appointment-tags">
+      <div className={`appointment-status status-${appointment.status}`}>
+        {appointment.status}
+      </div>
+      <div className={`appointment-priority ${getPriorityColor(appointment.priority)}`}>
+        {getPriorityIcon(appointment.priority)} {appointment.priority}
+      </div>
+    </div>
+
+    {/* Actions */}
+    <div className="appointment-actions">
+      <button
+        className="action-btn view-btn"
+        onClick={() => {
+          setSelectedAppointment(appointment);
+          setShowDetailsModal(true);
+        }}
+        aria-label={`View details for ${appointment.name}`}
+        title={`View details for ${appointment.name}`}
+      >
+        <Eye size={16} />
+      </button>
+      <button
+        className="action-btn edit-btn"
+        onClick={() => handleReschedule(appointment)}
+        aria-label={`Reschedule appointment for ${appointment.name}`}
+        title={`Reschedule appointment for ${appointment.name}`}
+      >
+        <Edit size={16} />
+      </button>
+      <button
+        className="action-btn cancel-btn"
+        onClick={() => {
+          setSelectedAppointment(appointment);
+          setShowCancelModal(true);
+        }}
+        aria-label={`Cancel appointment for ${appointment.name}`}
+        title={`Cancel appointment for ${appointment.name}`}
+      >
+        <Trash2 size={16} />
+      </button>
+    </div>
+  </div>
+));
         })()}
       </div>
     </section>
@@ -1715,107 +1726,107 @@ try {
             )}
           </div>
         ) : (
-          filteredAppointments.map((appointment) => (
-            <div key={appointment.id} className="appointment-card">
-              {/* Avatar */}
-              <button
-                className="appointment-avatar-btn"
-                onClick={() => {
-                  setSelectedProfile(appointment);
-                  setShowDetailsModal(true);
-                }}
-                aria-label={`View profile for ${appointment.name}`}
-                title={`View profile for ${appointment.name}`}
-              >
-                <div className="appointment-avatar">
-                  {appointment.photo ? (
-                    <img
-                      src={appointment.photo}
-                      alt={appointment.name}
-                      className="avatar-image"
-                    />
-                  ) : (
-                    <User size={20} />
-                  )}
-                </div>
-              </button>
+        filteredAppointments.map((appointment) => (
+  <div key={appointment.id} className="appointment-card">
+    {/* Avatar */}
+    <button
+      className="appointment-avatar-btn"
+      onClick={() => {
+        setSelectedProfile(appointment);
+        setShowDetailsModal(true);
+      }}
+      aria-label={`View profile for ${appointment.name}`}
+      title={`View profile for ${appointment.name}`}
+    >
+      <div className="appointment-avatar">
+        {appointment.photo ? (
+          <img
+            src={appointment.photo}
+            alt={appointment.name}
+            className="avatar-image"
+          />
+        ) : (
+          <User size={20} />
+        )}
+      </div>
+    </button>
 
-              {/* Patient Details (Left Side) */}
-              <div className="appointment-details">
-                <div className="queue-number">#{appointment.queueNumber}</div>
-                <div className="appointment-name">
-                  {appointment.name}
-                  {appointment.age && (
-                    <span className="appointment-age"> (Age: {appointment.age})</span>
-                  )}
-                </div>
-                <div className="appointment-type">{appointment.type}</div>
-                <div className="appointment-doctor">{appointment.doctor}</div>
-                <div className="appointment-date-display">
-                  {(() => {
-                    const [year, month, day] = appointment.date.split('-');
-                    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-                    return dateObj.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    });
-                  })()}
-                </div>
-              </div>
+    {/* Queue Number - MOVED OUTSIDE appointment-details */}
+    <div className="queue-number">#{appointment.queueNumber}</div>
 
-              {/* Meta Info (Right Side) */}
-              <div className="appointment-meta">
-                <div className="appointment-time">{appointment.time}</div>
+    {/* Patient Details */}
+    <div className="appointment-details">
+      <div className="appointment-name">
+        {appointment.name}
+        {appointment.age && (
+          <span className="appointment-age"> (Age: {appointment.age})</span>
+        )}
+      </div>
+      <div className="appointment-type">{appointment.type}</div>
+      <div className="appointment-doctor">{appointment.doctor}</div>
+    </div>
 
-                <div className="appointment-tags">
-                  <div className={`appointment-status status-${appointment.status}`}>
-                    {appointment.status}
-                  </div>
-                  <div
-                    className={`appointment-priority ${getPriorityColor(
-                      appointment.priority
-                    )}`}
-                  >
-                    {getPriorityIcon(appointment.priority)} {appointment.priority}
-                  </div>
-                </div>
+    {/* Meta Info with inline date/time */}
+    <div className="appointment-meta">
+      <div className="appointment-time">{appointment.time}</div>
+      <div className="appointment-date-display">
+        {(() => {
+          const [year, month, day] = appointment.date.split('-');
+          const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+          return dateObj.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        })()}
+      </div>
+    </div>
 
-                <div className="appointment-actions">
-                  <button
-                    className="action-btn view-btn"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setShowDetailsModal(true);
-                    }}
-                    aria-label={`View details for ${appointment.name}`}
-                    title={`View details for ${appointment.name}`}
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    className="action-btn edit-btn"
-                    onClick={() => handleReschedule(appointment)}
-                    aria-label={`Reschedule appointment for ${appointment.name}`}
-                    title={`Reschedule appointment for ${appointment.name}`}
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    className="action-btn cancel-btn"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setShowCancelModal(true);
-                    }}
-                    aria-label={`Cancel appointment for ${appointment.name}`}
-                    title={`Cancel appointment for ${appointment.name}`}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
+    {/* Tags */}
+    <div className="appointment-tags">
+      <div className={`appointment-status status-${appointment.status}`}>
+        {appointment.status}
+      </div>
+      <div className={`appointment-priority ${getPriorityColor(appointment.priority)}`}>
+        {getPriorityIcon(appointment.priority)} {appointment.priority}
+      </div>
+    </div>
+
+    {/* Actions */}
+    <div className="appointment-actions">
+      <button
+        className="action-btn view-btn"
+        onClick={() => {
+          setSelectedAppointment(appointment);
+          setShowDetailsModal(true);
+        }}
+        aria-label={`View details for ${appointment.name}`}
+        title={`View details for ${appointment.name}`}
+      >
+        <Eye size={16} />
+      </button>
+      <button
+        className="action-btn edit-btn"
+        onClick={() => handleReschedule(appointment)}
+        aria-label={`Reschedule appointment for ${appointment.name}`}
+        title={`Reschedule appointment for ${appointment.name}`}
+      >
+        <Edit size={16} />
+      </button>
+      <button
+        className="action-btn cancel-btn"
+        onClick={() => {
+          setSelectedAppointment(appointment);
+          setShowCancelModal(true);
+        }}
+        aria-label={`Cancel appointment for ${appointment.name}`}
+        title={`Cancel appointment for ${appointment.name}`}
+      >
+        <Trash2 size={16} />
+      </button>
+    </div>
+  </div>
+))
         )}
       </div>
     </section>
@@ -3090,149 +3101,134 @@ try {
           <XCircle size={20} />
         </button>
       </div>
-
-      <div className="details-content">
-        {(selectedAppointment || selectedProfile)?.photo && (
-          <div className="detail-photo">
-            <img
-              src={(selectedAppointment || selectedProfile)!.photo}
-              alt={(selectedAppointment || selectedProfile)!.name}
-            />
-          </div>
-        )}
-
-        {/* Two Column Grid */}
-        <div className="details-grid">
-          {/* Left column */}
-          <div className="details-column">
-            <div className="detail-row">
-              <span className="detail-label">Queue Number:</span>
-              <span className="detail-value">
-                #{(selectedAppointment || selectedProfile)!.queueNumber}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Patient Name:</span>
-              <span className="detail-value">
-                {(selectedAppointment || selectedProfile)!.name}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Age:</span>
-              <span className="detail-value">
-                {(selectedAppointment || selectedProfile)!.age || "Not specified"}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Appointment Type:</span>
-              <span className="detail-value">
-                {(selectedAppointment || selectedProfile)!.type}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Doctor:</span>
-              <span className="detail-value">
-                {(selectedAppointment || selectedProfile)!.doctor}
-              </span>
-            </div>
-          </div>
-
-          {/* Right column */}
-          <div className="details-column">
-            <div className="detail-row">
-              <span className="detail-label">Date &amp; Time:</span>
-              <span className="detail-value">
-                {(() => {
-                  const apt = selectedAppointment || selectedProfile;
-                  if (!apt) return "";
-                  const [year, month, day] = apt.date.split("-");
-                  const dateObj = new Date(
-                    Number(year),
-                    Number(month) - 1,
-                    Number(day)
-                  );
-                  const formattedDate = dateObj.toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  });
-                  return `${formattedDate} at ${apt.time}`;
-                })()}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Email:</span>
-              <span className="detail-value">
-                {(selectedAppointment || selectedProfile)!.email}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Gender:</span>
-              <span className="detail-value">
-                {(selectedAppointment || selectedProfile)!.gender || "Not specified"}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Priority:</span>
-              <span className="detail-value">
-                <span
-                  className={`priority-badge ${getPriorityColor(
-                    (selectedAppointment || selectedProfile)!.priority
-                  )}`}
-                >
-                  {getPriorityIcon(
-                    (selectedAppointment || selectedProfile)!.priority
-                  )}
-                  {(selectedAppointment || selectedProfile)!.priority.toUpperCase()}
-                </span>
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Status:</span>
-              <span className="detail-value">
-                <span
-                  className={`status-badge status-${
-                    (selectedAppointment || selectedProfile)!.status
-                  }`}
-                >
-                  {(selectedAppointment || selectedProfile)!.status.toUpperCase()}
-                </span>
-              </span>
-            </div>
-          </div>
+<div className="details-content">
+  {/* Header with Photo */}
+  <div className="detail-header">
+    <div className="detail-photo">
+      {(selectedAppointment || selectedProfile)?.photo ? (
+        <img
+          src={(selectedAppointment || selectedProfile)!.photo}
+          alt={(selectedAppointment || selectedProfile)!.name}
+        />
+      ) : (
+        <div className="detail-photo-placeholder">
+          {(selectedAppointment || selectedProfile)!.name.charAt(0)}
         </div>
+      )}
+    </div>
+    <h2 className="detail-title">Appointment Details</h2>
+  </div>
 
-        {/* Actions */}
-        <div className="detail-actions">
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              const appointment = selectedAppointment || selectedProfile;
-              if (appointment) {
-                setShowDetailsModal(false);
-                setSelectedProfile(null);
-                handleReschedule(appointment);
-              }
-            }}
-          >
-            <Edit size={16} /> Reschedule
-          </button>
-          <button
-  className="btn-danger"
-  onClick={() => {
-    const appointment = selectedAppointment || selectedProfile;
-    if (appointment) {
-      setShowDetailsModal(false);
-      setSelectedProfile(null);
-      setSelectedAppointment(appointment);  // ✅ Set appointment
-      setShowCancelModal(true);  // ✅ Open cancel modal instead
-    }
-  }}
->
-  <Trash2 size={16} /> Cancel Appointment
-</button>
-        </div>
-      </div>
+  {/* Queue Number */}
+  <div className="detail-queue-container">
+    <span className="detail-queue-number">
+      Queue #{(selectedAppointment || selectedProfile)!.queueNumber}
+    </span>
+  </div>
+
+  {/* Details Grid */}
+  <div className="detail-grid">
+    <span className="detail-label">Patient Name:</span>
+    <span className="detail-value">
+      {(selectedAppointment || selectedProfile)!.name}
+    </span>
+
+    <span className="detail-label">Age:</span>
+    <span className="detail-value">
+      {(selectedAppointment || selectedProfile)!.age || "Not specified"}
+    </span>
+
+    <span className="detail-label">Appointment Type:</span>
+    <span className="detail-value">
+      {(selectedAppointment || selectedProfile)!.type}
+    </span>
+
+    <span className="detail-label">Doctor:</span>
+    <span className="detail-value">
+      {(selectedAppointment || selectedProfile)!.doctor}
+    </span>
+
+    <span className="detail-label">Date & Time:</span>
+    <span className="detail-value">
+      {(() => {
+        const apt = selectedAppointment || selectedProfile;
+        if (!apt) return "";
+        const [year, month, day] = apt.date.split("-");
+        const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+        const formattedDate = dateObj.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        return `${formattedDate} at ${apt.time}`;
+      })()}
+    </span>
+
+    <span className="detail-label">Email:</span>
+    <span className="detail-value">
+      {(selectedAppointment || selectedProfile)!.email}
+    </span>
+
+    <span className="detail-label">Gender:</span>
+    <span className="detail-value">
+      {(selectedAppointment || selectedProfile)!.gender || "Not specified"}
+    </span>
+
+    <span className="detail-label">Priority:</span>
+    <span className="detail-value">
+      <span
+        className={`detail-priority priority-${
+          (selectedAppointment || selectedProfile)!.priority
+        }`}
+      >
+        {(selectedAppointment || selectedProfile)!.priority}
+      </span>
+    </span>
+
+    <span className="detail-label">Status:</span>
+    <span className="detail-value">
+      <span
+        className={`detail-status status-${
+          (selectedAppointment || selectedProfile)!.status
+        }`}
+      >
+        {(selectedAppointment || selectedProfile)!.status}
+      </span>
+    </span>
+  </div>
+
+  {/* Actions */}
+  <div className="detail-actions">
+    <button
+      className="detail-action-btn primary"
+      onClick={() => {
+        const appointment = selectedAppointment || selectedProfile;
+        if (appointment) {
+          setShowDetailsModal(false);
+          setSelectedProfile(null);
+          handleReschedule(appointment);
+        }
+      }}
+    >
+      <Edit size={16} /> Reschedule
+    </button>
+    <button
+      className="detail-action-btn danger"
+      onClick={() => {
+        const appointment = selectedAppointment || selectedProfile;
+        if (appointment) {
+          setShowDetailsModal(false);
+          setSelectedProfile(null);
+          setSelectedAppointment(appointment);
+          setShowCancelModal(true);
+        }
+      }}
+    >
+      <Trash2 size={16} /> Cancel Appointment
+    </button>
+  </div>
+</div>
+
     </div>
   </div>
 )}
