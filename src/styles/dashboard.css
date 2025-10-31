@@ -3225,15 +3225,15 @@ border-radius: var(--radius-xl);
 }
 
 .detail-header {
-  text-align: center;
-  margin-bottom: var(--space-lg);
+  text-align: left;
+  margin-bottom: var(--space-xl);
 }
 
 .detail-photo {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .detail-photo img {
@@ -3247,11 +3247,12 @@ border-radius: var(--radius-xl);
 }
 
 .detail-title {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-2xl);
   font-weight: 700;
   color: var(--primary);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-sm);
   letter-spacing: 0.5px;
+  text-align: left;
 }
 
 .detail-subtitle {
@@ -3291,26 +3292,36 @@ border-radius: var(--radius-xl);
   letter-spacing: 0.5px;
 }
 
-/* Queue Number Display */
+/* ===== QUEUE NUMBER - ALWAYS CENTERED ===== */
+.detail-queue-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
 .detail-queue-number {
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--text-primary);
   text-align: center;
-  margin-bottom: var(--space-md);
   padding: var(--space-sm) var(--space-md);
   background: rgba(59, 130, 246, 0.1);
   border-radius: var(--radius-md);
   display: inline-block;
 }
 
-/* Details Grid - More Spacing */
+[data-theme="dark"] .detail-queue-number {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--text-primary);
+}
+
+/* ✅ DESKTOP: Left-aligned grid with proper spacing */
 .detail-grid {
   display: grid;
-  grid-template-columns: max-content 1fr;
-  row-gap: 1.25rem; /* Increased spacing */
-  column-gap: 2rem; /* Increased spacing */
-  align-items: center;
+  grid-template-columns: 140px 1fr;
+  row-gap: 1rem;
+  column-gap: 1.5rem;
+  align-items: start;
   margin-top: 1.5rem;
   margin-bottom: 2rem;
   background: var(--bg-secondary);
@@ -3320,13 +3331,13 @@ border-radius: var(--radius-xl);
 }
 
 .detail-label {
-  font-weight: 700; /* Bolder label */
+  font-weight: 700;
   color: var(--text-primary);
-  text-align: right;
-  padding-right: 1rem;
+  text-align: left;
   white-space: nowrap;
   font-size: 0.95rem;
   line-height: 1.6;
+  padding-top: 2px;
 }
 
 .detail-value {
@@ -3663,7 +3674,7 @@ border-radius: var(--radius-xl);
   color: #f87171; 
   border-color: rgba(239, 68, 68, 0.3);
 }
-/* ===== MOBILE DETAILS MODAL - CENTERED LAYOUT ===== */
+/* ===== MOBILE VIEW - DETAILS MODAL ===== */
 @media (max-width: 768px) {
   .detail-header {
     text-align: center;
@@ -3672,6 +3683,7 @@ border-radius: var(--radius-xl);
   
   .detail-photo {
     margin: 0 auto var(--space-lg) auto;
+    justify-content: center;
   }
   
   .detail-photo img {
@@ -3684,15 +3696,18 @@ border-radius: var(--radius-xl);
     text-align: center;
   }
   
-  .detail-queue-number {
-    display: block;
-    text-align: center;
-    margin: 0 auto var(--space-md) auto;
+  /* Queue number stays centered (already set in main styles) */
+  .detail-queue-container {
+    justify-content: center;
   }
   
-  /* Stack labels and values */
+  .detail-queue-number {
+    font-size: var(--font-size-lg);
+  }
+  
+  /* Stack labels and values vertically */
   .detail-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
     row-gap: 1rem;
     column-gap: 0;
     padding: var(--space-lg) var(--space-md);
@@ -3700,8 +3715,8 @@ border-radius: var(--radius-xl);
   }
   
   .detail-label {
-    text-align: center !important;
-    padding-right: 0 !important;
+    text-align: center;
+    padding-right: 0;
     margin-bottom: 0.375rem;
     font-weight: 700;
     font-size: 0.85rem;
@@ -3709,7 +3724,7 @@ border-radius: var(--radius-xl);
   }
   
   .detail-value {
-    text-align: center !important;
+    text-align: center;
     margin-bottom: 0;
     font-size: 1rem;
     font-weight: 600;
@@ -6071,7 +6086,7 @@ svg.clock,
     margin: var(--space-sm) 0;
   }
   
-  /* Center action buttons */
+  /* ✅ CENTER ACTION BUTTONS */
   .appointment-actions {
     width: 100%;
     justify-content: center;
@@ -6079,7 +6094,8 @@ svg.clock,
     margin-top: var(--space-md);
   }
   
-  .action-btn {
+  .action-btn,
+  .cancel-btn {
     width: 40px;
     height: 40px;
   }
