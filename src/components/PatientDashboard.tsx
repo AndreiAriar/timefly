@@ -3127,75 +3127,75 @@ try {
   </div>
 
   {/* Details Grid */}
-  <div className="detail-grid">
-    <span className="detail-label">Patient Name:</span>
-    <span className="detail-value">
-      {(selectedAppointment || selectedProfile)!.name}
-    </span>
+ <div className="detail-grid">
+  <span className="detail-label">Patient Name</span>
+  <span className="detail-value">
+    {(selectedAppointment || selectedProfile)!.name}
+  </span>
 
-    <span className="detail-label">Age:</span>
-    <span className="detail-value">
-      {(selectedAppointment || selectedProfile)!.age || "Not specified"}
-    </span>
+  <span className="detail-label">Age</span>
+  <span className="detail-value">
+    {(selectedAppointment || selectedProfile)!.age || "Not specified"}
+  </span>
 
-    <span className="detail-label">Appointment Type:</span>
-    <span className="detail-value">
-      {(selectedAppointment || selectedProfile)!.type}
-    </span>
+  <span className="detail-label">Appointment Type</span>
+  <span className="detail-value">
+    {(selectedAppointment || selectedProfile)!.type}
+  </span>
 
-    <span className="detail-label">Doctor:</span>
-    <span className="detail-value">
-      {(selectedAppointment || selectedProfile)!.doctor}
-    </span>
+  <span className="detail-label">Doctor</span>
+  <span className="detail-value">
+    {(selectedAppointment || selectedProfile)!.doctor}
+  </span>
 
-    <span className="detail-label">Date & Time:</span>
-    <span className="detail-value">
-      {(() => {
-        const apt = selectedAppointment || selectedProfile;
-        if (!apt) return "";
-        const [year, month, day] = apt.date.split("-");
-        const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-        const formattedDate = dateObj.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-        return `${formattedDate} at ${apt.time}`;
-      })()}
-    </span>
+  <span className="detail-label">Date & Time</span>
+  <span className="detail-value">
+    {(() => {
+      const apt = selectedAppointment || selectedProfile;
+      if (!apt) return "";
+      const [year, month, day] = apt.date.split("-");
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      const formattedDate = dateObj.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      return `${formattedDate} at ${apt.time}`;
+    })()}
+  </span>
 
-    <span className="detail-label">Email:</span>
-    <span className="detail-value">
-      {(selectedAppointment || selectedProfile)!.email}
-    </span>
+  <span className="detail-label">Email</span>
+  <span className="detail-value">
+    {(selectedAppointment || selectedProfile)!.email}
+  </span>
 
-    <span className="detail-label">Gender:</span>
-    <span className="detail-value">
-      {(selectedAppointment || selectedProfile)!.gender || "Not specified"}
-    </span>
+  <span className="detail-label">Gender</span>
+  <span className="detail-value">
+    {(selectedAppointment || selectedProfile)!.gender || "Not specified"}
+  </span>
 
-    <span className="detail-label">Priority:</span>
-    <span className="detail-value">
-      <span
-        className={`detail-priority priority-${
-          (selectedAppointment || selectedProfile)!.priority
-        }`}
-      >
-        {(selectedAppointment || selectedProfile)!.priority}
-      </span>
+  <span className="detail-label">Priority</span>
+  <span className="detail-value">
+    <span
+      className={`detail-priority priority-${
+        (selectedAppointment || selectedProfile)!.priority
+      }`}
+    >
+      {(selectedAppointment || selectedProfile)!.priority}
     </span>
+  </span>
 
-    <span className="detail-label">Status:</span>
-    <span className="detail-value">
-      <span
-        className={`detail-status status-${
-          (selectedAppointment || selectedProfile)!.status
-        }`}
-      >
-        {(selectedAppointment || selectedProfile)!.status}
-      </span>
+  <span className="detail-label">Status</span>
+  <span className="detail-value">
+    <span
+      className={`detail-status status-${
+        (selectedAppointment || selectedProfile)!.status
+      }`}
+    >
+      {(selectedAppointment || selectedProfile)!.status}
     </span>
-  </div>
+  </span>
+</div>
 
   {/* Actions */}
   <div className="detail-actions">
