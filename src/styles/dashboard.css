@@ -930,7 +930,7 @@ select:active {
   background-color: var(--bg-secondary);
 }
 
-/* 🌅 Hero Section Overlay - INCREASED BLUR */
+/*  Hero Section Overlay - INCREASED BLUR FOR TEXT READABILITY */
 .hero-section::before {
   content: "";
   position: absolute;
@@ -938,11 +938,11 @@ select:active {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.55); /* Darker overlay for better text contrast */
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px); /* Added blur to overlay */
+  background: rgba(0, 0, 0, 0.65); /* âœ… Darker overlay (was 0.55) */
+  -webkit-backdrop-filter: blur(8px); /* âœ… Increased from 2px to 8px */
+  backdrop-filter: blur(8px);
   z-index: 0;
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--radius-lg);
 }
 
 /* Mobile - Adjusted spacing */
@@ -1399,13 +1399,14 @@ select:active {
 
 /* ✨ GLASSMORPHISM STAT CARDS */
 .stat-card {
-  background: rgba(255, 255, 255, 0.7); /* Glass effect */
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.25) !important; /* More transparent (was 0.7) */
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important; /* Stronger blur */
+  backdrop-filter: blur(30px) saturate(200%) !important;
   padding: var(--space-lg);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
+              0 1px 2px rgba(0, 0, 0, 0.08) !important; /*  iOS-style layered shadow */
+  border: 1px solid rgba(255, 255, 255, 0.4) !important; /*  Brighter border */
   transition: var(--transition-normal);
   display: flex;
   align-items: flex-start;
@@ -1414,22 +1415,23 @@ select:active {
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 
+              0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  background: rgba(255, 255, 255, 0.35) !important; /* Slightly more opaque on hover */
 }
 
-/* Dark Mode Glass */
+/* âœ… Dark Mode Glass for Stats */
 [data-theme="dark"] .stat-card {
-  background: rgba(30, 41, 55, 0.6); /* Dark glass */
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-   backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: rgba(30, 41, 55, 0.3) !important; /* âœ… More transparent dark glass */
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+  backdrop-filter: blur(30px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
 
 [data-theme="dark"] .stat-card:hover {
-  background: rgba(30, 41, 55, 0.7);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  background: rgba(30, 41, 55, 0.4) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7) !important;
 }
 
 /* Enhanced text readability */
@@ -1572,18 +1574,28 @@ select:active {
   margin: var(--space-md) !important;
 }
 
-/* ===== APPOINTMENTS & QUEUE SECTIONS - GLASSMORPHISM ===== */
+/*  iOS-STYLE GLASS - TODAY'S & MY APPOINTMENTS */
 .appointments-section, 
 .queue-section {
-  background: rgba(255, 255, 255, 0.7); /* Glass effect */
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.3) !important; /*  More transparent */
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important; /*  Stronger blur */
+  backdrop-filter: blur(30px) saturate(200%) !important;
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
+              0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
   overflow: hidden;
 }
 
+/* Dark Mode Glass */
+[data-theme="dark"] .appointments-section,
+[data-theme="dark"] .queue-section {
+  background: rgba(30, 41, 55, 0.35) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+  backdrop-filter: blur(30px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
 
 /* Section Headers - Glass */
 .section-header {
@@ -1618,22 +1630,38 @@ select:active {
 }
 
 
-/* Appointment Cards - Subtle glass */
+/* iOS-STYLE APPOINTMENT CARDS */
 .appointment-card {
-  background: rgba(255, 255, 255, 0.4);
-  -webkit-backdrop-filter: blur(10px);
-   backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.2) !important; /* âœ… Even more transparent */
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
   padding: var(--space-lg);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: var(--transition-fast);
   margin: 0 var(--space-sm);
   border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 .appointment-card:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.35) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/*  Dark Mode */
+[data-theme="dark"] .appointment-card {
+  background: rgba(30, 41, 55, 0.25) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .appointment-card:hover {
+  background: rgba(30, 41, 55, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 .appointment-card:last-child {
@@ -2031,21 +2059,37 @@ select:active {
   text-align: center;
 }
 
-/* Queue Cards - Glass */
+/* iOS-STYLE QUEUE CARDS */
 .queue-card {
-  background: rgba(255, 255, 255, 0.4);
-  -webkit-backdrop-filter: blur(10px);
-   backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: var(--transition-fast);
   margin: 0 var(--space-sm);
   border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 .queue-card:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.35) !important;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/*  Dark Mode */
+[data-theme="dark"] .queue-card {
+  background: rgba(30, 41, 55, 0.25) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .queue-card:hover {
+  background: rgba(30, 41, 55, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 .queue-card:last-child {
@@ -6939,4 +6983,34 @@ svg.clock,
   .stat-card {
     padding: var(--space-md);
   }
+}
+
+/* ===== TEXT READABILITY ON GLASS - iOS STYLE ===== */
+
+/* Light mode - darker text with subtle shadow for depth */
+.stat-card .stat-title,
+.stat-card .stat-subtitle,
+.appointment-card .appointment-name,
+.appointment-card .appointment-type,
+.queue-card .queue-name,
+.queue-card .queue-doctor,
+.section-title,
+.section-subtitle {
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8), 
+               0 0 1px rgba(0, 0, 0, 0.1) !important;
+  font-weight: 600 !important;
+}
+
+/* Dark mode - brighter text with glow */
+[data-theme="dark"] .stat-card .stat-title,
+[data-theme="dark"] .stat-card .stat-subtitle,
+[data-theme="dark"] .appointment-card .appointment-name,
+[data-theme="dark"] .appointment-card .appointment-type,
+[data-theme="dark"] .queue-card .queue-name,
+[data-theme="dark"] .queue-card .queue-doctor,
+[data-theme="dark"] .section-title,
+[data-theme="dark"] .section-subtitle {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 
+               0 0 2px rgba(255, 255, 255, 0.2) !important;
+  font-weight: 600 !important;
 }
