@@ -917,19 +917,21 @@ select:active {
   }
 }
 
+/* ===== HERO SECTION ===== */
+
 .hero-section {
   position: relative;
   padding: var(--space-xl) var(--space-xl);
   background: url('/images/eye_center.png') center/cover no-repeat;
-  background-color: rgba(15, 23, 42, 0.85); /* Fallback if image doesn't load */
   color: #ffffff;
   text-align: center;
-  border-radius: var(--radius-xl);
+border-radius: var(--radius-xl);
   overflow: hidden;
   margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
-  min-height: 300px;
+  background-color: var(--bg-secondary);
 }
 
+/* 🌅 Hero Section Overlay */
 .hero-section::before {
   content: "";
   position: absolute;
@@ -937,19 +939,9 @@ select:active {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
-  -webkit-backdrop-filter: blur(8px);
-   backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.45); /* Dark overlay for readability */
   z-index: 0;
-  border-radius: var(--radius-lg);
-}
-
-/* Mobile - Adjusted spacing */
-@media (max-width: 768px) {
-  .hero-section {
-    padding: var(--space-lg) var(--space-md);
-    margin: 0 var(--space-md) var(--space-md); /* Reduced bottom margin */
-  }
+  border-radius: var(--border-radius-lg);
 }
 
 /* 🌤 Hero Content */
@@ -1382,10 +1374,10 @@ select:active {
   height: 100px;
 }
 
-/* ===== STATS SECTION - GLASSMORPHISM ===== */
+/* ===== STATS SECTION ===== */
 .stats-section {
   padding: var(--space-xl);
-  margin-top: -40px; /* Keeps overlap with hero */
+  margin-top: -40px; /* ✅ Moved section slightly up */
 }
 
 .stats-grid {
@@ -1393,19 +1385,15 @@ select:active {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-lg);
   max-width: 1200px;
-  margin: -10px auto 0 auto;
+  margin: -10px auto 0 auto; /* ✅ Slight upward lift of entire grid */
 }
 
-/* ✨ GLASSMORPHISM STAT CARDS */
 .stat-card {
-  background: rgba(255, 255, 255, 0.25) !important; /* More transparent (was 0.7) */
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important; /* Stronger blur */
-  backdrop-filter: blur(30px) saturate(200%) !important;
+  background: var(--bg-primary);
   padding: var(--space-lg);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
-              0 1px 2px rgba(0, 0, 0, 0.08) !important; /*  iOS-style layered shadow */
-  border: 1px solid rgba(255, 255, 255, 0.4) !important; /*  Brighter border */
+  border-radius: 20px; /* Rounded corners for card */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-light);
   transition: var(--transition-normal);
   display: flex;
   align-items: flex-start;
@@ -1413,59 +1401,8 @@ select:active {
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 
-              0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  background: rgba(255, 255, 255, 0.35) !important; /* Slightly more opaque on hover */
-}
-
-/* âœ… Dark Mode Glass for Stats */
-[data-theme="dark"] .stat-card {
-  background: rgba(30, 41, 55, 0.3) !important; /* âœ… More transparent dark glass */
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-  backdrop-filter: blur(30px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-[data-theme="dark"] .stat-card:hover {
-  background: rgba(30, 41, 55, 0.4) !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7) !important;
-}
-
-/* Enhanced text readability */
-.stat-title {
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  margin-bottom: var(--space-xs);
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
-}
-
-.stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: var(--space-xs);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stat-subtitle,
-.stat-change {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Mobile Stats - Fixed spacing */
-@media (max-width: 768px) {
-  .stats-section {
-    padding: var(--space-md);
-    margin-top: -20px; /* Less overlap on mobile */
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-md);
-    margin-top: 0; /* Remove negative margin on mobile */
-  }
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ===== ICON STYLES ===== */
@@ -1573,62 +1510,35 @@ select:active {
   margin: var(--space-md) !important;
 }
 
-/*  iOS-STYLE GLASS - TODAY'S & MY APPOINTMENTS */
-.appointments-section, 
-.queue-section {
-  background: rgba(255, 255, 255, 0.3) !important; /*  More transparent */
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important; /*  Stronger blur */
-  backdrop-filter: blur(30px) saturate(200%) !important;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
-              0 1px 2px rgba(0, 0, 0, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+/* ===== APPOINTMENTS SECTION ===== */
+.appointments-section, .queue-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg); /* UPDATED: iOS style */
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
   overflow: hidden;
 }
 
-/* Dark Mode Glass */
-[data-theme="dark"] .appointments-section,
-[data-theme="dark"] .queue-section {
-  background: rgba(30, 41, 55, 0.35) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-  backdrop-filter: blur(30px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-/* Section Headers - Glass */
 .section-header {
   padding: var(--space-lg);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(248, 250, 252, 0.5);
-  -webkit-backdrop-filter: blur(10px);
-   backdrop-filter: blur(10px);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0; /* ADDED: Rounded top corners only */
 }
 
-
-/* ✅ ADD THIS NEW RULE */
-.section-header .section-title {
+.section-title {
   display: flex;
   align-items: center;
-  gap: 12px; /* Adds spacing between icon and title text */
-}
-
-.section-header .section-title svg {
-  flex-shrink: 0; /* Prevents icon from shrinking */
-}
-
-
-/* Enhanced text readability */
-.section-title {
+  gap: var(--space-sm);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
   color: var(--text-primary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  font-weight: 700;
 }
 
 .section-subtitle {
-  color: var(--text-secondary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .search-results {
@@ -1641,39 +1551,21 @@ select:active {
   overflow-y: auto;
 }
 
-
-/* iOS-STYLE APPOINTMENT CARDS */
 .appointment-card {
-  background: rgba(255, 255, 255, 0.2) !important; /* âœ… Even more transparent */
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
   padding: var(--space-lg);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-light);
   transition: var(--transition-fast);
-  margin: 0 var(--space-sm);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  margin: 0 var(--space-md); /* ADDED: Added margin */
+  border-radius: var(--radius-md); /* ADDED: iOS style */
 }
 
 .appointment-card:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-/*  Dark Mode */
-[data-theme="dark"] .appointment-card {
-  background: rgba(30, 41, 55, 0.25) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-[data-theme="dark"] .appointment-card:hover {
-  background: rgba(30, 41, 55, 0.4) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  background: var(--bg-secondary);
+  transform: translateY(-1px); /* ADDED: Hover effect */
+  box-shadow: var(--shadow-sm); /* ADDED: Hover effect */
 }
 
 .appointment-card:last-child {
@@ -1804,7 +1696,6 @@ select:active {
   display: flex;
   gap: var(--space-xs);
 }
-
 /* ===============================
    ACTION & CANCEL (DELETE) BUTTONS
    =============================== */
@@ -1921,88 +1812,19 @@ select:active {
   top: var(--space-xl);
 }
 
-/* Queue Summary - Glass */
 .queue-summary {
   padding: var(--space-lg);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  background: rgba(255, 255, 255, 0.4);
-  -webkit-backdrop-filter: blur(15px);
-   backdrop-filter: blur(15px);
-  border-radius: var(--radius-md);
-  margin: var(--space-md);
+  border-bottom: 1px solid var(--border-light);
+  border-radius: var(--radius-md); /* ADDED: iOS style */
+  margin: var(--space-md); /* ADDED: Added margin */
 }
 
 .queue-summary.next-patient {
-  background: linear-gradient(135deg, rgba(255, 251, 235, 0.8) 0%, rgba(254, 243, 199, 0.8) 100%);
-  -webkit-backdrop-filter: blur(15px);
-  backdrop-filter: blur(15px);
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
   border-left: 4px solid var(--warning);
+  border-radius: var(--radius-md); /* ADDED: iOS style */
 }
 
-/* ===== DARK MODE GLASSMORPHISM ===== */
-[data-theme="dark"] .appointments-section,
-[data-theme="dark"] .queue-section {
-  background: rgba(30, 41, 55, 0.6);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-    backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-[data-theme="dark"] .section-header {
-  background: rgba(15, 23, 42, 0.5);
-  -webkit-backdrop-filter: blur(15px);
-    backdrop-filter: blur(15px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .appointment-card {
-  background: rgba(30, 41, 55, 0.4);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-[data-theme="dark"] .appointment-card:hover {
-  background: rgba(30, 41, 55, 0.6);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] .queue-card {
-  background: rgba(30, 41, 55, 0.4);
-  -webkit-backdrop-filter: blur(10px);
-   backdrop-filter: blur(10px);
-}
-
-[data-theme="dark"] .queue-card:hover {
-  background: rgba(30, 41, 55, 0.6);
-}
-
-[data-theme="dark"] .queue-summary {
-  background: rgba(30, 41, 55, 0.4);
-  -webkit-backdrop-filter: blur(15px);
-    backdrop-filter: blur(15px);
-}
-
-[data-theme="dark"] .queue-summary.next-patient {
-  background: linear-gradient(135deg, rgba(124, 45, 18, 0.5) 0%, rgba(146, 64, 14, 0.5) 100%);
-  -webkit-backdrop-filter: blur(15px);
-   backdrop-filter: blur(15px);
-  border-left-color: #fbbf24;
-}
-
-/* Text readability in dark mode */
-[data-theme="dark"] .section-title,
-[data-theme="dark"] .appointment-name,
-[data-theme="dark"] .queue-name {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] .section-subtitle,
-[data-theme="dark"] .appointment-type,
-[data-theme="dark"] .queue-doctor {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
 .serving-label {
   display: block;
   font-size: var(--font-size-sm);
@@ -2071,37 +1893,17 @@ select:active {
   text-align: center;
 }
 
-/* iOS-STYLE QUEUE CARDS */
 .queue-card {
-  background: rgba(255, 255, 255, 0.2) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-light);
   transition: var(--transition-fast);
-  margin: 0 var(--space-sm);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  margin: 0 var(--space-md); /* ADDED: Added margin */
+  border-radius: var(--radius-md); /* ADDED: iOS style */
 }
 
 .queue-card:hover {
-  background: rgba(255, 255, 255, 0.35) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-/*  Dark Mode */
-[data-theme="dark"] .queue-card {
-  background: rgba(30, 41, 55, 0.25) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-[data-theme="dark"] .queue-card:hover {
-  background: rgba(30, 41, 55, 0.4) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  background: var(--bg-secondary);
+  transform: translateY(-1px); /* ADDED: Hover effect */
 }
 
 .queue-card:last-child {
@@ -6941,277 +6743,3 @@ svg.clock,
   color: #2e7d32;
 }
 
-/* ===== MOBILE SPACING FIX ===== */
-@media (max-width: 768px) {
-  /* Hero to Stats spacing */
-  .hero-section {
-    margin-bottom: var(--space-md); /* Reduced from var(--space-xl) */
-  }
-  
-  .stats-section {
-    padding: var(--space-md);
-    margin-top: -15px; /* Slight overlap for continuity */
-  }
-  
-  /* Appointments and Queue sections */
-  .appointments-section,
-  .queue-section {
-    margin: var(--space-md);
-  }
-  
-  /* Card spacing */
-  .appointment-card,
-  .queue-card {
-    margin: 0 var(--space-xs);
-    padding: var(--space-md);
-  }
-  
- /* ===== FORCE GLASS EFFECT - HIGHEST PRIORITY ===== */
-body .stat-card,
-body .appointments-section,
-body .queue-section,
-.dashboard-container .stat-card,
-.dashboard-container .appointments-section,
-.dashboard-container .queue-section {
-  background: rgba(255, 255, 255, 0.3) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-  backdrop-filter: blur(30px) saturate(200%) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
-              0 1px 2px rgba(0, 0, 0, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-}
-
-/* Dark mode glass */
-[data-theme="dark"] body .stat-card,
-[data-theme="dark"] body .appointments-section,
-[data-theme="dark"] body .queue-section,
-[data-theme="dark"] .dashboard-container .stat-card,
-[data-theme="dark"] .dashboard-container .appointments-section,
-[data-theme="dark"] .dashboard-container .queue-section {
-  background: rgba(30, 41, 55, 0.35) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-  backdrop-filter: blur(30px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-/* Individual cards inside sections */
-body .appointment-card,
-body .queue-card,
-.dashboard-container .appointment-card,
-.dashboard-container .queue-card {
-  background: rgba(255, 255, 255, 0.2) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-}
-
-[data-theme="dark"] body .appointment-card,
-[data-theme="dark"] body .queue-card,
-[data-theme="dark"] .dashboard-container .appointment-card,
-[data-theme="dark"] .dashboard-container .queue-card {
-  background: rgba(30, 41, 55, 0.25) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-  
-  .appointment-card,
-  .queue-card {
-    -webkit-backdrop-filter: blur(8px);
-     backdrop-filter: blur(8px);
-  }
-}
-
-/* Extra small mobile */
-@media (max-width: 480px) {
-  .hero-section {
-    padding: var(--space-md);
-  }
-  
-  .stats-section {
-    padding: var(--space-sm);
-    margin-top: -10px;
-  }
-  
-  .stat-card {
-    padding: var(--space-md);
-  }
-}
-
-/* ===== TEXT READABILITY ON GLASS - iOS STYLE ===== */
-
-/* Light mode - darker text with subtle shadow for depth */
-.stat-card .stat-title,
-.stat-card .stat-subtitle,
-.appointment-card .appointment-name,
-.appointment-card .appointment-type,
-.queue-card .queue-name,
-.queue-card .queue-doctor,
-.section-title,
-.section-subtitle {
-  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8), 
-               0 0 1px rgba(0, 0, 0, 0.1) !important;
-  font-weight: 600 !important;
-}
-
-/* Dark mode - brighter text with glow */
-[data-theme="dark"] .stat-card .stat-title,
-[data-theme="dark"] .stat-card .stat-subtitle,
-[data-theme="dark"] .appointment-card .appointment-name,
-[data-theme="dark"] .appointment-card .appointment-type,
-[data-theme="dark"] .queue-card .queue-name,
-[data-theme="dark"] .queue-card .queue-doctor,
-[data-theme="dark"] .section-title,
-[data-theme="dark"] .section-subtitle {
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 
-               0 0 2px rgba(255, 255, 255, 0.2) !important;
-  font-weight: 600 !important;
-}
-
-/* ===== FORCE GLASS EFFECT - OVERRIDE ALL ===== */
-.stat-card,
-.appointments-section,
-.queue-section,
-.appointment-card,
-.queue-card {
-  background: rgba(255, 255, 255, 0.25) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
-  backdrop-filter: blur(30px) saturate(200%) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-}
-
-[data-theme="dark"] .stat-card,
-[data-theme="dark"] .appointments-section,
-[data-theme="dark"] .queue-section,
-[data-theme="dark"] .appointment-card,
-[data-theme="dark"] .queue-card {
-  background: rgba(30, 41, 55, 0.3) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-/* ===== iOS FROSTED GLASS EFFECT ===== */
-
-/* Page background - subtle pattern instead of solid color */
-body {
-  background: 
-    linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%),
-    radial-gradient(circle at 20% 50%, rgba(147, 197, 253, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(191, 219, 254, 0.2) 0%, transparent 50%),
-    linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%) !important;
-  background-attachment: fixed !important;
-  min-height: 100vh;
-}
-
-[data-theme="dark"] body {
-  background: 
-    linear-gradient(135deg, rgba(15, 23, 42, 0.3) 0%, transparent 100%),
-    radial-gradient(circle at 20% 50%, rgba(30, 58, 138, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(30, 64, 175, 0.2) 0%, transparent 50%),
-    linear-gradient(to bottom, #0f172a 0%, #1e293b 100%) !important;
-}
-
-.dashboard-container {
-  background: transparent !important;
-}
-
-/* ===== TRUE iOS FROSTED GLASS CARDS ===== */
-.stat-card,
-.appointments-section,
-.queue-section {
-  background: rgba(255, 255, 255, 0.7) !important; /* More opaque base */
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.1) !important;
-    backdrop-filter: blur(40px) saturate(180%) brightness(1.1) !important;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.8) !important;
-  border-radius: var(--radius-lg) !important;
-}
-
-/* Inner cards - even more transparent */
-.appointment-card,
-.queue-card {
-  background: rgba(255, 255, 255, 0.5) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
-   backdrop-filter: blur(30px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-}
-
-/* ===== DARK MODE iOS GLASS ===== */
-[data-theme="dark"] .stat-card,
-[data-theme="dark"] .appointments-section,
-[data-theme="dark"] .queue-section {
-   background: rgba(30, 41, 55, 0.6) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(0.9) !important;
-  backdrop-filter: blur(40px) saturate(180%) brightness(0.9) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2) !important;
-}
-
-[data-theme="dark"] .appointment-card,
-[data-theme="dark"] .queue-card {
-  background: rgba(30, 41, 55, 0.5) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
-    backdrop-filter: blur(30px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-/* ===== TEXT CONTRAST FOR READABILITY ===== */
-.stat-title,
-.stat-subtitle,
-.appointment-name,
-.queue-name,
-.section-title,
-.section-subtitle {
-  color: var(--text-primary) !important;
-  font-weight: 600 !important;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Remove shine effect - too distracting for iOS style */
-.stat-card::before,
-.appointments-section::before,
-.queue-section::before {
-  display: none !important;
-}
-
-/* ===== HOVER EFFECTS ===== */
-.stat-card:hover,
-.appointments-section:hover,
-.queue-section:hover {
-  background: rgba(255, 255, 255, 0.8) !important;
-  transform: translateY(-2px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-[data-theme="dark"] .stat-card:hover,
-[data-theme="dark"] .appointments-section:hover,
-[data-theme="dark"] .queue-section:hover {
-  background: rgba(30, 41, 55, 0.7) !important;
-}
-
-.appointment-card:hover,
-.queue-card:hover {
-  background: rgba(255, 255, 255, 0.65) !important;
-  transform: translateY(-2px);
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-}
-
-[data-theme="dark"] .appointment-card:hover,
-[data-theme="dark"] .queue-card:hover {
-  background: rgba(30, 41, 55, 0.65) !important;
-}
