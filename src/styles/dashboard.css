@@ -917,21 +917,20 @@ select:active {
   }
 }
 
-/* ===== HERO SECTION ===== */
-
+/* ===== HERO SECTION - UPDATED ===== */
 .hero-section {
   position: relative;
   padding: var(--space-xl) var(--space-xl);
   background: url('/images/eye_center.png') center/cover no-repeat;
   color: #ffffff;
   text-align: center;
-border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
   background-color: var(--bg-secondary);
 }
 
-/* 🌅 Hero Section Overlay */
+/* 🌅 Hero Section Overlay - INCREASED BLUR */
 .hero-section::before {
   content: "";
   position: absolute;
@@ -939,9 +938,19 @@ border-radius: var(--radius-xl);
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.45); /* Dark overlay for readability */
+  background: rgba(0, 0, 0, 0.55); /* Darker overlay for better text contrast */
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px); /* Added blur to overlay */
   z-index: 0;
   border-radius: var(--border-radius-lg);
+}
+
+/* Mobile - Adjusted spacing */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: var(--space-lg) var(--space-md);
+    margin: 0 var(--space-md) var(--space-md); /* Reduced bottom margin */
+  }
 }
 
 /* 🌤 Hero Content */
@@ -1374,10 +1383,10 @@ border-radius: var(--radius-xl);
   height: 100px;
 }
 
-/* ===== STATS SECTION ===== */
+/* ===== STATS SECTION - GLASSMORPHISM ===== */
 .stats-section {
   padding: var(--space-xl);
-  margin-top: -40px; /* ✅ Moved section slightly up */
+  margin-top: -40px; /* Keeps overlap with hero */
 }
 
 .stats-grid {
@@ -1385,15 +1394,18 @@ border-radius: var(--radius-xl);
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-lg);
   max-width: 1200px;
-  margin: -10px auto 0 auto; /* ✅ Slight upward lift of entire grid */
+  margin: -10px auto 0 auto;
 }
 
+/* ✨ GLASSMORPHISM STAT CARDS */
 .stat-card {
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.7); /* Glass effect */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   padding: var(--space-lg);
-  border-radius: 20px; /* Rounded corners for card */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   transition: var(--transition-normal);
   display: flex;
   align-items: flex-start;
@@ -1401,8 +1413,58 @@ border-radius: var(--radius-xl);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Dark Mode Glass */
+[data-theme="dark"] .stat-card {
+  background: rgba(30, 41, 55, 0.6); /* Dark glass */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+   backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .stat-card:hover {
+  background: rgba(30, 41, 55, 0.7);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Enhanced text readability */
+.stat-title {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-subtitle,
+.stat-change {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile Stats - Fixed spacing */
+@media (max-width: 768px) {
+  .stats-section {
+    padding: var(--space-md);
+    margin-top: -20px; /* Less overlap on mobile */
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+    margin-top: 0; /* Remove negative margin on mobile */
+  }
 }
 
 /* ===== ICON STYLES ===== */
@@ -1510,35 +1572,39 @@ border-radius: var(--radius-xl);
   margin: var(--space-md) !important;
 }
 
-/* ===== APPOINTMENTS SECTION ===== */
-.appointments-section, .queue-section {
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg); /* UPDATED: iOS style */
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+/* ===== APPOINTMENTS & QUEUE SECTIONS - GLASSMORPHISM ===== */
+.appointments-section, 
+.queue-section {
+  background: rgba(255, 255, 255, 0.7); /* Glass effect */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   overflow: hidden;
 }
 
+
+/* Section Headers - Glass */
 .section-header {
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0; /* ADDED: Rounded top corners only */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(248, 250, 252, 0.5);
+  -webkit-backdrop-filter: blur(10px);
+   backdrop-filter: blur(10px);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
+/* Enhanced text readability */
 .section-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  margin-bottom: var(--space-xs);
   color: var(--text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  font-weight: 700;
 }
 
 .section-subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .search-results {
@@ -1551,21 +1617,23 @@ border-radius: var(--radius-xl);
   overflow-y: auto;
 }
 
+
+/* Appointment Cards - Subtle glass */
 .appointment-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
+  background: rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+   backdrop-filter: blur(10px);
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: var(--transition-fast);
-  margin: 0 var(--space-md); /* ADDED: Added margin */
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  margin: 0 var(--space-sm);
+  border-radius: var(--radius-md);
 }
 
 .appointment-card:hover {
-  background: var(--bg-secondary);
-  transform: translateY(-1px); /* ADDED: Hover effect */
-  box-shadow: var(--shadow-sm); /* ADDED: Hover effect */
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .appointment-card:last-child {
@@ -1696,6 +1764,7 @@ border-radius: var(--radius-xl);
   display: flex;
   gap: var(--space-xs);
 }
+
 /* ===============================
    ACTION & CANCEL (DELETE) BUTTONS
    =============================== */
@@ -1812,19 +1881,88 @@ border-radius: var(--radius-xl);
   top: var(--space-xl);
 }
 
+/* Queue Summary - Glass */
 .queue-summary {
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
-  border-radius: var(--radius-md); /* ADDED: iOS style */
-  margin: var(--space-md); /* ADDED: Added margin */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(15px);
+   backdrop-filter: blur(15px);
+  border-radius: var(--radius-md);
+  margin: var(--space-md);
 }
 
 .queue-summary.next-patient {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.8) 0%, rgba(254, 243, 199, 0.8) 100%);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
   border-left: 4px solid var(--warning);
-  border-radius: var(--radius-md); /* ADDED: iOS style */
 }
 
+/* ===== DARK MODE GLASSMORPHISM ===== */
+[data-theme="dark"] .appointments-section,
+[data-theme="dark"] .queue-section {
+  background: rgba(30, 41, 55, 0.6);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .section-header {
+  background: rgba(15, 23, 42, 0.5);
+  -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .appointment-card {
+  background: rgba(30, 41, 55, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .appointment-card:hover {
+  background: rgba(30, 41, 55, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .queue-card {
+  background: rgba(30, 41, 55, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+   backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .queue-card:hover {
+  background: rgba(30, 41, 55, 0.6);
+}
+
+[data-theme="dark"] .queue-summary {
+  background: rgba(30, 41, 55, 0.4);
+  -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+}
+
+[data-theme="dark"] .queue-summary.next-patient {
+  background: linear-gradient(135deg, rgba(124, 45, 18, 0.5) 0%, rgba(146, 64, 14, 0.5) 100%);
+  -webkit-backdrop-filter: blur(15px);
+   backdrop-filter: blur(15px);
+  border-left-color: #fbbf24;
+}
+
+/* Text readability in dark mode */
+[data-theme="dark"] .section-title,
+[data-theme="dark"] .appointment-name,
+[data-theme="dark"] .queue-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .section-subtitle,
+[data-theme="dark"] .appointment-type,
+[data-theme="dark"] .queue-doctor {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 .serving-label {
   display: block;
   font-size: var(--font-size-sm);
@@ -1893,17 +2031,21 @@ border-radius: var(--radius-xl);
   text-align: center;
 }
 
+/* Queue Cards - Glass */
 .queue-card {
+  background: rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+   backdrop-filter: blur(10px);
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: var(--transition-fast);
-  margin: 0 var(--space-md); /* ADDED: Added margin */
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  margin: 0 var(--space-sm);
+  border-radius: var(--radius-md);
 }
 
 .queue-card:hover {
-  background: var(--bg-secondary);
-  transform: translateY(-1px); /* ADDED: Hover effect */
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
 }
 
 .queue-card:last-child {
@@ -6743,3 +6885,58 @@ svg.clock,
   color: #2e7d32;
 }
 
+/* ===== MOBILE SPACING FIX ===== */
+@media (max-width: 768px) {
+  /* Hero to Stats spacing */
+  .hero-section {
+    margin-bottom: var(--space-md); /* Reduced from var(--space-xl) */
+  }
+  
+  .stats-section {
+    padding: var(--space-md);
+    margin-top: -15px; /* Slight overlap for continuity */
+  }
+  
+  /* Appointments and Queue sections */
+  .appointments-section,
+  .queue-section {
+    margin: var(--space-md);
+  }
+  
+  /* Card spacing */
+  .appointment-card,
+  .queue-card {
+    margin: 0 var(--space-xs);
+    padding: var(--space-md);
+  }
+  
+  /* Glass effects - slightly less blur on mobile for performance */
+  .stat-card,
+  .appointments-section,
+  .queue-section {
+    -webkit-backdrop-filter: blur(15px) saturate(170%);
+     backdrop-filter: blur(15px) saturate(170%);
+  }
+  
+  .appointment-card,
+  .queue-card {
+    -webkit-backdrop-filter: blur(8px);
+     backdrop-filter: blur(8px);
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 480px) {
+  .hero-section {
+    padding: var(--space-md);
+  }
+  
+  .stats-section {
+    padding: var(--space-sm);
+    margin-top: -10px;
+  }
+  
+  .stat-card {
+    padding: var(--space-md);
+  }
+}

@@ -20,6 +20,14 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// ✅ Helper function to get API URL
+const getApiUrl = (endpoint: string) => {
+  const baseUrl = window.location.hostname === 'localhost' 
+    ? '' 
+    : 'https://timefly.vercel.app';
+  return `${baseUrl}/api/${endpoint}`;
+};
+
 interface SignupProps {
   onSuccess?: () => void;
 }
@@ -69,11 +77,13 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const checkResponse = await fetch("/api/check-email", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email: normalizedEmail }),
-});
+      
+      // ✅ Updated: Using helper function
+      const checkResponse = await fetch(getApiUrl('check-email'), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
 
       const checkData = await checkResponse.json();
 
@@ -86,11 +96,12 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
         return;
       }
 
-     const response = await fetch("/api/send-code", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email: normalizedEmail }),
-});
+      // ✅ Updated: Using helper function
+      const response = await fetch(getApiUrl('send-code'), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
 
       const data = await response.json();
 
@@ -129,11 +140,12 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedCode = inputCode.trim();
 
-    const response = await fetch("/api/verify-code", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email: normalizedEmail, code: normalizedCode }),
-});
+      // ✅ Updated: Using helper function
+      const response = await fetch(getApiUrl('verify-code'), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail, code: normalizedCode }),
+      });
 
       const data = await response.json();
       if (!response.ok || !data.success) throw new Error(data.error || "Invalid code.");
@@ -171,42 +183,42 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
   };
 
   const handleGoogleSignUp = async () => {
-  if (isGoogleLoading) return;
-  setIsGoogleLoading(true);
+    if (isGoogleLoading) return;
+    setIsGoogleLoading(true);
 
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
 
-    const userQuery = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
+      const userQuery = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
 
-    if (userQuery.empty) {
-      await addDoc(collection(db, "users"), {
-        uid: user.uid,
-        name: user.displayName || user.email?.split("@")[0] || "User",
-        email: user.email || "",
-        role: "Patient",
-        phone: "",
-        department: "",
-        photo: user.photoURL || "",
-        createdAt: serverTimestamp(),
-      });
+      if (userQuery.empty) {
+        await addDoc(collection(db, "users"), {
+          uid: user.uid,
+          name: user.displayName || user.email?.split("@")[0] || "User",
+          email: user.email || "",
+          role: "Patient",
+          phone: "",
+          department: "",
+          photo: user.photoURL || "",
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      // ✅ Immediately sign them out after account creation
+      await signOut(auth);
+
+      toast.success("🎉 Account created successfully! Please log in.", { autoClose: 4000 });
+      setTimeout(() => navigate("/login", { replace: true }), 1500);
+    } catch (err: any) {
+      setIsGoogleLoading(false);
+      if (err.code === "auth/popup-closed-by-user") {
+        toast.info("ℹ️ Sign-up cancelled", { autoClose: 5000 });
+      } else {
+        toast.error(`❌ ${err.message || "Google sign-up failed"}`, { autoClose: 10000 });
+      }
     }
-
-    // ✅ Immediately sign them out after account creation
-    await signOut(auth);
-
-    toast.success("🎉 Account created successfully! Please log in.", { autoClose: 4000 });
-    setTimeout(() => navigate("/login", { replace: true }), 1500);
-  } catch (err: any) {
-    setIsGoogleLoading(false);
-    if (err.code === "auth/popup-closed-by-user") {
-      toast.info("ℹ️ Sign-up cancelled", { autoClose: 5000 });
-    } else {
-      toast.error(`❌ ${err.message || "Google sign-up failed"}`, { autoClose: 10000 });
-    }
-  }
-};
+  };
 
   return (
     <div className="signup-container">

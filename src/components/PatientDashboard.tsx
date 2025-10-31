@@ -189,6 +189,15 @@ const PatientDashboard = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [isSendingCancellation, setIsSendingCancellation] = useState(false);
 
+
+// Add this after imports
+const getApiUrl = (endpoint: string) => {
+  const baseUrl = window.location.hostname === 'localhost' 
+    ? '' 
+    : 'https://timefly.vercel.app';
+  return `${baseUrl}/api/${endpoint}`;
+};
+
   // Add notification function
   const addNotification = (
     type: 'success' | 'error' | 'info' | 'warning',
@@ -1240,8 +1249,8 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       await deleteDoc(doc(db, 'waitingList', nextInLine.id));
 
       // Send notification to waiting list patient
-     try {
-  await fetch('/api/send-waiting-list-notification', {
+ try {
+  await fetch(getApiUrl('send-waiting-list-notification'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -1264,9 +1273,10 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       addNotification('info', 'Appointment cancelled successfully');
     }
 
-    // Send cancellation email to clinic
-    try {
-  const response = await fetch('/api/send-cancellation', {
+  
+ // Send cancellation email to clinic
+try {
+  const response = await fetch(getApiUrl('send-cancellation'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

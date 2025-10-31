@@ -6,6 +6,10 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import admin from "firebase-admin";
 
+console.log('🚀 API Starting...');
+console.log('📧 EMAIL_USER:', process.env.EMAIL_USER ? '✅ Set' : '❌ Missing');
+console.log('🔑 EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Set' : '❌ Missing');
+console.log('🔥 FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing');
 
 
 const app = express();
@@ -13,6 +17,16 @@ app.use(cors());
 // ✅ INCREASED PAYLOAD LIMIT TO HANDLE BASE64 IMAGES
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ✅ ADD THIS NEW MIDDLEWARE - Strip /api prefix for Express routes
+app.use((req, res, next) => {
+  console.log('📍 Incoming request:', req.method, req.url);
+  if (req.url.startsWith('/api')) {
+    req.url = req.url.replace('/api', '');
+    console.log('🔄 Rewritten to:', req.url);
+  }
+  next();
+});
 
 // ============================
 // 🔥 Initialize Firebase Admin SDK

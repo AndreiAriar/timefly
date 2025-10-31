@@ -338,6 +338,11 @@ useEffect(() => {
   return () => document.removeEventListener('mousedown', handleOutsideClick);
 }, [showProfileDropdown]);
 
+
+
+
+
+
   // Notification System
   const addNotification = (
     type: 'success' | 'error' | 'info' | 'warning',
@@ -688,6 +693,15 @@ useEffect(() => {
     }
   };
   
+// Add this after imports
+const getApiUrl = (endpoint: string) => {
+  const baseUrl = window.location.hostname === 'localhost' 
+    ? '' 
+    : 'https://timefly.vercel.app';
+  return `${baseUrl}/api/${endpoint}`;
+};
+
+
   // Helper Functions
   const getTodayDate = (): string => {
     const today = new Date();
@@ -1879,9 +1893,9 @@ const handleAppointmentStatusChange = async (appointmentId: string, status: 'con
 
         // Send notification to waiting list patient
         try {
-          await fetch('http://127.0.0.1:5000/send-waiting-list-notification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+         await fetch(getApiUrl('send-waiting-list-notification'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               name: waitingData.patientName,
               email: waitingData.patientEmail,
@@ -2000,8 +2014,8 @@ const handleCreateDoctor = async () => {
     setDoctors(prev => [...prev, newDoctor]);
 
     //  Step 2: Create Firebase Auth account + User document via backend
-   try {
-  const response = await fetch('/api/create-doctor-account', {
+  try {
+  const response = await fetch(getApiUrl('create-doctor-account'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -2218,8 +2232,9 @@ const sendNotificationToPatient = async (
     };
 
     const notificationContent = getNotificationMessage(type, appointmentData);
+
 // Real email sending via backend
-const response = await fetch("/api/send-reminder", {
+const response = await fetch(getApiUrl('send-reminder'), {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -2366,7 +2381,7 @@ const sendNotificationToPatientById = async (
 
   try {
     //Send queue position notification to backend
-   const response = await fetch("/api/send-queue-notification", {
+  const response = await fetch(getApiUrl('send-queue-notification'), {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -4406,10 +4421,9 @@ const handleLogout = async () => {
                         });
 
                         await deleteDoc(doc(db, 'waitingList', entry.id));
-
-                        await fetch('http://127.0.0.1:5000/send-waiting-list-notification', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
+                     await fetch(getApiUrl('send-waiting-list-notification'), {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             name: entry.patientName,
                             email: entry.patientEmail,
@@ -5490,10 +5504,10 @@ const handleLogout = async () => {
                 className="btn-secondary"
                 title="Notify Patient"
                 onClick={async () => {
-                  try {
-                  const response = await fetch("/api/send-reminder", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
+  try {
+    const response = await fetch(getApiUrl('send-reminder'), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     email: selectedAppointment.email,
     phone: selectedAppointment.phone,
