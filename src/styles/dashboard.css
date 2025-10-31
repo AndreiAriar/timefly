@@ -1711,48 +1711,48 @@ border-radius: var(--radius-xl);
 
 /* Container for action buttons */
 .appointment-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* ✅ CENTER THE BUTTONS */
-  gap: 8px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important; /* ✅ CENTERED BY DEFAULT */
+  gap: 8px !important;
 }
 
 /* Base action button */
 .action-btn {
-  color: #000000; /* Black in light mode */
-  background: transparent;
-  border: none;
-  padding: 8px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.25s ease, transform 0.2s ease;
-  cursor: pointer;
-  width: 36px; /* Consistent size for all action buttons */
-  height: 36px; /* Consistent size for all action buttons */
-  flex-shrink: 0; /* Prevent buttons from shrinking */
+  color: #000000 !important; /* Black in light mode */
+  background: transparent !important;
+  border: none !important;
+  padding: 8px !important;
+  border-radius: var(--radius-md) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: color 0.25s ease, transform 0.2s ease !important;
+  cursor: pointer !important;
+  width: 36px !important;
+  height: 36px !important;
+  flex-shrink: 0 !important;
 }
 
 /* Cancel/Delete button */
 .cancel-btn {
-  color: #000000; /* Black in light mode */
+  color: #000000 !important;
   background: transparent !important;
   border: none !important;
-  padding: 8px !important; /* Match other buttons' padding */
-  border-radius: var(--radius-md) !important; /* Match other buttons' border radius */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.25s ease, transform 0.2s ease;
-  cursor: pointer;
-  width: 36px !important; /* Consistent size with other buttons */
-  height: 36px !important; /* Consistent size with other buttons */
-  box-shadow: none !important; /* Remove any shadow */
-  flex-shrink: 0; /* Prevent button from shrinking */
+  padding: 8px !important;
+  border-radius: var(--radius-md) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: color 0.25s ease, transform 0.2s ease !important;
+  cursor: pointer !important;
+  width: 36px !important;
+  height: 36px !important;
+  box-shadow: none !important;
+  flex-shrink: 0 !important;
 }
 
-/* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Remove circular browser focus outline */
+/* Remove circular browser focus outline */
 .cancel-btn:focus,
 .cancel-btn:active,
 .action-btn:focus,
@@ -1765,31 +1765,26 @@ border-radius: var(--radius-xl);
 /* Dark mode colors */
 [data-theme="dark"] .action-btn,
 [data-theme="dark"] .cancel-btn {
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
 }
 
-/* Hover/focus base - ensure no background on cancel button */
+/* Hover/focus base */
 .action-btn:hover,
 .cancel-btn:hover,
 .cancel-btn:focus {
   background: transparent !important;
   border: none !important;
-  transform: scale(1.1);
+  transform: scale(1.1) !important;
 }
 
-/* ======================================
-   ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ CANCEL (TRASH) ICON HOVER FIX
-   ====================================== */
-
-/* Light mode - change stroke only (no fill) */
+/* Cancel (trash) icon hover */
 .cancel-btn:hover svg,
 .cancel-btn:focus svg {
-  stroke: var(--error, #ef4444) !important; /* Red outline */
-  fill: none !important; /* Prevent filling the icon */
+  stroke: var(--error, #ef4444) !important;
+  fill: none !important;
   color: var(--error, #ef4444) !important;
 }
 
-/* Dark mode - bright red */
 [data-theme="dark"] .cancel-btn:hover svg,
 [data-theme="dark"] .cancel-btn:focus svg {
   stroke: #f87171 !important;
@@ -1797,22 +1792,21 @@ border-radius: var(--radius-xl);
   color: #f87171 !important;
 }
 
-/* Specific hover colors maintained */
+/* Specific hover colors */
 .view-btn:hover {
-  color: var(--primary);
+  color: var(--primary) !important;
 }
 
 .edit-btn:hover {
-  color: var(--warning);
+  color: var(--warning) !important;
 }
 
-/* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Red hover for delete button */
 .delete-btn:hover {
-  color: var(--error); /* Red in light mode */
+  color: var(--error) !important;
 }
 
 [data-theme="dark"] .delete-btn:hover {
-  color: #f87171; /* Bright red in dark mode */
+  color: #f87171 !important;
 }
 
 /* ===== QUEUE SECTION ===== */
@@ -3315,101 +3309,103 @@ border-radius: var(--radius-xl);
   background: rgba(59, 130, 246, 0.2);
   color: var(--text-primary);
 }
+
+/* ===== DETAILS MODAL - GRID LAYOUT (SIDE BY SIDE) ===== */
 .detail-grid {
-  display: grid;
-  grid-template-columns: auto 1fr; /* ✅ AUTO WIDTH FOR LABELS */
-  row-gap: 1rem;
-  column-gap: 0.5rem; /* ✅ SMALLER GAP */
-  align-items: center;
-  margin-top: 1.5rem;
-  margin-bottom: 2rem;
-  background: var(--bg-secondary);
-  padding: var(--space-xl) var(--space-lg);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-light);
+  display: grid !important;
+  grid-template-columns: auto 1fr !important; /* ✅ Label on left, value on right */
+  row-gap: 1rem !important;
+  column-gap: 1rem !important; /* ✅ Space between label and value */
+  align-items: center !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 2rem !important;
+  background: var(--bg-secondary) !important;
+  padding: var(--space-xl) var(--space-lg) !important;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-light) !important;
 }
 
 .detail-label {
-  font-weight: 700;
-  color: var(--text-primary);
-  text-align: left; /* ✅ LEFT ALIGNED */
-  white-space: nowrap;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
 }
 
 .detail-label::after {
-  content: ':'; /* ✅ ADD COLON AFTER LABEL */
+  content: ':' !important;
 }
 
 .detail-value {
-  text-align: left;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  word-break: break-word;
-  line-height: 1.6;
-  font-weight: 500;
+  text-align: left !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.95rem !important;
+  word-break: break-word !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
 }
 
 /* Remove colored background from status/priority in details */
 .detail-status,
 .detail-priority {
-  display: inline-block;
-  padding: 0;
-  border-radius: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  border: none;
+  display: inline-block !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  text-transform: capitalize !important;
+  border: none !important;
   background: transparent !important;
 }
 
-/* Color-coded text only (no boxes) */
+/* Color-coded text only */
 .detail-status.status-confirmed,
 .detail-priority.priority-normal { 
-  color: #10b981;
+  color: #10b981 !important;
 }
 
 .detail-status.status-pending,
 .detail-priority.priority-urgent { 
-  color: #f59e0b;
+  color: #f59e0b !important;
 }
 
 .detail-status.status-in-progress { 
-  color: #3b82f6;
+  color: #3b82f6 !important;
 }
 
 .detail-status.status-completed { 
-  color: #6b7280;
+  color: #6b7280 !important;
 }
 
 .detail-status.status-cancelled,
 .detail-priority.priority-emergency { 
-  color: #ef4444;
+  color: #ef4444 !important;
 }
 
 /* Dark mode text colors */
 [data-theme="dark"] .detail-status.status-confirmed,
 [data-theme="dark"] .detail-priority.priority-normal { 
-  color: #34d399;
+  color: #34d399 !important;
 }
 
 [data-theme="dark"] .detail-status.status-pending,
 [data-theme="dark"] .detail-priority.priority-urgent { 
-  color: #fbbf24;
+  color: #fbbf24 !important;
 }
 
 [data-theme="dark"] .detail-status.status-in-progress { 
-  color: #60a5fa;
+  color: #60a5fa !important;
 }
 
 [data-theme="dark"] .detail-status.status-completed { 
-  color: #9ca3af;
+  color: #9ca3af !important;
 }
 
 [data-theme="dark"] .detail-status.status-cancelled,
 [data-theme="dark"] .detail-priority.priority-emergency { 
-  color: #f87171;
+  color: #f87171 !important;
 }
 
 /* Status and priority badges in details modal */
@@ -3680,61 +3676,93 @@ border-radius: var(--radius-xl);
 /* ===== MOBILE VIEW - DETAILS MODAL ===== */
 @media (max-width: 768px) {
   .detail-header {
-    text-align: center;
-    margin-bottom: var(--space-lg);
+    text-align: center !important;
+    margin-bottom: var(--space-lg) !important;
   }
   
   .detail-photo {
-    margin: 0 auto var(--space-lg) auto;
-    justify-content: center;
+    margin: 0 auto var(--space-lg) auto !important;
+    justify-content: center !important;
   }
   
   .detail-photo img {
-    width: 80px;
-    height: 80px;
+    width: 80px !important;
+    height: 80px !important;
   }
   
   .detail-title {
-    font-size: var(--font-size-xl);
-    text-align: center; /* ✅ KEEP CENTERED */
+    font-size: var(--font-size-xl) !important;
+    text-align: center !important;
   }
   
   .detail-queue-container {
-    justify-content: center;
+    justify-content: center !important;
   }
   
   .detail-queue-number {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-lg) !important;
   }
   
-  /* ✅ KEEP GRID FORMAT (Name: Tyler) */
+  /* ✅ KEEP SIDE-BY-SIDE FORMAT ON MOBILE */
   .detail-grid {
-    grid-template-columns: auto 1fr;
-    row-gap: 0.875rem;
-    column-gap: 0.5rem;
-    padding: var(--space-lg) var(--space-md);
-    text-align: left; /* ✅ LEFT ALIGNED */
+    grid-template-columns: auto 1fr !important; /* ✅ Label: Value side by side */
+    row-gap: 0.875rem !important;
+    column-gap: 0.75rem !important;
+    padding: var(--space-lg) var(--space-md) !important;
   }
   
   .detail-label {
-    text-align: left; /* ✅ LEFT ALIGNED */
-    padding-right: 0;
-    margin-bottom: 0;
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    text-align: left !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    color: var(--text-secondary) !important;
   }
   
   .detail-label::after {
-    content: ':'; /* ✅ COLON STILL SHOWS */
+    content: ':' !important;
   }
   
   .detail-value {
-    text-align: left; /* ✅ LEFT ALIGNED */
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-primary);
+    text-align: left !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+  }
+  
+  /* Center action buttons */
+  .detail-actions {
+    flex-direction: column !important;
+    gap: var(--space-sm) !important;
+    padding-top: var(--space-lg) !important;
+  }
+  
+  .detail-action-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .detail-photo img {
+    width: 72px !important;
+    height: 72px !important;
+  }
+  
+  .detail-title {
+    font-size: var(--font-size-lg) !important;
+  }
+  
+  .detail-grid {
+    padding: var(--space-md) var(--space-sm) !important;
+    column-gap: 0.5rem !important;
+  }
+  
+  .detail-label {
+    font-size: 0.8rem !important;
+  }
+  
+  .detail-value {
+    font-size: 0.85rem !important;
   }
 
   
@@ -6026,85 +6054,85 @@ svg.clock,
 /* ===== APPOINTMENT CARDS - MOBILE CENTERED LAYOUT ===== */
 @media (max-width: 768px) {
   .appointment-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: var(--space-md);
-    padding: var(--space-lg) var(--space-md);
-    margin: 0 var(--space-sm);
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: var(--space-md) !important;
+    padding: var(--space-lg) var(--space-md) !important;
+    margin: 0 var(--space-sm) !important;
   }
   
   /* Center avatar */
   .appointment-avatar-btn {
-    margin: 0 auto;
+    margin: 0 auto !important;
   }
   
   .appointment-avatar {
-    width: 64px;
-    height: 64px;
+    width: 64px !important;
+    height: 64px !important;
   }
   
   /* Center queue number */
   .queue-number {
-    font-size: 1.25rem;
-    text-align: center;
-    margin-bottom: var(--space-xs);
+    font-size: 1.25rem !important;
+    text-align: center !important;
+    margin-bottom: var(--space-xs) !important;
   }
   
   /* Center patient details */
   .appointment-details {
-    width: 100%;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    width: 100% !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
   }
   
   .appointment-name {
-    font-size: 1.125rem;
-    margin-bottom: var(--space-xs);
+    font-size: 1.125rem !important;
+    margin-bottom: var(--space-xs) !important;
   }
   
-  /* Date & Time Row - Inline */
+  /* Date & Time inline */
   .appointment-meta {
-    width: 100%;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-md);
-    margin: var(--space-sm) 0;
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+    margin: var(--space-sm) 0 !important;
   }
   
   .appointment-time {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
   }
   
   .appointment-date-display {
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
   }
   
-  /* Priority after date/time */
+  /* Priority tags centered */
   .appointment-tags {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-    margin: var(--space-sm) 0;
+    width: 100% !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: var(--space-sm) !important;
+    margin: var(--space-sm) 0 !important;
   }
   
-  /* ✅ CENTER ACTION BUTTONS */
+  /* ✅ ACTION BUTTONS CENTERED */
   .appointment-actions {
-    width: 100%;
-    justify-content: center;
-    gap: var(--space-md);
-    margin-top: var(--space-md);
+    width: 100% !important;
+    justify-content: center !important; /* ✅ CENTERED */
+    gap: var(--space-md) !important;
+    margin-top: var(--space-md) !important;
   }
   
   .action-btn,
   .cancel-btn {
-    width: 40px;
-    height: 40px;
+    width: 40px !important;
+    height: 40px !important;
   }
 }
 
