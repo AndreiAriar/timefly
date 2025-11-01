@@ -6051,96 +6051,6 @@ svg.clock,
     max-height: none !important;
   }
 }
-/* ===== APPOINTMENT CARDS - MOBILE CENTERED LAYOUT ===== */
-@media (max-width: 768px) {
-  .appointment-card {
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    gap: var(--space-md) !important;
-    padding: var(--space-lg) var(--space-md) !important;
-    margin: 0 var(--space-sm) !important;
-  }
-  
-  /* Center avatar */
-  .appointment-avatar-btn {
-    margin: 0 auto !important;
-  }
-  
-  .appointment-avatar {
-    width: 64px !important;
-    height: 64px !important;
-  }
-  
-  /* Center queue number */
-  .queue-number {
-    font-size: 1.25rem !important;
-    text-align: center !important;
-    margin-bottom: var(--space-xs) !important;
-  }
-  
-  /* Center patient details */
-  .appointment-details {
-    width: 100% !important;
-    text-align: center !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-  }
-  
-  .appointment-name {
-    font-size: 1.125rem !important;
-    margin-bottom: var(--space-xs) !important;
-  }
-  
-  /* Date & Time inline */
-  .appointment-meta {
-    width: 100% !important;
-    flex-direction: row !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: var(--space-md) !important;
-    margin: var(--space-sm) 0 !important;
-  }
-  
-  .appointment-time {
-    font-size: 0.95rem !important;
-    font-weight: 600 !important;
-  }
-  
-  .appointment-date-display {
-    font-size: 0.9rem !important;
-  }
-  
-  /* Priority tags centered */
-  .appointment-tags {
-    width: 100% !important;
-    justify-content: center !important;
-    flex-wrap: wrap !important;
-    gap: var(--space-sm) !important;
-    margin: var(--space-sm) 0 !important;
-  }
-  
-  /* ✅ MOBILE-ONLY FIX: CENTER ACTION BUTTONS */
-  .appointment-actions {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: var(--space-md) !important;
-    margin-top: var(--space-md) !important;
-    padding: 0 !important;
-  }
-  
-  .action-btn,
-  .cancel-btn {
-    width: 40px !important;
-    height: 40px !important;
-    flex-shrink: 0 !important;
-    margin: 0 !important;
-  }
-}
 
 /* Queue Section - Mobile */
 @media (max-width: 768px) {
@@ -6950,4 +6860,93 @@ svg.clock,
   font-weight: 700;
 }
 
-
+/* ===== APPOINTMENT CARDS - MOBILE CENTERED LAYOUT (FINAL OVERRIDE) ===== */
+@media (max-width: 768px) {
+  .appointment-card {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: var(--space-md) !important;
+    padding: var(--space-lg) var(--space-md) !important;
+    margin: 0 var(--space-sm) !important;
+  }
+  
+  /* Center avatar */
+  .appointment-avatar-btn {
+    margin: 0 auto !important;
+  }
+  
+  .appointment-avatar {
+    width: 64px !important;
+    height: 64px !important;
+  }
+  
+  /* Center queue number */
+  .queue-number {
+    font-size: 1.25rem !important;
+    text-align: center !important;
+    margin-bottom: var(--space-xs) !important;
+  }
+  
+  /* Center patient details */
+  .appointment-details {
+    width: 100% !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .appointment-name {
+    font-size: 1.125rem !important;
+    margin-bottom: var(--space-xs) !important;
+  }
+  
+  /* Date & Time inline */
+  .appointment-meta {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+    margin: var(--space-sm) 0 !important;
+  }
+  
+  .appointment-time {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+  }
+  
+  .appointment-date-display {
+    font-size: 0.9rem !important;
+  }
+  
+  /* Priority tags centered */
+  .appointment-tags {
+    width: 100% !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: var(--space-sm) !important;
+    margin: var(--space-sm) 0 !important;
+  }
+  
+  /* ✅✅✅ CRITICAL FIX: CENTER ACTION BUTTONS ✅✅✅ */
+  .appointments-list .appointment-card .appointment-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+    margin-top: var(--space-md) !important;
+    padding: 0 !important;
+  }
+  
+  .appointments-list .appointment-card .action-btn,
+  .appointments-list .appointment-card .cancel-btn {
+    width: 40px !important;
+    height: 40px !important;
+    flex-shrink: 0 !important;
+    margin: 0 auto !important;
+  }
+}
