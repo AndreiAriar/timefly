@@ -6052,6 +6052,7 @@ svg.clock,
   }
 }
 /* ===== APPOINTMENT CARDS - MOBILE CENTERED LAYOUT ===== */
+/* ===== APPOINTMENT CARDS - MOBILE CENTERED LAYOUT ===== */
 @media (max-width: 768px) {
   .appointment-card {
     flex-direction: column !important;
@@ -6121,19 +6122,24 @@ svg.clock,
     margin: var(--space-sm) 0 !important;
   }
   
-  /* ✅ ACTION BUTTONS CENTERED */
+  /* ✅ FIXED: ACTION BUTTONS NOW PROPERLY CENTERED */
   .appointment-actions {
     width: 100% !important;
-    justify-content: center !important; /* ✅ CENTERED */
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
     gap: var(--space-md) !important;
     margin-top: var(--space-md) !important;
-    margin-left: 10px !important;
+    padding: 0 !important;
   }
   
   .action-btn,
   .cancel-btn {
     width: 40px !important;
     height: 40px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
   }
 }
 
