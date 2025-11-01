@@ -1209,7 +1209,42 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     const appointment = appointments.find(apt => apt.id === id);
     if (!appointment) {
       addNotification('error', 'Appointment not found');
+      setIsSendingCancellation(false);
       return;
+    }
+
+    // ✅ Send cancellation email FIRST before updating status
+    try {
+      console.log('📧 Sending cancellation email to clinic...');
+      const response = await fetch(getApiUrl('send-cancellation'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appointmentId: id,
+          name: appointment.name,
+          email: appointment.email || currentUser?.email || 'N/A',
+          date: appointment.date,
+          time: appointment.time,
+          doctor: appointment.doctor,
+          reason: reason
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ Cancellation email sent to clinic');
+        addNotification('success', 'Cancellation notification sent to clinic');
+      } else {
+        console.error('❌ Email API returned error:', data.error);
+        addNotification('warning', 'Appointment cancelled but email notification failed');
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending cancellation email:', emailError);
+      addNotification('warning', 'Appointment will be cancelled but email notification failed');
     }
 
     // Update appointment status
@@ -1221,7 +1256,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       updatedAt: serverTimestamp()
     });
 
-    // ✅ NEW: Check waiting list for this doctor and date
+    // ✅ Check waiting list for this doctor and date
     const waitingListQuery = query(
       collection(db, 'waitingList'),
       where('preferredDoctorId', '==', appointment.doctorId),
@@ -1260,53 +1295,26 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       await deleteDoc(doc(db, 'waitingList', nextInLine.id));
 
       // Send notification to waiting list patient
- try {
-  await fetch(getApiUrl('send-waiting-list-notification'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: waitingData.patientName,
-      email: waitingData.patientEmail,
-      phone: waitingData.patientPhone,
-      doctor: waitingData.preferredDoctorName,
-      date: appointment.date,
-      time: appointment.time
-    })
-  });
-} catch (notifError) {
-  console.error('Error sending waiting list notification:', notifError);
-}
-
-
+      try {
+        await fetch(getApiUrl('send-waiting-list-notification'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: waitingData.patientName,
+            email: waitingData.patientEmail,
+            phone: waitingData.patientPhone,
+            doctor: waitingData.preferredDoctorName,
+            date: appointment.date,
+            time: appointment.time
+          })
+        });
+      } catch (notifError) {
+        console.error('Error sending waiting list notification:', notifError);
+      }
 
       addNotification('info', 'Appointment cancelled. The slot has been offered to the next patient on the waiting list.');
     } else {
-      addNotification('info', 'Appointment cancelled successfully');
-    }
-
-  
- // Send cancellation email to clinic
-try {
-  const response = await fetch(getApiUrl('send-cancellation'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      appointmentId: id,
-      name: appointment.name,
-      email: appointment.email || currentUser?.email || 'N/A',
-      date: appointment.date,
-      time: appointment.time,
-      doctor: appointment.doctor,
-      reason: reason
-    })
-  });
-
-      const data = await response.json();
-      if (data.success) {
-        console.log('✅ Cancellation email sent to clinic');
-      }
-    } catch (emailError) {
-      console.error('❌ Error sending cancellation email:', emailError);
+      addNotification('success', 'Appointment cancelled successfully');
     }
 
     setShowCancelModal(false);
