@@ -167,20 +167,20 @@ const PatientDashboard = () => {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState('');
   const [selectedCalendarDoctor, setSelectedCalendarDoctor] = useState<Doctor | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    age: '',
-    date: '',
-    time: '',
-    condition: '',
-    customCondition: '',
-    priority: 'normal' as 'normal' | 'urgent' | 'emergency',
-    email: '',
-    phone: '',
-    doctor: '',
-    photo: '',
-    gender: ''
-  });
+const [formData, setFormData] = useState({
+  fullName: '',
+  age: '',
+  date: '',
+  time: '',
+  condition: '',
+  customCondition: '',
+  priority: 'normal' as 'normal' | 'urgent' | 'emergency',
+  email: '',  // ✅ Start empty
+  phone: '',
+  doctor: '',
+  photo: '',
+  gender: ''
+});
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -600,6 +600,17 @@ const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
   return 10; // Ultimate fallback
 };
 
+// Auto-populate email and user info when userProfile loads
+useEffect(() => {
+  if (userProfile && !formData.email) {
+    setFormData(prev => ({
+      ...prev,
+      email: userProfile.email || '',
+      phone: userProfile.phone || '',
+      photo: userProfile.photo || ''
+    }));
+  }
+}, [userProfile]); // Run when userProfile changes
 
 // ✅ Get total max slots for a specific date (sum of all doctors' actual slots)
 const getTotalSlotsForDate = (date: string): number => {
@@ -1483,15 +1494,26 @@ try {
     </p>
 
     <div className="hero-actions">
-      <button
-        className="btn-primary"
-        onClick={() => setShowBookingForm(true)}
-        title="Book a new appointment"
-      >
-        <Plus size={20} aria-hidden="true" />
-        Book Appointment
-      </button>
-
+   <button
+  className="btn-primary"
+  onClick={() => {
+    // Pre-fill form with current user data
+    if (userProfile) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: userProfile.name || '',
+        email: userProfile.email || '',
+        phone: userProfile.phone || '',
+        photo: userProfile.photo || ''
+      }));
+    }
+    setShowBookingForm(true);
+  }}
+  title="Book a new appointment"
+>
+  <Plus size={20} aria-hidden="true" />
+  Book Appointment
+</button>
       <button
         className="btn-secondary"
         onClick={() => setShowCalendarView(true)}
@@ -1660,7 +1682,7 @@ try {
         {getPriorityIcon(appointment.priority)} {appointment.priority}
       </div>
     </div>
-    
+
 {/* Actions */}
     <div className="appointment-actions mobile-center-actions">
       <button
@@ -2433,16 +2455,20 @@ try {
               className={`timeslot-btn-wizard ${
                 !slot.available ? 'booked' : ''
               }`}
-              onClick={() => {
-                if (slot.available) {
-                  setFormData((prev) => ({
-                    ...prev,
-                    date: selectedCalendarDate,
-                    time: slot.time,
-                    doctor: selectedCalendarDoctor.id,
-                  }));
-                  setShowCalendarView(false);
-                  setShowBookingForm(true);
+         onClick={() => {
+  if (slot.available) {
+    setFormData((prev) => ({
+      ...prev,
+      date: selectedCalendarDate,
+      time: slot.time,
+      doctor: selectedCalendarDoctor.id,
+      // Preserve user data if already set
+      email: prev.email || userProfile?.email || '',
+      phone: prev.phone || userProfile?.phone || '',
+      fullName: prev.fullName || userProfile?.name || ''
+    }));
+    setShowCalendarView(false);
+    setShowBookingForm(true);
                   setCalendarWizardStep(1);
                   setSelectedCalendarDate('');
                   setSelectedCalendarDoctor(null);

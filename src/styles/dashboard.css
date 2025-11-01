@@ -6930,6 +6930,25 @@ svg.clock,
     margin: var(--space-sm) 0 !important;
   }
   
+  /* ✅✅✅ CRITICAL FIX: CENTER ACTION BUTTONS ✅✅✅ */
+  .appointments-list .appointment-card .appointment-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+    margin-top: var(--space-md) !important;
+    padding: 0 !important;
+  }
+  
+  .appointments-list .appointment-card .action-btn,
+  .appointments-list .appointment-card .cancel-btn {
+    width: 40px !important;
+    height: 40px !important;
+    flex-shrink: 0 !important;
+    margin: 0 auto !important;
+  }
 }
 
 /* ========================================
