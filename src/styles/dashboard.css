@@ -6950,3 +6950,28 @@ svg.clock,
     margin: 0 auto !important;
   }
 }
+
+/* ========================================
+   MOBILE ACTION BUTTONS - GUARANTEED CENTER
+   ======================================== */
+@media (max-width: 768px) {
+  /* Target the new mobile-center-actions class */
+  .mobile-center-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    margin: 1rem auto 0 auto !important;
+    padding: 0 !important;
+  }
+  
+  .mobile-center-actions .action-btn,
+  .mobile-center-actions .cancel-btn {
+    width: 40px !important;
+    height: 40px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+}

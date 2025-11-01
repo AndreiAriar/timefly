@@ -1660,9 +1660,9 @@ try {
         {getPriorityIcon(appointment.priority)} {appointment.priority}
       </div>
     </div>
-
-    {/* Actions */}
-    <div className="appointment-actions">
+    
+{/* Actions */}
+    <div className="appointment-actions mobile-center-actions">
       <button
         className="action-btn view-btn"
         onClick={() => {
@@ -1792,8 +1792,8 @@ try {
       </div>
     </div>
 
-    {/* Actions */}
-    <div className="appointment-actions">
+{/* Actions */}
+    <div className="appointment-actions mobile-center-actions">
       <button
         className="action-btn view-btn"
         onClick={() => {
