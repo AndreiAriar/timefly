@@ -1708,24 +1708,18 @@ border-radius: var(--radius-xl);
 /* ===============================
    ACTION & CANCEL (DELETE) BUTTONS
    =============================== */
-/* ===============================
-   ACTION & CANCEL (DELETE) BUTTONS
-   =============================== */
 
 /* Container for action buttons */
 .appointment-actions {
   display: flex !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: center !important; /* ✅ CENTERED BY DEFAULT */
   gap: 8px !important;
-  width: 100%; /* ✅ Full width */
-  margin: 0 auto; /* ✅ Center the container */
-  padding: 0 !important; /* ✅ Remove padding */
 }
 
 /* Base action button */
 .action-btn {
-  color: #000000 !important;
+  color: #000000 !important; /* Black in light mode */
   background: transparent !important;
   border: none !important;
   padding: 8px !important;
@@ -6058,7 +6052,6 @@ svg.clock,
   }
 }
 /* ===== APPOINTMENT CARDS - MOBILE CENTERED LAYOUT ===== */
-/* ===== APPOINTMENT CARDS - MOBILE CENTERED LAYOUT ===== */
 @media (max-width: 768px) {
   .appointment-card {
     flex-direction: column !important;
@@ -6128,28 +6121,22 @@ svg.clock,
     margin: var(--space-sm) 0 !important;
   }
   
-  /* ✅ FIXED: ACTION BUTTONS NOW PROPERLY CENTERED */
- @media (max-width: 768px) {
+  /* ✅ MOBILE-ONLY FIX: CENTER ACTION BUTTONS */
   .appointment-actions {
     width: 100% !important;
     display: flex !important;
     flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 12px !important;
-    margin: var(--space-md) auto 0 auto !important;
+    gap: var(--space-md) !important;
+    margin-top: var(--space-md) !important;
     padding: 0 !important;
-    box-sizing: border-box !important; /* ✅ Added */
   }
   
-}
-  
   .action-btn,
-  .cancel-btn,
-  .view-btn,
-  .edit-btn {
-    width: 44px !important;
-    height: 44px !important;
+  .cancel-btn {
+    width: 40px !important;
+    height: 40px !important;
     flex-shrink: 0 !important;
     margin: 0 !important;
   }
