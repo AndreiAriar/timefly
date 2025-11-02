@@ -227,7 +227,7 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.6;
   color: var(--text-primary);
-  background-color: var(--bg-secondary); /* Ensure body has background */
+  background: #e3e9f2;
   margin: 0;
   padding: 0;
 }
@@ -235,36 +235,39 @@ body {
 /* Page*/
 .page-wrapper {
   min-height: 100vh;
-  background: #ffffff; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Match dashboard background */
+  background: #dce8ff; /* Stronger pale blue background */
+  margin: 0;
+  padding: 0;
+}
+/* ========================================= */
+/* PATIENT DASHBOARD EXCLUSIVE BACKGROUND */
+/* ========================================= */
+
+/* Light Mode */
+.patient-dashboard-exclusive .dashboard-container {
+  min-height: 100vh;
+  background: #e3e9f2;/* Soft sky blue - balanced */
   margin: 0;
   padding: 0;
 }
 
-/* Light Mode */
-.dashboard-container {
-  min-height: 100vh;
-  background: #ffffff;
+/* Scoped body only within patient dashboard */
+.patient-dashboard-exclusive {
+  background: #e3e9f2; /* Soft sky blue - balanced */
   margin: 0;
   padding: 0;
 }
 
 /* Dark Mode */
-[data-theme="dark"] .page-wrapper {
-  background: #0f172a; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Dark mode background */
+[data-theme="dark"] .patient-dashboard-exclusive .page-wrapper {
+  background: #0f172a; /* Dark mode background */
 }
 
-[data-theme="dark"] .dashboard-container {
+[data-theme="dark"] .patient-dashboard-exclusive .dashboard-container {
   background: #0f172a;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Remove any body background that creates gap */
-body {
-  background-color: #ffffff !important;
-  margin: 0;
-  padding: 0;
-}
-
-[data-theme="dark"] body {
+[data-theme="dark"] .patient-dashboard-exclusive {
   background-color: #0f172a !important;
 }
 
@@ -954,10 +957,16 @@ select:active {
   z-index: auto; /* Don't create new stacking context */
 }
 
-/* Hero Section Overlay - DISABLED */
-.hero-section::before {
-  content: none !important;
-  display: none !important;
+/* Hero Section Overlay - REDUCED OPACITY (Patient Dashboard Only) */
+.patient-dashboard-exclusive .hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.25) !important; /* ✅ Reduced from 0.45 to 0.25 */
+  z-index: 0;
 }
 
 /* Hero Content */
@@ -1391,135 +1400,133 @@ select:active {
   width: 100px;
   height: 100px;
 }
-
-/* ===== STATS SECTION ===== */
-.stats-section {
+/* ========================================= */
+/* PATIENT DASHBOARD EXCLUSIVE STATS SECTION */
+/* ========================================= */
+.patient-dashboard-exclusive .stats-section {
   padding: var(--space-xl);
-  margin-top: -40px; /*Moved section slightly up */
+  margin-top: -40px;
 }
 
-/* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Add spacing on mobile between hero and stats */
 @media (max-width: 768px) {
-  .stats-section {
+  .patient-dashboard-exclusive .stats-section {
     padding: var(--space-md);
-    margin-top: var(--space-lg) !important; /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Increased spacing on mobile */
+    margin-top: var(--space-lg) !important;
   }
 }
 
-.stats-grid {
+.patient-dashboard-exclusive .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-lg);
   max-width: 1200px;
-  margin: -10px auto 0 auto; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Slight upward lift of entire grid */
+  margin: -10px auto 0 auto;
 }
 
-.stat-card {
-  background: var(--bg-primary);
+/* ===== STAT CARD ===== */
+.patient-dashboard-exclusive .stat-card {
+  /* Light mode: transparent frosted glass like iOS */
+  background: rgba(255, 255, 255, 0.5) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
   padding: var(--space-lg);
-  border-radius: 20px; /* Rounded corners for card */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
   transition: var(--transition-normal);
   display: flex;
   align-items: flex-start;
   gap: var(--space-md);
+  position: relative !important;
+  z-index: 10 !important;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+.patient-dashboard-exclusive .stat-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
-/* ===== ICON STYLES ===== */
-.stat-icon {
+/* ===== DARK MODE ===== */
+[data-theme="dark"] .patient-dashboard-exclusive .stat-card {
+  /* Dark mode: light transparent glass */
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .patient-dashboard-exclusive .stat-card:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ===== ICONS ===== */
+.patient-dashboard-exclusive .stat-icon {
   padding: var(--space-md);
-  border-radius: 16px; /* Rounded icon box */
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent !important;
+  color: #000000 !important; /* Black icons for light mode */
 }
 
-/* Light Mode Icons */
-.stat-blue .stat-icon {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--primary);
+/* All icons black in light mode */
+.patient-dashboard-exclusive .stat-blue .stat-icon,
+.patient-dashboard-exclusive .stat-orange .stat-icon,
+.patient-dashboard-exclusive .stat-green .stat-icon {
+  color: #000000 !important;
 }
 
-.stat-orange .stat-icon {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--warning);
+/* Dark mode: white icons */
+[data-theme="dark"] .patient-dashboard-exclusive .stat-icon,
+[data-theme="dark"] .patient-dashboard-exclusive .stat-blue .stat-icon,
+[data-theme="dark"] .patient-dashboard-exclusive .stat-orange .stat-icon,
+[data-theme="dark"] .patient-dashboard-exclusive .stat-green .stat-icon {
+  color: #ffffff !important;
 }
 
-.stat-green .stat-icon {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
-}
-
-/* ===== DARK MODE ICONS ===== */
-[data-theme="dark"] .stat-blue .stat-icon {
-  background: rgba(59, 130, 246, 0.25);
-  color: #3b82f6; /* Bright blue for dark mode */
-}
-
-[data-theme="dark"] .stat-orange .stat-icon {
-  background: rgba(245, 158, 11, 0.25);
-  color: #fbbf24; /* Bright orange for clock icon */
-}
-
-[data-theme="dark"] .stat-green .stat-icon {
-  background: rgba(16, 185, 129, 0.25);
-  color: #34d399; /* Bright green for total icon */
-}
-
-/* ===== CONTENT STYLES ===== */
-
-.stat-content {
+/* ===== TEXT ===== */
+.patient-dashboard-exclusive .stat-content {
   flex: 1;
 }
 
-.stat-title {
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
-  margin-bottom: var(--space-xs);
-  font-weight: 600;
+.patient-dashboard-exclusive .stat-title,
+.patient-dashboard-exclusive .stat-value,
+.patient-dashboard-exclusive .stat-subtitle,
+.patient-dashboard-exclusive .stat-change {
+  color: #000000 !important; /* Black text for light mode */
 }
 
-.stat-value {
+.patient-dashboard-exclusive .stat-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.patient-dashboard-exclusive .stat-value {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: var(--space-xs);
 }
 
-.stat-blue .stat-value { color: var(--primary); }
-.stat-orange .stat-value { color: var(--warning); }
-.stat-green .stat-value { color: var(--success); }
-
-[data-theme="dark"] .stat-blue .stat-value { color: #60a5fa; }
-[data-theme="dark"] .stat-orange .stat-value { color: #fbbf24; }
-[data-theme="dark"] .stat-green .stat-value { color: #34d399; }
-
-.stat-subtitle {
+.patient-dashboard-exclusive .stat-subtitle {
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
   margin-bottom: var(--space-xs);
 }
 
-.stat-change {
+.patient-dashboard-exclusive .stat-change {
   font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
-.stat-blue .stat-change { color: var(--primary); }
-.stat-orange .stat-change { color: var(--warning); }
-.stat-green .stat-change { color: var(--success); }
-
-[data-theme="dark"] .stat-blue .stat-change { color: #60a5fa; }
-[data-theme="dark"] .stat-orange .stat-change { color: #fbbf24; }
-[data-theme="dark"] .stat-green .stat-change { color: #34d399; }
-
-
+/* Dark mode: white text */
+[data-theme="dark"] .patient-dashboard-exclusive .stat-title,
+[data-theme="dark"] .patient-dashboard-exclusive .stat-value,
+[data-theme="dark"] .patient-dashboard-exclusive .stat-subtitle,
+[data-theme="dark"] .patient-dashboard-exclusive .stat-change {
+  color: #ffffff !important;
+}
 /* ===== MAIN CONTENT ===== */
 .main-content {
   display: grid;
@@ -1536,21 +1543,36 @@ select:active {
 .queue-section {
   margin: var(--space-md) !important;
 }
-
 /* ===== APPOINTMENTS SECTION ===== */
 .appointments-section, .queue-section {
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg); /* UPDATED: iOS style */
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.5) !important; /* iOS frosted glass */
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
   overflow: hidden;
+}
+
+/* Dark mode appointments/queue sections */
+[data-theme="dark"] .appointments-section,
+[data-theme="dark"] .queue-section {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2) !important;
 }
 
 .section-header {
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0; /* ADDED: Rounded top corners only */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Dark mode section header */
+[data-theme="dark"] .section-header {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .section-title {
@@ -1560,17 +1582,34 @@ select:active {
   font-size: var(--font-size-lg);
   font-weight: 600;
   margin-bottom: var(--space-xs);
-  color: var(--text-primary);
+  color: #000000 !important; /* Black text for light mode */
+}
+
+/* Dark mode section title */
+[data-theme="dark"] .section-title {
+  color: #ffffff !important;
 }
 
 .section-subtitle {
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text for light mode */
+  opacity: 0.7;
+}
+
+/* Dark mode section subtitle */
+[data-theme="dark"] .section-subtitle {
+  color: #ffffff !important;
+  opacity: 0.7;
 }
 
 .search-results {
-  color: var(--primary);
+  color: #000000 !important; /* Black text for light mode */
   font-weight: 600;
+}
+
+/* Dark mode search results */
+[data-theme="dark"] .search-results {
+  color: #ffffff !important;
 }
 
 .appointments-list {
@@ -1583,29 +1622,37 @@ select:active {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   transition: var(--transition-fast);
-  margin: 0 var(--space-md); /* ADDED: Added margin */
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  margin: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  z-index: 10 !important; /* High z-index */
 }
 
 .appointment-card:hover {
-  background: var(--bg-secondary);
-  transform: translateY(-1px); /* ADDED: Hover effect */
-  box-shadow: var(--shadow-sm); /* ADDED: Hover effect */
+  background: transparent !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dark mode appointment card */
+[data-theme="dark"] .appointment-card {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="dark"] .appointment-card:hover {
+  background: transparent !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .appointment-card:last-child {
   border-bottom: none;
-  border-radius: 0 0 var(--radius-md) var(--radius-md); /* ADDED: Bottom rounded corners */
-}
-
-.appointment-card:hover {
-  background: var(--bg-secondary);
-}
-
-.appointment-card:last-child {
-  border-bottom: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .appointment-avatar-btn {
@@ -1619,11 +1666,18 @@ select:active {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: var(--bg-tertiary);
+  background: rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode avatar - white */
+[data-theme="dark"] .appointment-avatar {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(255, 255, 255, 1);
 }
 
 .appointment-details {
@@ -1634,31 +1688,60 @@ select:active {
 .queue-number {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--primary);
+  color: #000000 !important; /* Black text for light mode */
   margin-bottom: var(--space-xs);
+}
+
+/* Dark mode queue number */
+[data-theme="dark"] .queue-number {
+  color: #ffffff !important;
 }
 
 .appointment-name {
   font-weight: 600;
   margin-bottom: var(--space-xs);
-  color: var(--text-primary);
+  color: #000000 !important; /* Black text for light mode */
+}
+
+/* Dark mode appointment name */
+[data-theme="dark"] .appointment-name {
+  color: #ffffff !important;
 }
 
 .appointment-age {
   font-weight: normal;
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text for light mode */
+  opacity: 0.7;
+}
+
+/* Dark mode appointment age */
+[data-theme="dark"] .appointment-age {
+  color: #ffffff !important;
+  opacity: 0.6;
 }
 
 .appointment-type {
   font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+  color: #000000 !important; /* Black text for light mode */
   margin-bottom: var(--space-xs);
+  opacity: 0.7;
+}
+
+/* Dark mode appointment type */
+[data-theme="dark"] .appointment-type {
+  color: #ffffff !important;
+  opacity: 0.7;
 }
 
 .appointment-doctor {
   font-size: var(--font-size-sm);
-  color: var(--primary);
+  color: #000000 !important; /* Black text for light mode */
   font-weight: 500;
+}
+
+/* Dark mode appointment doctor */
+[data-theme="dark"] .appointment-doctor {
+  color: #ffffff !important;
 }
 
 .appointment-meta {
@@ -1671,7 +1754,12 @@ select:active {
 .appointment-time {
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--text-primary);
+  color: #000000 !important; /* Black text for light mode */
+}
+
+/* Dark mode appointment time */
+[data-theme="dark"] .appointment-time {
+  color: #ffffff !important;
 }
 
 .appointment-tags {
@@ -1681,7 +1769,7 @@ select:active {
 
 .appointment-status, .status-pill {
   padding: 4px 12px;
-  border-radius: var(--radius-full); /* UPDATED: Pill shape */
+  border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: capitalize;
@@ -1692,7 +1780,7 @@ select:active {
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  border-radius: var(--radius-full); /* UPDATED: Pill shape */
+  border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: capitalize;
@@ -1704,25 +1792,10 @@ select:active {
 .status-completed { background: rgba(107, 114, 128, 0.1); color: #374151; }
 .status-cancelled { background: rgba(239, 68, 68, 0.1); color: #7f1d1d; }
 
-.appointment-priority {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 20px;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
 .priority-normal { background: rgba(16, 185, 129, 0.1); color: #065f46; }
 .priority-urgent { background: rgba(245, 158, 11, 0.1); color: #78350f; }
 .priority-emergency { background: rgba(239, 68, 68, 0.1); color: #7f1d1d; }
 
-.appointment-actions {
-  display: flex;
-  gap: var(--space-xs);
-}
 /* ===============================
    ACTION & CANCEL (DELETE) BUTTONS
    =============================== */
@@ -1731,13 +1804,13 @@ select:active {
 .appointment-actions {
   display: flex !important;
   align-items: center !important;
-  justify-content: center !important; /* Ã¢Å“â€¦ CENTERED BY DEFAULT */
+  justify-content: center !important;
   gap: 8px !important;
 }
 
-/* Base action button */
+/* Base action button - BLACK in light mode */
 .action-btn {
-  color: #000000 !important; /* Black in light mode */
+  color: #000000 !important; /* Black for light mode */
   background: transparent !important;
   border: none !important;
   padding: 8px !important;
@@ -1752,9 +1825,9 @@ select:active {
   flex-shrink: 0 !important;
 }
 
-/* Cancel/Delete button */
+/* Cancel/Delete button - BLACK in light mode */
 .cancel-btn {
-  color: #000000 !important;
+  color: #000000 !important; /* Black for light mode */
   background: transparent !important;
   border: none !important;
   padding: 8px !important;
@@ -1780,10 +1853,10 @@ select:active {
   background: transparent !important;
 }
 
-/* Dark mode colors */
+/* Dark mode colors - WHITE */
 [data-theme="dark"] .action-btn,
 [data-theme="dark"] .cancel-btn {
-  color: var(--text-primary) !important;
+  color: #ffffff !important;
 }
 
 /* Hover/focus base */
@@ -1826,7 +1899,6 @@ select:active {
 [data-theme="dark"] .delete-btn:hover {
   color: #f87171 !important;
 }
-
 /* ===== QUEUE SECTION ===== */
 .queue-section {
   height: fit-content;
@@ -1837,29 +1909,40 @@ select:active {
 .queue-summary {
   padding: var(--space-lg);
   border-bottom: 1px solid var(--border-light);
-  border-radius: var(--radius-md); /* ADDED: iOS style */
-  margin: var(--space-md); /* ADDED: Added margin */
+  border-left: 4px solid #10b981;
+  border-radius: var(--radius-md);
+  margin: var(--space-md);
 }
 
 .queue-summary.next-patient {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  background: transparent !important;
   border-left: 4px solid var(--warning);
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  border-radius: var(--radius-md);
 }
 
 .serving-label {
   display: block;
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text in light mode */
   margin-bottom: var(--space-xs);
+}
+
+/* Dark mode */
+[data-theme="dark"] .serving-label {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .serving-number {
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--primary);
+  color: #000000 !important; /* Black text in light mode */
   display: block;
   margin-bottom: var(--space-md);
+}
+
+/* Dark mode */
+[data-theme="dark"] .serving-number {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .serving-details {
@@ -1870,17 +1953,35 @@ select:active {
 .serving-name {
   font-weight: 600;
   margin-bottom: var(--space-xs);
+  color: #000000 !important; /* Black text in light mode */
+}
+
+/* Dark mode */
+[data-theme="dark"] .serving-name {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .serving-age {
   font-weight: normal;
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text in light mode */
+  opacity: 0.7;
+}
+
+/* Dark mode */
+[data-theme="dark"] .serving-age {
+  color: #ffffff !important; /* White text in dark mode */
+  opacity: 0.6;
 }
 
 .serving-doctor {
-  color: var(--primary);
+  color: #000000 !important; /* Black text in light mode */
   font-weight: 500;
   margin-bottom: var(--space-xs);
+}
+
+/* Dark mode */
+[data-theme="dark"] .serving-doctor {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .serving-booking {
@@ -1894,8 +1995,7 @@ select:active {
 .serving-booking.staff { background: rgba(16, 185, 129, 0.1); color: #065f46; }
 
 .queue-list {
-  /* Remove max-height to allow natural scrolling */
-  overflow-y: visible; /* Changed from auto */
+  overflow-y: visible;
 }
 
 /* Remove queue section sticky on mobile to allow natural scroll */
@@ -1911,26 +2011,31 @@ select:active {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-light);
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text in light mode */
   text-align: center;
+}
+
+/* Dark mode */
+[data-theme="dark"] .queue-header {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .queue-card {
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--border-light);
   transition: var(--transition-fast);
-  margin: 0 var(--space-md); /* ADDED: Added margin */
-  border-radius: var(--radius-md); /* ADDED: iOS style */
+  margin: 0 var(--space-md);
+  border-radius: var(--radius-md);
 }
 
 .queue-card:hover {
   background: var(--bg-secondary);
-  transform: translateY(-1px); /* ADDED: Hover effect */
+  transform: translateY(-1px);
 }
 
 .queue-card:last-child {
   border-bottom: none;
-  border-radius: 0 0 var(--radius-md) var(--radius-md); /* ADDED: Bottom rounded corners */
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .queue-top {
@@ -1942,8 +2047,13 @@ select:active {
 
 .queue-number {
   font-weight: 700;
-  color: var(--primary);
+  color: #000000 !important; /* Black text in light mode */
   font-size: var(--font-size-lg);
+}
+
+/* Dark mode */
+[data-theme="dark"] .queue-number {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .queue-time {
@@ -1952,12 +2062,24 @@ select:active {
 
 .appointment-time {
   font-weight: 600;
-  color: var(--text-primary);
+  color: #000000 !important; /* Black text in light mode */
+}
+
+/* Dark mode */
+[data-theme="dark"] .appointment-time {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .appointment-date {
   font-size: var(--font-size-xs);
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text in light mode */
+  opacity: 0.7;
+}
+
+/* Dark mode */
+[data-theme="dark"] .appointment-date {
+  color: #ffffff !important; /* White text in dark mode */
+  opacity: 0.6;
 }
 
 .queue-body {
@@ -1968,17 +2090,35 @@ select:active {
 
 .queue-name {
   font-weight: 600;
+  color: #000000 !important; /* Black text in light mode */
+}
+
+/* Dark mode */
+[data-theme="dark"] .queue-name {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .queue-age {
   font-weight: normal;
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text in light mode */
+  opacity: 0.7;
+}
+
+/* Dark mode */
+[data-theme="dark"] .queue-age {
+  color: #ffffff !important; /* White text in dark mode */
+  opacity: 0.6;
 }
 
 .queue-doctor {
-  color: var(--primary);
+  color: #000000 !important; /* Black text in light mode */
   font-weight: 500;
   font-size: var(--font-size-sm);
+}
+
+/* Dark mode */
+[data-theme="dark"] .queue-doctor {
+  color: #ffffff !important; /* White text in dark mode */
 }
 
 .booking-status-row {
@@ -2000,7 +2140,14 @@ select:active {
 .empty-queue {
   padding: var(--space-2xl);
   text-align: center;
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text in light mode */
+  opacity: 0.7;
+}
+
+/* Dark mode */
+[data-theme="dark"] .empty-queue {
+  color: #ffffff !important; /* White text in dark mode */
+  opacity: 0.6;
 }
 
 /* ===== MODALS ===== */
@@ -6696,7 +6843,7 @@ svg.clock,
 /* ===== APPOINTMENT DATE DISPLAY ===== */
 .appointment-date-display {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: #000000 !important; /* Black text in light mode */
   margin-top: 0.25rem;
   padding: 0.125rem 0.5rem;
   background: var(--bg-secondary);
@@ -6706,8 +6853,10 @@ svg.clock,
 }
 
 [data-theme="dark"] .appointment-date-display {
-  background: var(--bg-tertiary);
-  color: var(--text-tertiary);
+  background: transparent !important; /* Remove box in dark mode */
+  color: #ffffff !important; /* White text in dark mode */
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* ===== TODAY'S APPOINTMENTS HIGHLIGHT ===== */
@@ -7002,5 +7151,120 @@ svg.clock,
     height: 40px !important;
     flex-shrink: 0 !important;
     margin: 0 !important;
+  }
+}
+
+/* ===== MOBILE VIEW - ACTION BUTTONS CENTERED (COMPLETE FIX) ===== */
+@media (max-width: 768px) {
+  /* Center entire appointment card */
+  .appointment-card {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: var(--space-md) !important;
+    padding: var(--space-lg) var(--space-md) !important;
+    margin: 0 var(--space-sm) !important;
+  }
+  
+  /* Center avatar */
+  .appointment-avatar-btn {
+    margin: 0 auto !important;
+    display: block !important;
+  }
+  
+  .appointment-avatar {
+    width: 64px !important;
+    height: 64px !important;
+    margin: 0 auto !important;
+  }
+  
+  /* Center queue number */
+  .queue-number {
+    font-size: 1.25rem !important;
+    text-align: center !important;
+    margin: 0 auto var(--space-xs) auto !important;
+    display: block !important;
+  }
+  
+  /* Center patient details */
+  .appointment-details {
+    width: 100% !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .appointment-name {
+    font-size: 1.125rem !important;
+    margin-bottom: var(--space-xs) !important;
+    text-align: center !important;
+  }
+  
+  /* Date & Time inline */
+  .appointment-meta {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+    margin: var(--space-sm) 0 !important;
+  }
+  
+  .appointment-time {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+  }
+  
+  .appointment-date-display {
+    font-size: 0.9rem !important;
+  }
+  
+  /* Priority tags centered */
+  .appointment-tags {
+    width: 100% !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: var(--space-sm) !important;
+    margin: var(--space-sm) 0 !important;
+  }
+  
+  /* ⚡ CRITICAL FIX: CENTER ACTION BUTTONS ⚡ */
+  .appointment-actions,
+  .appointments-list .appointment-card .appointment-actions,
+  .my-appointments .appointment-card .appointment-actions,
+  .today-appointments .appointment-card .appointment-actions {
+    width: 100% !important;
+    max-width: 200px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 16px !important;
+    margin: 16px auto 0 auto !important;
+    padding: 0 !important;
+  }
+  
+  /* Make buttons uniform size */
+  .appointment-actions .action-btn,
+  .appointment-actions .cancel-btn,
+  .appointment-actions .view-btn,
+  .appointment-actions .edit-btn,
+  .appointment-actions .delete-btn,
+  .appointments-list .action-btn,
+  .appointments-list .cancel-btn {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: var(--radius-md) !important;
   }
 }

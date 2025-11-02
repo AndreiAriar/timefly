@@ -27,6 +27,15 @@
 }
 
 
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary); /* Ensure body has background */
+  margin: 0;
+  padding: 0;
+}
+
 /* ===== BASE STYLES ===== */
 .staff-dashboard {
   min-height: 100vh;

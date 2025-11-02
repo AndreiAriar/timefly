@@ -1421,7 +1421,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
   }
 
   return (
-    <div className="dashboard-container">
+   <div className="dashboard-container patient-dashboard-exclusive">
       {/* Notifications */}
       <div className="notifications-container">
         {notifications.map((notification) => (
