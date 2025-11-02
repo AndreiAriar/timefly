@@ -1984,10 +1984,11 @@ const handleCancelAppointment = async (id: string, reason: string) => {
 </section>
 </div>
 {/* ✅ Close main-content div here */}
+
 {/* Cancel Appointment Modal */}
 {showCancelModal && selectedAppointment && (
   <div 
-    className="modal-overlay" 
+    className="modal-overlay cancel-appointment-modal"
     onClick={() => {
       setShowCancelModal(false);
       setCancelReason('');

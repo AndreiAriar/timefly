@@ -246,14 +246,14 @@ body {
 /* Light Mode */
 .patient-dashboard-exclusive .dashboard-container {
   min-height: 100vh;
-  background: #e3e9f2;/* Soft sky blue - balanced */
+  background: #e3e9f2;/* Frosted Gray */
   margin: 0;
   padding: 0;
 }
 
 /* Scoped body only within patient dashboard */
 .patient-dashboard-exclusive {
-  background: #e3e9f2; /* Soft sky blue - balanced */
+  background: #e3e9f2; /* Frosted Gray */
   margin: 0;
   padding: 0;
 }
@@ -1426,7 +1426,7 @@ select:active {
 /* ===== STAT CARD ===== */
 .patient-dashboard-exclusive .stat-card {
   /* Light mode: transparent frosted glass like iOS */
-  background: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
   -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
   backdrop-filter: blur(40px) saturate(180%) !important;
   padding: var(--space-lg);
@@ -1443,14 +1443,14 @@ select:active {
 
 .patient-dashboard-exclusive .stat-card:hover {
   transform: translateY(-3px);
-  background: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
 /* ===== DARK MODE ===== */
 [data-theme="dark"] .patient-dashboard-exclusive .stat-card {
   /* Dark mode: light transparent glass */
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2) !important;
 }
@@ -1545,7 +1545,7 @@ select:active {
 }
 /* ===== APPOINTMENTS SECTION ===== */
 .appointments-section, .queue-section {
-  background: rgba(255, 255, 255, 0.5) !important; /* iOS frosted glass */
+   background: rgba(255, 255, 255, 0.18) !important;/* iOS frosted glass */
   -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
   backdrop-filter: blur(40px) saturate(180%) !important;
   border-radius: var(--radius-lg);
@@ -1557,22 +1557,22 @@ select:active {
 /* Dark mode appointments/queue sections */
 [data-theme="dark"] .appointments-section,
 [data-theme="dark"] .queue-section {
-  background: rgba(255, 255, 255, 0.08) !important;
+   background: rgba(255, 255, 255, 0.18) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2) !important;
 }
 
 .section-header {
   padding: var(--space-lg);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.3) !important;
+  border-bottom: 1.5px solid rgba(136, 136, 136, 0.3);
+   background: transparent !important;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 /* Dark mode section header */
 [data-theme="dark"] .section-header {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent !important;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
 }
 
 .section-title {
@@ -1709,28 +1709,26 @@ select:active {
 }
 
 .appointment-age {
-  font-weight: normal;
+  font-weight: 600;
   color: #000000 !important; /* Black text for light mode */
-  opacity: 0.7;
 }
 
 /* Dark mode appointment age */
 [data-theme="dark"] .appointment-age {
   color: #ffffff !important;
-  opacity: 0.6;
+  font-weight: 600;
 }
 
 .appointment-type {
-  font-size: var(--font-size-sm);
+  font-weight: 600;
   color: #000000 !important; /* Black text for light mode */
   margin-bottom: var(--space-xs);
-  opacity: 0.7;
 }
 
 /* Dark mode appointment type */
 [data-theme="dark"] .appointment-type {
+  font-weight: 600;
   color: #ffffff !important;
-  opacity: 0.7;
 }
 
 .appointment-doctor {
@@ -1907,6 +1905,7 @@ select:active {
 }
 
 .queue-summary {
+  background: transparent !important;
   padding: var(--space-lg);
   border-bottom: 1px solid var(--border-light);
   border-left: 4px solid #10b981;
@@ -2008,7 +2007,7 @@ select:active {
 
 .queue-header {
   padding: var(--space-md) var(--space-lg);
-  background: var(--bg-secondary);
+  background: transparent !important;
   border-bottom: 1px solid var(--border-light);
   font-size: var(--font-size-sm);
   color: #000000 !important; /* Black text in light mode */
@@ -2023,13 +2022,14 @@ select:active {
 .queue-card {
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--border-light);
+  background: transparent !important;
   transition: var(--transition-fast);
   margin: 0 var(--space-md);
   border-radius: var(--radius-md);
 }
 
 .queue-card:hover {
-  background: var(--bg-secondary);
+  background: transparent !important;
   transform: translateY(-1px);
 }
 
@@ -2071,15 +2071,14 @@ select:active {
 }
 
 .appointment-date {
-  font-size: var(--font-size-xs);
+  font-size: 600;
   color: #000000 !important; /* Black text in light mode */
-  opacity: 0.7;
 }
 
 /* Dark mode */
 [data-theme="dark"] .appointment-date {
   color: #ffffff !important; /* White text in dark mode */
-  opacity: 0.6;
+  font-size: 600;
 }
 
 .queue-body {
@@ -2267,7 +2266,7 @@ select:active {
   order: 2 !important;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Dark mode fix for month title */
+/* Dark mode fix for month title */
 [data-theme="dark"] .month-title {
   color: #60a5fa !important;
 }
@@ -5279,601 +5278,6 @@ svg.clock,
   color: #ffffff !important; /* White for all clock icons */
   stroke: #ffffff !important;
 }
-/* ====================================
-   CANCEL APPOINTMENT MODAL - PREMIUM DESIGN
-   ==================================== */
-
-/* Modal Overlay */
-.modal-overlay {
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Cancel Modal Container */
-.cancel-modal {
-  max-width: 560px;
-  width: 92%;
-  max-height: 90vh;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
-              0 0 0 1px rgba(0, 0, 0, 0.05);
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Modal Header */
-.cancel-modal .modal-header {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  padding: 24px 28px;
-  border-bottom: 1px solid rgba(220, 38, 38, 0.1);
-  position: relative;
-}
-
-.cancel-modal .modal-header h3 {
-  color: #991b1b;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-  letter-spacing: -0.025em;
-}
-
-.cancel-modal .modal-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(220, 38, 38, 0.1);
-  color: #991b1b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-
-.cancel-modal .modal-close:hover {
-  background: #ffffff;
-  transform: rotate(90deg) scale(1.05);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
-}
-
-/* Modal Content - Scrollable */
-.cancel-modal-content {
-  padding: 0;
-  overflow-y: auto;
-  max-height: calc(90vh - 180px);
-}
-
-/* Chrome, Edge, Safari scrollbar styling */
-.cancel-modal-content::-webkit-scrollbar {
-  width: 8px; /* scrollbar width */
-}
-
-.cancel-modal-content::-webkit-scrollbar-track {
-  background: transparent; /* track background */
-}
-
-.cancel-modal-content::-webkit-scrollbar-thumb {
-  background-color: rgba(220, 38, 38, 0.3); /* red shade */
-  border-radius: 8px;
-}
-
-.cancel-modal-content::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(220, 38, 38, 0.5); /* darker on hover */
-}
-
-
-/* Custom Scrollbar for Webkit browsers */
-.cancel-modal-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.cancel-modal-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 10px;
-  margin: 8px 0;
-}
-
-.cancel-modal-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(220, 38, 38, 0.4), rgba(220, 38, 38, 0.2));
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  transition: background 0.3s ease;
-}
-
-.cancel-modal-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(220, 38, 38, 0.6), rgba(220, 38, 38, 0.4));
-  background-clip: padding-box;
-}
-
-/* Warning Section */
-.cancel-warning {
-  text-align: center;
-  padding: 32px 28px 28px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border-bottom: 2px solid rgba(220, 38, 38, 0.08);
-  position: relative;
-  overflow: hidden;
-}
-
-.cancel-warning::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #dc2626, #ef4444, #dc2626);
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.cancel-warning .warning-icon {
-  color: #dc2626;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 4px 12px rgba(220, 38, 38, 0.25));
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { 
-    opacity: 1; 
-    transform: scale(1);
-  }
-  50% { 
-    opacity: 0.85; 
-    transform: scale(1.05);
-  }
-}
-
-.cancel-warning h4 {
-  color: #7f1d1d;
-  font-size: 1.35rem;
-  margin: 0 0 12px 0;
-  font-weight: 700;
-  line-height: 1.4;
-  letter-spacing: -0.025em;
-}
-
-.cancel-warning p {
-  color: #991b1b;
-  font-size: 0.95rem;
-  margin: 0;
-  font-weight: 500;
-  opacity: 0.9;
-}
-
-/* Appointment Details Card */
-.cancel-appointment-details {
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-  padding: 24px 28px;
-  margin: 24px 28px;
-  border-radius: 16px;
-  border: 2px solid rgba(220, 38, 38, 0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
-              0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  position: relative;
-  overflow: hidden;
-}
-
-.cancel-appointment-details::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, #dc2626, #ef4444);
-  border-radius: 0 4px 4px 0;
-}
-
-.cancel-appointment-details p {
-  margin: 0 0 14px 0;
-  padding-left: 12px;
-  color: #1f2937;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.cancel-appointment-details p:last-child {
-  margin-bottom: 0;
-}
-
-.cancel-appointment-details strong {
-  color: #111827;
-  font-weight: 600;
-  min-width: 70px;
-  display: inline-block;
-  font-size: 0.9rem;
-  letter-spacing: 0.01em;
-}
-
-/* Form Group */
-.cancel-modal .form-group {
-  padding: 0 28px 24px;
-}
-
-.cancel-modal .form-group label {
-  display: block;
-  color: #374151;
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 12px;
-  letter-spacing: -0.01em;
-}
-/* Textarea - MOBILE ZOOM FIX */
-.cancel-reason-input {
-  width: 100%;
-  padding: 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 14px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 16px; /* âœ… CRITICAL: Must be 16px or larger to prevent iOS zoom */
-  line-height: 1.6;
-  resize: vertical;
-  min-height: 120px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #ffffff;
-  color: #111827;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
-
-.cancel-reason-input:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-.cancel-reason-input:focus {
-  outline: none;
-  border-color: #dc2626;
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1),
-              0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  background: #ffffff;
-  font-size: 16px; /* âœ… Maintain 16px on focus */
-}
-
-.cancel-reason-input::placeholder {
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-/* âœ… Mobile-specific fix */
-@media (max-width: 768px) {
-  .cancel-reason-input {
-    font-size: 16px !important; /* Force 16px on mobile */
-    max-height: 180px; /* Prevent excessive height */
-  }
-}
-
-/* Modal Actions */
-.cancel-modal-actions {
-  display: flex;
-  gap: 12px;
-  padding: 24px 28px;
-  background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-}
-
-.cancel-modal-actions button {
-  flex: 1;
-  padding: 14px 24px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-radius: 12px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  letter-spacing: -0.01em;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Keep Appointment Button */
-.cancel-modal-actions .btn-secondary {
-  background: #ffffff;
-  color: #374151;
-  border-color: #d1d5db;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
-}
-
-.cancel-modal-actions .btn-secondary:hover:not(:disabled) {
-  background: #f9fafb;
-  border-color: #9ca3af;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.cancel-modal-actions .btn-secondary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* Cancel Button */
-.cancel-modal-actions .btn-danger {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-  color: #ffffff;
-  border-color: #dc2626;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-  position: relative;
-}
-
-.cancel-modal-actions .btn-danger::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.6s ease;
-}
-
-.cancel-modal-actions .btn-danger:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.cancel-modal-actions .btn-danger:hover:not(:disabled) {
-  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
-}
-
-.cancel-modal-actions .btn-danger:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-}
-
-/* Disabled State */
-.cancel-modal-actions button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-/* Loading Spinner */
-.button-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ====================================
-   DARK MODE SUPPORT
-   ==================================== */
-
-.dark-mode .cancel-modal {
-  background: #1f2937;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.dark-mode .cancel-modal .modal-header {
-  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
-  border-bottom-color: rgba(239, 68, 68, 0.2);
-}
-
-.dark-mode .cancel-modal .modal-header h3 {
-  color: #fecaca;
-}
-
-.dark-mode .cancel-modal .modal-close {
-  background: rgba(31, 41, 55, 0.9);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
-}
-
-.dark-mode .cancel-modal .modal-close:hover {
-  background: #374151;
-}
-
-.dark-mode .cancel-modal-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.dark-mode .cancel-warning {
-  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
-  border-bottom-color: rgba(239, 68, 68, 0.2);
-}
-
-.dark-mode .cancel-warning h4 {
-  color: #fecaca;
-}
-
-.dark-mode .cancel-warning p {
-  color: #fca5a5;
-}
-
-.dark-mode .cancel-appointment-details {
-  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-.dark-mode .cancel-appointment-details p {
-  color: #d1d5db;
-}
-
-.dark-mode .cancel-appointment-details strong {
-  color: #f9fafb;
-}
-
-.dark-mode .cancel-modal .form-group label {
-  color: #d1d5db;
-}
-
-.dark-mode .cancel-reason-input {
-  background: #374151;
-  border-color: #4b5563;
-  color: #f9fafb;
-}
-
-.dark-mode .cancel-reason-input:hover {
-  border-color: #6b7280;
-}
-
-.dark-mode .cancel-reason-input:focus {
-  background: #374151;
-  border-color: #ef4444;
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
-}
-
-.dark-mode .cancel-modal-actions {
-  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark-mode .cancel-modal-actions .btn-secondary {
-  background: #374151;
-  color: #d1d5db;
-  border-color: #4b5563;
-}
-
-.dark-mode .cancel-modal-actions .btn-secondary:hover:not(:disabled) {
-  background: #4b5563;
-  border-color: #6b7280;
-}
-
-/* ====================================
-   RESPONSIVE DESIGN
-   ==================================== */
-
-@media (max-width: 640px) {
-  .cancel-modal {
-    width: 96%;
-    max-height: 95vh;
-    border-radius: 20px;
-  }
-
-  .cancel-modal .modal-header {
-    padding: 20px 24px;
-  }
-
-  .cancel-modal .modal-header h3 {
-    font-size: 1.25rem;
-    padding-right: 40px;
-  }
-
-  .cancel-modal .modal-close {
-    width: 36px;
-    height: 36px;
-    top: 18px;
-    right: 18px;
-  }
-
-  .cancel-warning {
-    padding: 24px 20px 20px;
-  }
-
-  .cancel-warning h4 {
-    font-size: 1.15rem;
-  }
-
-  .cancel-appointment-details {
-    margin: 20px 20px;
-    padding: 20px;
-  }
-
-  .cancel-appointment-details p {
-    font-size: 0.9rem;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .cancel-modal .form-group {
-    padding: 0 20px 20px;
-  }
-
-  .cancel-modal-actions {
-    flex-direction: column;
-    padding: 20px;
-  }
-
-  .cancel-modal-actions button {
-    width: 100%;
-  }
-}
-
-/* ====================================
-   ACCESSIBILITY IMPROVEMENTS
-   ==================================== */
-@media (prefers-reduced-motion: reduce) {
-  .cancel-modal,
-  .cancel-warning .warning-icon,
-  .cancel-modal-actions button,
-  .modal-overlay {
-    animation: none !important;
-    transition: none;
-  }
-  
-  /* Keep emergency animations - they're critical safety alerts */
-  .emergency-blinking {
-    animation: emergencyCardPulse 3s ease-in-out infinite !important;
-  }
-  
-  .priority-pill.emergency {
-    animation: emergencyTagPulse 2.5s ease-in-out infinite !important;
-  }
-}
-
-/* Focus visible for keyboard navigation */
-.cancel-modal button:focus-visible,
-.cancel-reason-input:focus-visible {
-  outline: 3px solid #3b82f6;
-  outline-offset: 2px;
-}
 
 /* ====================================
    EMERGENCY BUFFER SLOTS
@@ -6435,51 +5839,6 @@ svg.clock,
   }
 }
 
-/* Cancel Modal - Mobile */
-@media (max-width: 640px) {
-  .cancel-modal {
-    width: 100vw;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-  
-  .cancel-modal .modal-header {
-    padding: var(--space-md) var(--space-lg);
-  }
-  
-  .cancel-modal .modal-header h3 {
-    font-size: 1.15rem;
-    padding-right: 40px;
-  }
-  
-  .cancel-warning {
-    padding: var(--space-lg) var(--space-md);
-  }
-  
-  .cancel-warning h4 {
-    font-size: 1.1rem;
-  }
-  
-  .cancel-appointment-details {
-    margin: var(--space-md);
-    padding: var(--space-md);
-  }
-  
-  .cancel-modal .form-group {
-    padding: 0 var(--space-md) var(--space-md);
-  }
-  
-  .cancel-modal-actions {
-    flex-direction: column;
-    padding: var(--space-md);
-    gap: var(--space-sm);
-  }
-  
-  .cancel-modal-actions button {
-    width: 100%;
-  }
-}
-
 /* Profile Modal - Mobile */
 @media (max-width: 768px) {
   .profile-modal {
@@ -6846,8 +6205,8 @@ svg.clock,
   color: #000000 !important; /* Black text in light mode */
   margin-top: 0.25rem;
   padding: 0.125rem 0.5rem;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
+  background: transparent !important;
+  border: none !important;
   display: inline-block;
   font-weight: 500;
 }
@@ -6996,32 +6355,37 @@ svg.clock,
   text-align: center;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Queue Wait Time Display */
+/* Queue Wait Time Display */
 .queue-wait-time {
   display: flex;
   align-items: center;
   gap: 6px;
   margin-top: 8px;
   padding: 6px 10px;
-  background: rgba(66, 165, 245, 0.1);
-  border-radius: 6px;
+  background: transparent !important;
+  border: none !important;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1976d2;
+  color: #065f46;
 }
 
 .queue-wait-time svg {
   flex-shrink: 0;
-  color: #1976d2;
+  color: #2e7d32;
 }
 
 /* Being Served styling */
 .queue-card.status-confirmed .queue-wait-time {
-  background: rgba(76, 175, 80, 0.1);
-  color: #2e7d32;
+  background: transparent !important;
+  color: #065f46;
 }
 
+ [data-theme="dark"] .queue-card.status-confirmed .queue-wait-time { 
+  color: #34d399;
+ }
+
 .queue-card.status-confirmed .queue-wait-time svg {
+  background: transparent !important;
   color: #2e7d32;
 }
 
@@ -7266,5 +6630,466 @@ svg.clock,
     align-items: center !important;
     justify-content: center !important;
     border-radius: var(--radius-md) !important;
+  }
+}
+/* ============================================
+   CANCEL APPOINTMENT MODAL - SCOPED STYLES
+   Light & Dark Mode Adaptive
+   HIGHEST PRIORITY - OVERRIDES ALL CONFLICTS
+   ============================================ */
+
+/* Modal Overlay - Maximum Specificity */
+div.modal-overlay.cancel-appointment-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+  z-index: 9999 !important;
+  padding: 2rem !important;
+  animation: cancelModalFadeIn 0.2s ease-out;
+  overflow-y: auto !important;
+  margin: 0 !important;
+}
+
+@keyframes cancelModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content - Maximum Specificity */
+div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+              0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  width: 100% !important;
+  max-width: 500px !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  animation: cancelModalSlideUp 0.3s ease-out;
+  position: relative !important;
+  margin: auto !important;
+  display: block !important;
+  transform: none !important;
+  top: auto !important;
+  left: auto !important;
+  inset: auto !important;
+}
+
+@keyframes cancelModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Dark Mode - Scoped */
+@media (prefers-color-scheme: dark) {
+  div.modal-overlay.cancel-appointment-modal {
+    background: rgba(0, 0, 0, 0.7) !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal {
+    background: #1a1a1a !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4),
+                0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+  }
+}
+
+/* Modal Header - Scoped */
+div.modal-overlay.cancel-appointment-modal .modal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 1.25rem 1.5rem !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  margin: 0 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .modal-header h3 {
+  margin: 0 !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .modal-close {
+  background: none !important;
+  border: none !important;
+  padding: 0.5rem !important;
+  cursor: pointer !important;
+  color: #6b7280 !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .modal-close:hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .modal-close:active {
+  transform: scale(0.95) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  div.modal-overlay.cancel-appointment-modal .modal-header {
+    border-bottom-color: #374151 !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .modal-header h3 {
+    color: #f9fafb !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .modal-close {
+    color: #9ca3af !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .modal-close:hover {
+    background: #374151 !important;
+    color: #f9fafb !important;
+  }
+}
+
+/* Cancel Modal Content - Scoped */
+div.modal-overlay.cancel-appointment-modal .cancel-modal-content {
+  padding: 1.25rem 1.5rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.25rem !important;
+}
+
+/* Cancel Warning - Scoped */
+div.modal-overlay.cancel-appointment-modal .cancel-warning {
+  text-align: center !important;
+  padding: 1.5rem !important;
+  background: #fef3c7 !important;
+  border-radius: 12px !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-warning .warning-icon {
+  color: #f59e0b !important;
+  margin-bottom: 1rem !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-warning h4 {
+  margin: 0 0 0.5rem 0 !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  color: #92400e !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-warning p {
+  margin: 0 !important;
+  font-size: 0.875rem !important;
+  color: #78350f !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  div.modal-overlay.cancel-appointment-modal .cancel-warning {
+    background: #422006 !important;
+    border-color: #78350f !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-warning h4 {
+    color: #fbbf24 !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-warning p {
+    color: #fcd34d !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-warning .warning-icon {
+    color: #fbbf24 !important;
+  }
+}
+
+/* Appointment Details - Scoped */
+div.modal-overlay.cancel-appointment-modal .cancel-appointment-details {
+  padding: 1rem !important;
+  background: #f9fafb !important;
+  border-radius: 12px !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-appointment-details p {
+  margin: 0.5rem 0 !important;
+  font-size: 0.875rem !important;
+  color: #4b5563 !important;
+  line-height: 1.5 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-appointment-details p:first-child {
+  margin-top: 0 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-appointment-details p:last-child {
+  margin-bottom: 0 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-appointment-details strong {
+  color: #111827 !important;
+  font-weight: 600 !important;
+  margin-right: 0.5rem !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  div.modal-overlay.cancel-appointment-modal .cancel-appointment-details {
+    background: #111827 !important;
+    border-color: #374151 !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-appointment-details p {
+    color: #d1d5db !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-appointment-details strong {
+    color: #f9fafb !important;
+  }
+}
+
+/* Form Group - Scoped */
+div.modal-overlay.cancel-appointment-modal .form-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .form-group label {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #374151 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-reason-input {
+  width: 100% !important;
+  padding: 0.75rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  font-size: 0.875rem !important;
+  font-family: inherit !important;
+  resize: vertical !important;
+  transition: all 0.2s ease !important;
+  color: #111827 !important;
+  background: #ffffff !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-reason-input:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-reason-input::placeholder {
+  color: #9ca3af !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  div.modal-overlay.cancel-appointment-modal .form-group label {
+    color: #d1d5db !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-reason-input {
+    background: #111827 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-reason-input:focus {
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-reason-input::placeholder {
+    color: #6b7280 !important;
+  }
+}
+
+/* Modal Actions - Scoped */
+div.modal-overlay.cancel-appointment-modal .cancel-modal-actions {
+  display: flex !important;
+  gap: 0.75rem !important;
+  flex-wrap: wrap !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-modal-actions button {
+  flex: 1 !important;
+  min-width: 140px !important;
+  padding: 0.75rem 1.25rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .btn-secondary {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .btn-danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .btn-danger:hover:not(:disabled) {
+  background: #b91c1c !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-modal-actions button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+div.modal-overlay.cancel-appointment-modal .cancel-modal-actions button:active:not(:disabled) {
+  transform: scale(0.98) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  div.modal-overlay.cancel-appointment-modal .btn-secondary {
+    background: #374151 !important;
+    color: #d1d5db !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .btn-secondary:hover:not(:disabled) {
+    background: #4b5563 !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .btn-danger {
+    background: #ef4444 !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .btn-danger:hover:not(:disabled) {
+    background: #dc2626 !important;
+  }
+}
+
+/* Button Spinner - Scoped */
+div.modal-overlay.cancel-appointment-modal .button-spinner {
+  width: 16px !important;
+  height: 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-top-color: #ffffff !important;
+  border-radius: 50% !important;
+  animation: cancelModalSpin 0.6s linear infinite !important;
+}
+
+@keyframes cancelModalSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Responsive - Scoped */
+@media (max-width: 640px) {
+  div.modal-overlay.cancel-appointment-modal {
+    padding: 0.5rem !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal {
+    border-radius: 12px !important;
+    max-height: 95vh !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .modal-header {
+    padding: 1rem !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .modal-header h3 {
+    font-size: 1.125rem !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-modal-content {
+    padding: 1rem !important;
+    gap: 1rem !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-warning {
+    padding: 1rem !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-warning .warning-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-warning h4 {
+    font-size: 1rem !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-modal-actions {
+    flex-direction: column !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal .cancel-modal-actions button {
+    min-width: 100% !important;
+  }
+}
+
+/* Tablet - Scoped */
+@media (min-width: 641px) and (max-width: 1024px) {
+  div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal {
+    max-width: 540px !important;
+  }
+}
+
+/* Scrollbar Styling - Scoped */
+div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-webkit-scrollbar-thumb {
+  background: #d1d5db !important;
+  border-radius: 4px !important;
+}
+
+div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-webkit-scrollbar-thumb {
+    background: #4b5563 !important;
+  }
+
+  div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-webkit-scrollbar-thumb:hover {
+    background: #6b7280 !important;
   }
 }

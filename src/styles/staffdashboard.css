@@ -2283,44 +2283,53 @@ body {
   background: var(--primary-blue);
   color: var(--dark-blue);
 }
-
 /* =============================== */
-/* Appointment Details Modal - UPDATED */
+/* iOS-Style Modal Overlay */
 /* =============================== */
-
-.modal-overlay {
+.details-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(4px);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
   z-index: 1000;
-  padding: 0;
+  animation: detailsFadeIn 0.2s ease-out;
 }
 
-.modal-content {
-  background: var(--white);
-  border-radius: 16px;
+@keyframes detailsFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* =============================== */
+/* Modal Content Container */
+/* =============================== */
+.details-modal {
+  background: #ffffff;
+  border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  max-width: 800px;
   width: 100%;
+  max-width: 600px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  animation: modalSlideIn 0.3s ease-out;
   overflow: hidden;
+  overflow-y: auto !important;
+  animation: detailsSlideUp 0.3s ease-out;
 }
 
-@keyframes modalSlideIn {
+@keyframes detailsSlideUp {
   from {
     opacity: 0;
-    transform: translateY(-30px) scale(0.95);
+    transform: translateY(20px) scale(0.95);
   }
   to {
     opacity: 1;
@@ -2328,236 +2337,412 @@ body {
   }
 }
 
-.modal-header {
+/* =============================== */
+/* Modal Header */
+/* =============================== */
+.details-modal .modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--white);
-  border-radius: 16px 16px 0 0;
-  flex-shrink: 0;
+  background: #fafafa;
 }
 
-.modal-header h3 {
+.details-modal .modal-header h3 {
   margin: 0;
-  color: var(--text-dark);
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
 }
 
-.modal-close {
-  background: none;
+.details-modal .modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: none;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--text-light);
-  transition: all 0.2s ease;
+  background: #e8e8ed;
+  color: #1d1d1f;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.modal-close:hover {
-  background: var(--light-gray);
-  color: var(--text-dark);
-}
-/* Modal Body - Scrollable Area */
-.modal-body {
-  padding: 2rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1 1 auto;
-  min-height: 0;
+.details-modal .modal-close:hover {
+  background: #d2d2d7;
+  transform: scale(1.05);
 }
 
-/* Style the scrollbar (keep it visible and thin) */
-.modal-body::-webkit-scrollbar {
-  width: 8px;
+.details-modal .modal-close:active {
+  transform: scale(0.95);
 }
 
-.modal-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+/* =============================== */
+/* Modal Body - SCROLLBAR HIDDEN */
+/* =============================== */
+.details-modal .modal-body {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 24px;
+  -ms-overflow-style: none !important;
 }
 
-.modal-body::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+.details-modal .modal-body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-.modal-body::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* For Firefox */
-@supports (scrollbar-width: thin) {
-  .modal-body {
-    scrollbar-width: thin;
-    scrollbar-color: #888 #f1f1f1;
-  }
-}
-
-/* Details Content Layout - Remove any overflow */
-.details-content {
+/* =============================== */
+/* Details Content */
+/* =============================== */
+.details-modal .details-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  overflow: visible !important; /* Ensure no inner scrollbar */
-  height: auto !important;
-  max-height: none !important;
+  gap: 24px;
+  overflow: visible !important;
 }
 
-.detail-photo {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
+/* Patient Photo */
+.details-modal .detail-photo {
+  width: 100px;
+  height: 100px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.detail-photo img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
+.details-modal .detail-photo img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border: 3px solid var(--accent-blue);
-  box-shadow: 0 4px 12px var(--shadow-light);
 }
 
-.detail-grid {
+/* =============================== */
+/* Detail Grid */
+/* =============================== */
+.details-modal .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  gap: 16px;
+  overflow: visible !important;
 }
 
-.detail-item {
+.details-modal .detail-item {
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
+  transition: background 0.2s ease;
 }
 
-.detail-item label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-light);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.details-modal .detail-item:hover {
+  background: #f2f2f2;
 }
 
-.detail-item span {
-  font-size: 1rem;
-  color: var(--text-dark);
-  font-weight: 500;
-}
-
-.detail-item.full-width {
+.details-modal .detail-item.full-width {
   grid-column: 1 / -1;
 }
 
-/* Modal Footer with Action Buttons */
-.modal-footer {
+.details-modal .detail-item label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #86868b;
+  margin: 0;
+}
+
+.details-modal .detail-item span {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1d1d1f;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* =============================== */
+/* Badges */
+/* =============================== */
+.details-modal .priority-badge,
+.details-modal .status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  width: fit-content;
+  text-transform: capitalize;
+}
+
+/* Priority Colors */
+.details-modal .priority-badge.high {
+  background: #ffe5e5;
+  color: #d70015;
+}
+
+.details-modal .priority-badge.medium {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.details-modal .priority-badge.low {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+/* Status Colors */
+.details-modal .status-badge.pending {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.details-modal .status-badge.confirmed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.details-modal .status-badge.completed {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.details-modal .status-badge.cancelled {
+  background: #fce4ec;
+  color: #c2185b;
+}
+
+/* =============================== */
+/* Modal Footer */
+/* =============================== */
+.details-modal .modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #fafafa;
+}
+
+/* =============================== */
+/* Buttons */
+/* =============================== */
+.details-modal .btn-secondary {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  background: #007aff;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding: 1.5rem 2rem;
-  border-top: 1px solid var(--border-light);
-  background: var(--light-gray);
-  border-radius: 0 0 16px 16px;
-  flex-shrink: 0;
-}
-
-/* Button Styles for Modal Footer */
-.modal-footer .btn-secondary {
-  display: inline-flex;
-  align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: var(--white);
-  color: var(--dark-blue);
-  border: 2px solid var(--dark-blue);
-  border-radius: 8px;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.modal-footer .btn-secondary:hover {
-  background: var(--primary-blue);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.2);
+.details-modal .btn-secondary:hover {
+  background: #0051d5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
-.modal-footer .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: var(--dark-blue);
-  color: var(--white);
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  font-size: 0.9rem;
+.details-modal .btn-secondary:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
-.modal-footer .btn-primary:hover {
-  background: #1e88e5;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(66, 165, 245, 0.3);
+/* Button Variants */
+.details-modal .btn-secondary:nth-child(1) {
+  background: #007aff;
 }
 
-/* Delete Button Special Styling */
-.modal-footer .btn-secondary:last-child {
-  color: var(--error);
-  border-color: var(--error);
+.details-modal .btn-secondary:nth-child(2) {
+  background: #34c759;
 }
 
-.modal-footer .btn-secondary:last-child:hover {
-  background: rgba(244, 67, 54, 0.1);
-  border-color: var(--error);
-  transform: translateY(-2px);
+.details-modal .btn-secondary:nth-child(2):hover {
+  background: #2ab04c;
 }
 
-/* Responsive Modal */
+.details-modal .btn-secondary:nth-child(3) {
+  background: #34c759;
+}
+
+.details-modal .btn-secondary:nth-child(3):hover {
+  background: #2ab04c;
+}
+
+.details-modal .btn-secondary:last-child {
+  background: #ff3b30;
+}
+
+.details-modal .btn-secondary:last-child:hover {
+  background: #d32f2f;
+}
+
+/* =============================== */
+/* Mobile Responsive */
+/* =============================== */
 @media (max-width: 768px) {
-  .modal-overlay {
-    padding: 1rem;
+  .details-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
   }
 
-  .modal-content {
+  .details-modal {
+    max-width: 100%;
     max-height: 95vh;
-    margin: 0;
+    border-radius: 20px 20px 0 0;
+    animation: detailsSlideUpMobile 0.3s ease-out;
   }
 
-  .modal-header,
-  .modal-footer {
-    padding: 1rem 1.5rem;
+  @keyframes detailsSlideUpMobile {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 
-  .modal-body {
-    padding: 1.5rem;
+  .details-modal .modal-header {
+    padding: 16px 20px;
   }
 
-  .detail-grid {
+  .details-modal .modal-header h3 {
+    font-size: 18px;
+  }
+
+  .details-modal .modal-body {
+    padding: 20px;
+  }
+
+  .details-modal .detail-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
-  .modal-footer {
-    flex-wrap: wrap;
-    gap: 0.75rem;
+  .details-modal .detail-item {
+    padding: 14px;
   }
 
-  .modal-footer .btn-secondary,
-  .modal-footer .btn-primary {
-    flex: 1 1 auto;
-    min-width: 120px;
+  .details-modal .detail-photo {
+    width: 80px;
+    height: 80px;
   }
+
+  .details-modal .modal-footer {
+    padding: 12px 20px 20px;
+    gap: 10px;
+  }
+
+  .details-modal .btn-secondary {
+    min-width: 100px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .details-modal .modal-footer {
+    flex-direction: column;
+  }
+
+  .details-modal .btn-secondary {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .details-modal .detail-item span {
+    font-size: 15px;
+  }
+}
+
+/* =============================== */
+/* Dark Mode Support (Optional) */
+/* =============================== */
+@media (prefers-color-scheme: dark) {
+  .details-modal {
+    background: #1c1c1e;
+  }
+
+  .details-modal .modal-header {
+    background: #2c2c2e;
+    border-bottom-color: #38383a;
+  }
+
+  .details-modal .modal-header h3 {
+    color: #ffffff;
+  }
+
+  .details-modal .modal-close {
+    background: #48484a;
+    color: #ffffff;
+  }
+
+  .details-modal .modal-close:hover {
+    background: #636366;
+  }
+
+  .details-modal .detail-item {
+    background: #2c2c2e;
+  }
+
+  .details-modal .detail-item:hover {
+    background: #38383a;
+  }
+
+  .details-modal .detail-item label {
+    color: #98989d;
+  }
+
+  .details-modal .detail-item span {
+    color: #ffffff;
+  }
+
+  .details-modal .modal-footer {
+    background: #2c2c2e;
+    border-top-color: #38383a;
+  }
+
+  .details-modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* =============================== */
+/* Accessibility */
+/* =============================== */
+@media (prefers-reduced-motion: reduce) {
+  .details-modal-overlay,
+  .details-modal,
+  .details-modal .btn-secondary,
+  .details-modal .detail-item {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Focus States */
+.details-modal .modal-close:focus-visible,
+.details-modal .btn-secondary:focus-visible {
+  outline: 3px solid #007aff;
+  outline-offset: 2px;
 }
 
 /* Form Styles */
