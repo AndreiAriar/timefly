@@ -2581,6 +2581,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   </div>
 )}
+
 {/* Booking Form Modal */}
 {showBookingForm && (
   <div className="modal-overlay" onClick={() => setShowBookingForm(false)}>

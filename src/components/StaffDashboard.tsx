@@ -657,41 +657,99 @@ useEffect(() => {
     fetchDoctorAvailabilitySlots();
   }, []);
   
-  // Image Upload Function - Convert to base64 for local display only
-  const uploadImage = async (file: File): Promise<string> => {
-    try {
-      setUploadingImage(true);
-      // Validate file
-      if (!file) {
-        throw new Error('No file selected');
-      }
-      // Check file size (limit to 2MB for base64)
-      if (file.size > 2 * 1024 * 1024) {
-        throw new Error('File size must be less than 2MB for local display');
-      }
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        throw new Error('File must be an image');
-      }
-      // Convert file to base64 data URL
-      const base64URL = await new Promise<string>((resolve, reject) => {
+  // ✅ UPDATED: Image Upload with 5MB limit and compression
+const uploadImage = async (file: File): Promise<string> => {
+  try {
+    setUploadingImage(true);
+    
+    // Validate file
+    if (!file) {
+      throw new Error('No file selected');
+    }
+    
+    // ✅ Increased limit to 5MB for mobile photos
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('File size must be less than 5MB');
+    }
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      throw new Error('File must be an image');
+    }
+    
+    // ✅ Compress image if it's too large
+    const compressImage = (file: File): Promise<Blob> => {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            // ✅ Resize if larger than 1200px
+            const maxDimension = 1200;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = (height / width) * maxDimension;
+                width = maxDimension;
+              } else {
+                width = (width / height) * maxDimension;
+                height = maxDimension;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            // ✅ Convert to blob with 0.85 quality (good balance)
+            canvas.toBlob(
+              (blob) => {
+                if (blob) resolve(blob);
+                else reject(new Error('Failed to compress image'));
+              },
+              'image/jpeg',
+              0.85
+            );
+          };
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = e.target?.result as string;
+        };
         reader.onerror = () => reject(new Error('Failed to read file'));
         reader.readAsDataURL(file);
       });
-      setUploadingImage(false);
-      return base64URL;
-    } catch (error) {
-      setUploadingImage(false);
-      console.error('Error processing image:', error);
-      if (error instanceof Error) {
-        throw new Error(`Image processing failed: ${error.message}`);
-      } else {
-        throw new Error('Failed to process image');
-      }
+    };
+    
+    // Compress the image
+    let processedFile: Blob = file;
+    if (file.size > 1 * 1024 * 1024) { // Compress if larger than 1MB
+      processedFile = await compressImage(file);
     }
-  };
+    
+    // Convert to base64
+    const base64URL = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(processedFile);
+    });
+    
+    setUploadingImage(false);
+    return base64URL;
+    
+  } catch (error) {
+    setUploadingImage(false);
+    console.error('Error processing image:', error);
+    if (error instanceof Error) {
+      throw new Error(`Image processing failed: ${error.message}`);
+    } else {
+      throw new Error('Failed to process image');
+    }
+  }
+};
   
 // Add this after imports
 const getApiUrl = (endpoint: string) => {
@@ -1489,17 +1547,17 @@ const getTotalSlotsForDate = (date: string): number => {
   return total;
 };
 
-// Utility: Get a single doctor's slot count for a date
-// Get a single doctor's slot count for a date
+// ✅ FIXED: Get a single doctor's slot count for a date - doesn't affect other doctors
 const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
   const key = `${doctorId}_${date}`;
   
-  // Check if staff has set a custom value
-  if (doctorSlotSettings[key]) {
-    return doctorSlotSettings[key];
+  // Check if staff has set a custom value for THIS doctor on THIS date
+  const customSlots = doctorSlotSettings[key];
+  if (customSlots !== undefined && customSlots > 0) {
+    return customSlots;
   }
   
-  // Otherwise calculate from working hours
+  // Otherwise calculate from working hours for THIS doctor only
   const doctor = doctors.find(d => d.id === doctorId);
   if (doctor) {
     return calculateDoctorDailySlots(doctor);
@@ -1507,7 +1565,6 @@ const getDoctorSlotsForDate = (doctorId: string, date: string): number => {
   
   return 10; // Ultimate fallback
 };
-
 
 // Update slot count for a specific doctor and date
 const handleDoctorSlotChange = async (doctorId: string, date: string, newCount: number) => {
@@ -1953,18 +2010,22 @@ const handleAppointmentStatusChange = async (appointmentId: string, status: 'con
     addNotification('error', 'Failed to update appointment status');
   }
 };
-  const handleDeleteAppointment = async (appointmentId: string) => {
-    if (!confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
-      return;
-    }
-    try {
-      await deleteDoc(doc(db, 'appointments', appointmentId));
-      addNotification('success', 'Appointment deleted successfully');
-    } catch (error) {
-      addNotification('error', 'Failed to delete appointment');
-    }
-  };
 
+ // LOCATE: Around line 1150 - handleDeleteAppointment function
+const handleDeleteAppointment = async (appointmentId: string) => {
+  try {
+    // Remove the confirmation dialog here since we handle it in the modal
+    await deleteDoc(doc(db, 'appointments', appointmentId));
+    addNotification('success', 'Appointment deleted successfully');
+    
+    // Close any open modals
+    setShowDetailsModal(false);
+    setSelectedAppointment(null);
+  } catch (error) {
+    console.error('Error deleting appointment:', error);
+    addNotification('error', 'Failed to delete appointment');
+  }
+};
  // Create Doctor
 const handleCreateDoctor = async () => {
   if (!doctorForm.name || !doctorForm.specialty || !doctorForm.email) {
@@ -3334,25 +3395,20 @@ const handleLogout = async () => {
     </div>
   </div>
 )}
-{/* ✅ UPDATED: Delete Appointment Confirmation Modal - MOBILE FIXED */}
+{/* ✅ UPDATED: Delete Appointment Confirmation Modal - FULLY FIXED */}
 {showDeleteConfirmModal && appointmentToDelete && (
   <div 
     className="modal-overlay"
     onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        setShowDeleteConfirmModal(false);
-        setAppointmentToDelete(null);
-      }
-    }}
-    onTouchEnd={(e) => {
-      if (e.target === e.currentTarget) {
-        e.preventDefault();
-        setShowDeleteConfirmModal(false);
-        setAppointmentToDelete(null);
-      }
+      e.stopPropagation();
+      setShowDeleteConfirmModal(false);
+      setAppointmentToDelete(null);
     }}
   >
-    <div className="confirm-modal">
+    <div 
+      className="confirm-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="confirm-modal-icon delete">
         <Trash2 size={48} />
       </div>
@@ -3365,13 +3421,6 @@ const handleLogout = async () => {
         <button
           className="btn-secondary"
           onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowDeleteConfirmModal(false);
-            setAppointmentToDelete(null);
-          }}
-          onTouchEnd={(e) => {
-            e.preventDefault();
             e.stopPropagation();
             setShowDeleteConfirmModal(false);
             setAppointmentToDelete(null);
@@ -3382,19 +3431,6 @@ const handleLogout = async () => {
         <button
           className="btn-confirm btn-delete"
           onClick={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            try {
-              await handleDeleteAppointment(appointmentToDelete);
-              setShowDeleteConfirmModal(false);
-              setAppointmentToDelete(null);
-            } catch (error) {
-              console.error('Error deleting appointment:', error);
-              addNotification('error', 'Failed to delete appointment');
-            }
-          }}
-          onTouchEnd={async (e) => {
-            e.preventDefault();
             e.stopPropagation();
             try {
               await handleDeleteAppointment(appointmentToDelete);
@@ -3885,10 +3921,6 @@ const handleLogout = async () => {
                 doctor.id,
                 selectedCalendarDate
               );
-              const currentDoctorSlots = getDoctorSlotsForDate(
-                doctor.id,
-                selectedCalendarDate
-              );
 
               return (
                 <div key={doctor.id} className="doctor-schedule-card">
@@ -3926,28 +3958,101 @@ const handleLogout = async () => {
                     </div>
                   </div>
 
-                  {/* ÃƒÂ°Ã…Â¸Ã¢â‚¬ Ã¢â‚¬Â¢ Per-Doctor Slot Input */}
-                  <div className="slot-control">
-                    <label htmlFor={`slot-count-${doctor.id}`}>
-                      Max Slots for this Day:
-                    </label>
-                    <input
-                      id={`slot-count-${doctor.id}`}
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={currentDoctorSlots}
-                      onChange={(e) =>
-                        handleDoctorSlotChange(
-                          doctor.id,
-                          selectedCalendarDate,
-                          Number(e.target.value)
-                        )
-                      }
-                      className="slot-input"
-                    />
-                  </div>
-
+{/* ✅ FIXED: Per-Doctor Slot Input - Only affects current doctor */}
+<div className="slot-control">
+  <label htmlFor={`slot-count-${doctor.id}`}>
+    Max Slots for this Day:
+  </label>
+  <input
+    id={`slot-count-${doctor.id}`}
+    type="text"
+    inputMode="numeric"
+    value={(() => {
+      const key = `${doctor.id}_${selectedCalendarDate}`;
+      const customSlots = doctorSlotSettings[key];
+      
+      // If custom slots set, show that
+      if (customSlots !== undefined) {
+        return customSlots === 0 ? '' : customSlots.toString();
+      }
+      
+      // Otherwise show calculated default
+      return calculateDoctorDailySlots(doctor).toString();
+    })()}
+    onChange={(e) => {
+      const value = e.target.value;
+      const key = `${doctor.id}_${selectedCalendarDate}`;
+      
+      // ✅ Allow completely clearing the input
+      if (value === '') {
+        setDoctorSlotSettings(prev => ({
+          ...prev,
+          [key]: 0 // Temporarily set to 0 while typing
+        }));
+        return;
+      }
+      
+      // Only allow numbers
+      const numericValue = value.replace(/[^0-9]/g, '');
+      
+      if (numericValue) {
+        const parsedValue = parseInt(numericValue);
+        // Update immediately while typing - only this doctor
+        setDoctorSlotSettings(prev => ({
+          ...prev,
+          [key]: parsedValue
+        }));
+      }
+    }}
+    onBlur={async (e) => {
+      const value = e.target.value;
+      const key = `${doctor.id}_${selectedCalendarDate}`;
+      let numericValue = parseInt(value);
+      
+      // ✅ If empty or invalid, restore calculated default
+      if (isNaN(numericValue) || numericValue < 1) {
+        const calculatedSlots = calculateDoctorDailySlots(doctor);
+        numericValue = calculatedSlots;
+        
+        // Remove custom setting, use default
+        setDoctorSlotSettings(prev => {
+          const updated = { ...prev };
+          delete updated[key];
+          return updated;
+        });
+        
+        addNotification('info', `Restored default: ${calculatedSlots} slots`);
+        return;
+      } else if (numericValue > 50) {
+        numericValue = 50;
+        addNotification('warning', 'Maximum 50 slots allowed - set to 50');
+      }
+      
+      // Save to Firestore and update state - only this doctor
+      await handleDoctorSlotChange(
+        doctor.id,
+        selectedCalendarDate,
+        numericValue
+      );
+    }}
+    onKeyDown={(e) => {
+      // Allow: backspace, delete, tab, escape, enter, arrows
+      if ([8, 9, 27, 13, 46, 37, 39].includes(e.keyCode) ||
+          // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+          (e.ctrlKey && [65, 67, 86, 88].includes(e.keyCode))) {
+        return;
+      }
+      // Only allow numbers
+      if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && 
+          (e.keyCode < 96 || e.keyCode > 105)) {
+        e.preventDefault();
+      }
+    }}
+    className="slot-input"
+    placeholder={`Default: ${calculateDoctorDailySlots(doctor)}`}
+    autoComplete="off"
+  />
+</div>
                   {/* Time slots */}
                   {doctorAvailableToday ? (
                     <div
@@ -4702,43 +4807,44 @@ const handleLogout = async () => {
           disabled={uploadingImage}
           aria-label="Upload patient photo"
         />
-        <label 
-          htmlFor="appointmentPhoto" 
-          className="photo-upload-box"
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.currentTarget.style.borderColor = 'var(--dark-blue)';
-            e.currentTarget.style.background = 'var(--secondary-blue)';
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            e.currentTarget.style.borderColor = 'var(--accent-blue)';
-            e.currentTarget.style.background = 'var(--primary-blue)';
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.currentTarget.style.borderColor = 'var(--accent-blue)';
-            e.currentTarget.style.background = 'var(--primary-blue)';
-            
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
-              const fakeEvent = {
-                target: { files: [file] }
-              } as any;
-              handlePhotoUpload(fakeEvent, 'appointment');
-            } else {
-              addNotification('error', 'Please drop a valid image file');
-            }
-          }}
-        >
-          <Camera size={24} aria-hidden="true" />
-          <span className="upload-text">
-            {uploadingImage 
-              ? 'Uploading...' 
-              : 'Click to upload or drag & drop'}
-          </span>
-          <span className="upload-hint">PNG, JPG up to 2MB</span>
-        </label>
+        {/* ✅ UPDATED: Photo upload with 5MB limit */}
+<label 
+  htmlFor="appointmentPhoto" 
+  className="photo-upload-box"
+  onDragOver={(e) => {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = 'var(--dark-blue)';
+    e.currentTarget.style.background = 'var(--secondary-blue)';
+  }}
+  onDragLeave={(e) => {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = 'var(--accent-blue)';
+    e.currentTarget.style.background = 'var(--primary-blue)';
+  }}
+  onDrop={(e) => {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = 'var(--accent-blue)';
+    e.currentTarget.style.background = 'var(--primary-blue)';
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const fakeEvent = {
+        target: { files: [file] }
+      } as any;
+      handlePhotoUpload(fakeEvent, 'appointment');
+    } else {
+      addNotification('error', 'Please drop a valid image file');
+    }
+  }}
+>
+  <Camera size={24} aria-hidden="true" />
+  <span className="upload-text">
+    {uploadingImage 
+      ? 'Uploading...' 
+      : 'Click to upload or drag & drop'}
+  </span>
+  <span className="upload-hint">PNG, JPG up to 5MB</span>
+</label>
       </>
     ) : (
       <>

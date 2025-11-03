@@ -2689,14 +2689,14 @@ select:active {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  border-radius: var(--radius-xl); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ 20px rounded corners */
+  border-radius: var(--radius-xl);
   background: var(--bg-primary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ soft shadow for depth */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease-in-out;
 }
 
 .booking-modal .modal-content {
-  border-radius: var(--radius-xl); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ matches outer modal */
+  border-radius: var(--radius-xl);
   overflow: hidden;
   background: var(--bg-primary);
   box-shadow: var(--shadow-lg);
@@ -2705,7 +2705,7 @@ select:active {
 /* ===== BOOKING FORM ===== */
 .booking-form {
   padding: var(--space-xl);
-  border-radius: var(--radius-lg); /* smooth edges inside modal */
+  border-radius: var(--radius-lg);
   background: var(--bg-primary);
   display: flex;
   flex-direction: column;
@@ -2713,16 +2713,32 @@ select:active {
   transition: all 0.3s ease-in-out;
 }
 
-/* Form fields - Higher specificity */
+/* Form fields - Higher specificity with dark mode support */
 .booking-modal .booking-form .form-group input,
 .booking-modal .booking-form .form-group select,
 .booking-modal .booking-form .form-group textarea {
   border-radius: var(--radius-md) !important;
-  border: 2px solid #cbd5e0 !important; /* Default border */
+  border: 2px solid #cbd5e0 !important;
   padding: var(--space-md) !important;
   font-size: var(--font-size-base) !important;
   background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Dark mode input fields */
+[data-theme="dark"] .booking-modal .booking-form .form-group input,
+[data-theme="dark"] .booking-modal .booking-form .form-group select,
+[data-theme="dark"] .booking-modal .booking-form .form-group textarea {
+  background: var(--bg-secondary) !important;
+  border: 2px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode placeholder text */
+[data-theme="dark"] .booking-modal .booking-form .form-group input::placeholder,
+[data-theme="dark"] .booking-modal .booking-form .form-group textarea::placeholder {
+  color: var(--text-tertiary) !important;
 }
 
 /* Show dropdown arrow on select elements */
@@ -2734,9 +2750,22 @@ select:active {
 }
 
 /* Date input visibility fixes */
+.booking-modal .booking-form .form-group input[type="date"] {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
 .booking-modal .booking-form .form-group input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 1 !important;
   cursor: pointer !important;
+  filter: invert(0.5) !important;
+  z-index: 2 !important;
+  position: relative !important;
+}
+
+/* Dark mode calendar icon */
+[data-theme="dark"] .booking-modal .booking-form .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) !important;
 }
 
 /* Focus state - Stronger highlight matching staff input */
@@ -2749,12 +2778,30 @@ select:active {
   background: #fff !important;
 }
 
+/* Dark mode focus state */
+[data-theme="dark"] .booking-modal .booking-form .form-group input:focus,
+[data-theme="dark"] .booking-modal .booking-form .form-group select:focus,
+[data-theme="dark"] .booking-modal .booking-form .form-group textarea:focus {
+  border: 2px solid var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2) !important;
+  background: var(--bg-tertiary) !important;
+}
+
 /* Mobile-specific fixes */
 @media (max-width: 768px) {
   .booking-modal .booking-form .form-group input[type="date"],
   .booking-modal .booking-form .form-group select {
     min-height: 44px !important;
     font-size: 16px !important; /* Prevents zoom on iOS */
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Ensure date picker is clickable on mobile */
+  .booking-modal .booking-form .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 4px !important;
+    margin-left: 8px !important;
   }
 }
 
@@ -2786,26 +2833,6 @@ select:active {
 
 [data-theme="dark"] .booking-form .form-group label {
   color: var(--text-primary);
-}
-
-[data-theme="dark"] .booking-form .form-group input,
-[data-theme="dark"] .booking-form .form-group select,
-[data-theme="dark"] .booking-form .form-group textarea {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .booking-form .form-group input:focus,
-[data-theme="dark"] .booking-form .form-group select:focus,
-[data-theme="dark"] .booking-form .form-group textarea:focus {
-  border-color: var(--primary);
-  background: var(--bg-tertiary);
-}
-
-[data-theme="dark"] .booking-form .form-group input::placeholder,
-[data-theme="dark"] .booking-form .form-group select::placeholder {
-  color: var(--text-tertiary);
 }
 
 
