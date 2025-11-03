@@ -5014,3 +5014,33 @@ body {
   box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.25) !important;
   background: #fff !important;
 }
+
+/* ✅ Fix touch/click issues on mobile - WITH SAFARI SUPPORT */
+.appointment-actions {
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.icon-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; /* Safari 3+, Safari on iOS 3+ */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Standard syntax */
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.appointment-card {
+  pointer-events: auto;
+}
+
+.appointment-actions > * {
+  pointer-events: auto;
+}

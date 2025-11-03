@@ -3142,8 +3142,7 @@ const handleLogout = async () => {
                     <span>{formattedDate}</span>
                   </div>
                 </div>
-
-                {/* ✅ UPDATED: Action Buttons with Confirmation */}
+{/* ✅ UPDATED: Action Buttons with Confirmation */}
                 <div className="appointment-right">
                   <div className="appointment-status">
                     <span className={appointment.priority}>
@@ -3157,7 +3156,15 @@ const handleLogout = async () => {
                   <div className="appointment-actions">
                     <button
                       className="icon-btn view"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAppointment(appointment);
+                        setShowDetailsModal(true);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setSelectedAppointment(appointment);
                         setShowDetailsModal(true);
                       }}
@@ -3168,7 +3175,16 @@ const handleLogout = async () => {
                     
                     <button
                       className="icon-btn edit"
-                      onClick={() => handleEditAppointment(appointment)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEditAppointment(appointment);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEditAppointment(appointment);
+                      }}
                       title={`Edit appointment for ${appointment.name}`}
                     >
                       <Edit size={20} />
@@ -3176,7 +3192,16 @@ const handleLogout = async () => {
                     
                     <button
                       className="icon-btn notify"
-                      onClick={() => sendNotificationToPatientById(appointment.id, 'both')}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        sendNotificationToPatientById(appointment.id, 'both');
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        sendNotificationToPatientById(appointment.id, 'both');
+                      }}
                       title={`Send notification to ${appointment.name}`}
                     >
                       <Send size={20} />
@@ -3185,7 +3210,15 @@ const handleLogout = async () => {
                     {/* ✅ UPDATED: Cancel Button with Confirmation */}
                     <button
                       className="icon-btn cancel"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setAppointmentToCancel(appointment.id);
+                        setShowCancelConfirmModal(true);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setAppointmentToCancel(appointment.id);
                         setShowCancelConfirmModal(true);
                       }}
@@ -3197,7 +3230,15 @@ const handleLogout = async () => {
                     {/* ✅ UPDATED: Delete Button with Confirmation */}
                     <button
                       className="icon-btn delete"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setAppointmentToDelete(appointment.id);
+                        setShowDeleteConfirmModal(true);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setAppointmentToDelete(appointment.id);
                         setShowDeleteConfirmModal(true);
                       }}
