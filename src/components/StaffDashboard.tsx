@@ -3256,9 +3256,24 @@ const handleLogout = async () => {
     </div>
   </div>
 )}
-{/* ✅ NEW: Cancel Appointment Confirmation Modal */}
+{/* ✅ UPDATED: Cancel Appointment Confirmation Modal - MOBILE FIXED */}
 {showCancelConfirmModal && appointmentToCancel && (
-  <div className="modal-overlay">
+  <div 
+    className="modal-overlay"
+    onClick={(e) => {
+      if (e.target === e.currentTarget) {
+        setShowCancelConfirmModal(false);
+        setAppointmentToCancel(null);
+      }
+    }}
+    onTouchEnd={(e) => {
+      if (e.target === e.currentTarget) {
+        e.preventDefault();
+        setShowCancelConfirmModal(false);
+        setAppointmentToCancel(null);
+      }
+    }}
+  >
     <div className="confirm-modal">
       <div className="confirm-modal-icon cancel">
         <AlertTriangle size={48} />
@@ -3271,7 +3286,15 @@ const handleLogout = async () => {
       <div className="modal-actions">
         <button
           className="btn-secondary"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowCancelConfirmModal(false);
+            setAppointmentToCancel(null);
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setShowCancelConfirmModal(false);
             setAppointmentToCancel(null);
           }}
@@ -3280,7 +3303,21 @@ const handleLogout = async () => {
         </button>
         <button
           className="btn-confirm btn-cancel"
-          onClick={async () => {
+          onClick={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              await handleAppointmentStatusChange(appointmentToCancel, 'cancelled');
+              setShowCancelConfirmModal(false);
+              setAppointmentToCancel(null);
+            } catch (error) {
+              console.error('Error cancelling appointment:', error);
+              addNotification('error', 'Failed to cancel appointment');
+            }
+          }}
+          onTouchEnd={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             try {
               await handleAppointmentStatusChange(appointmentToCancel, 'cancelled');
               setShowCancelConfirmModal(false);
@@ -3297,9 +3334,24 @@ const handleLogout = async () => {
     </div>
   </div>
 )}
-{/* ✅ NEW: Delete Appointment Confirmation Modal */}
+{/* ✅ UPDATED: Delete Appointment Confirmation Modal - MOBILE FIXED */}
 {showDeleteConfirmModal && appointmentToDelete && (
-  <div className="modal-overlay">
+  <div 
+    className="modal-overlay"
+    onClick={(e) => {
+      if (e.target === e.currentTarget) {
+        setShowDeleteConfirmModal(false);
+        setAppointmentToDelete(null);
+      }
+    }}
+    onTouchEnd={(e) => {
+      if (e.target === e.currentTarget) {
+        e.preventDefault();
+        setShowDeleteConfirmModal(false);
+        setAppointmentToDelete(null);
+      }
+    }}
+  >
     <div className="confirm-modal">
       <div className="confirm-modal-icon delete">
         <Trash2 size={48} />
@@ -3312,7 +3364,15 @@ const handleLogout = async () => {
       <div className="modal-actions">
         <button
           className="btn-secondary"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDeleteConfirmModal(false);
+            setAppointmentToDelete(null);
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setShowDeleteConfirmModal(false);
             setAppointmentToDelete(null);
           }}
@@ -3321,7 +3381,21 @@ const handleLogout = async () => {
         </button>
         <button
           className="btn-confirm btn-delete"
-          onClick={async () => {
+          onClick={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              await handleDeleteAppointment(appointmentToDelete);
+              setShowDeleteConfirmModal(false);
+              setAppointmentToDelete(null);
+            } catch (error) {
+              console.error('Error deleting appointment:', error);
+              addNotification('error', 'Failed to delete appointment');
+            }
+          }}
+          onTouchEnd={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             try {
               await handleDeleteAppointment(appointmentToDelete);
               setShowDeleteConfirmModal(false);
