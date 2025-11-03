@@ -20,12 +20,18 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// ✅ Helper function to get API URL
+// ✅ FIXED Helper function to get API URL
 const getApiUrl = (endpoint: string) => {
-  const baseUrl = window.location.hostname === 'localhost' 
-    ? '' 
-    : 'https://timefly.vercel.app';
-  return `${baseUrl}/api/${endpoint}`;
+  // Remove any leading slash from endpoint
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  
+  if (window.location.hostname === 'localhost') {
+    // Local development - connect to Express server directly
+    return `http://localhost:5000/${cleanEndpoint}`;
+  } else {
+    // Production - use Vercel serverless functions
+    return `/api/${cleanEndpoint}`;
+  }
 };
 
 interface SignupProps {
@@ -78,8 +84,11 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
     try {
       const normalizedEmail = email.trim().toLowerCase();
       
-      // ✅ Updated: Using helper function
-      const checkResponse = await fetch(getApiUrl('check-email'), {
+      // ✅ Check if email exists
+      const checkUrl = getApiUrl('check-email');
+      console.log("📤 Checking email at:", checkUrl);
+      
+      const checkResponse = await fetch(checkUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: normalizedEmail }),
@@ -96,8 +105,11 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
         return;
       }
 
-      // ✅ Updated: Using helper function
-      const response = await fetch(getApiUrl('send-code'), {
+      // ✅ Send verification code
+      const sendCodeUrl = getApiUrl('send-code');
+      console.log("📤 Sending code to:", sendCodeUrl);
+      
+      const response = await fetch(sendCodeUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: normalizedEmail }),
@@ -140,8 +152,11 @@ const Signup: React.FC<SignupProps> = ({ onSuccess }) => {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedCode = inputCode.trim();
 
-      // ✅ Updated: Using helper function
-      const response = await fetch(getApiUrl('verify-code'), {
+      // ✅ Verify code
+      const verifyUrl = getApiUrl('verify-code');
+      console.log("📤 Verifying code at:", verifyUrl);
+      
+      const response = await fetch(verifyUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: normalizedEmail, code: normalizedCode }),
