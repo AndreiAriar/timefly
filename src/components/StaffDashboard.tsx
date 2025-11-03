@@ -5382,113 +5382,121 @@ const handleLogout = async () => {
           </div>
         </div>
       )}
- 
+{/* =============================== */}
+{/* Appointment Details Modal - UPDATED */}
+{/* =============================== */}
+{showDetailsModal && selectedAppointment && (
+  <div className="modal-overlay" role="dialog" aria-modal="true">
+    <div className="modal-content details-modal">
+      <div className="modal-header">
+        <h3>Appointment Details</h3>
+        <button
+          className="modal-close"
+          onClick={() => {
+            setShowDetailsModal(false);
+            setSelectedAppointment(null);
+          }}
+          aria-label="Close details"
+          title="Close details"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-      {/* =============================== */}
-      {/* Appointment Details Modal - UPDATED */}
-      {/* =============================== */}
-      {showDetailsModal && selectedAppointment && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-content details-modal">
-            <div className="modal-header">
-              <h3>Appointment Details</h3>
-              <button
-                className="modal-close"
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setSelectedAppointment(null);
-                }}
-                aria-label="Close details"
-                title="Close details"
+      <div className="modal-body">
+        <div className="details-content">
+          {selectedAppointment.photo && (
+            <div className="detail-photo">
+              <img src={selectedAppointment.photo} alt={selectedAppointment.name} />
+            </div>
+          )}
+
+          <div className="detail-grid">
+            <div className="detail-item">
+              <label>Patient Name:</label>
+              <span>{selectedAppointment.name}</span>
+            </div>
+            <div className="detail-item">
+              <label>Age:</label>
+              <span>{selectedAppointment.age || "Not specified"}</span>
+            </div>
+            <div className="detail-item">
+              <label>Gender:</label>
+              <span>{selectedAppointment.gender || "Not specified"}</span>
+            </div>
+            <div className="detail-item">
+              <label>Email:</label>
+              <span>{selectedAppointment.email}</span>
+            </div>
+            <div className="detail-item">
+              <label>Phone:</label>
+              <span>{selectedAppointment.phone}</span>
+            </div>
+            <div className="detail-item">
+              <label>Condition:</label>
+              <span>{selectedAppointment.type}</span>
+            </div>
+            <div className="detail-item">
+              <label>Date:</label>
+              <span>
+                {new Date(selectedAppointment.date).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+            <div className="detail-item">
+              <label>Time:</label>
+              <span>{selectedAppointment.time}</span>
+            </div>
+            <div className="detail-item">
+              <label>Doctor:</label>
+              <span>{selectedAppointment.doctor}</span>
+            </div>
+            <div className="detail-item">
+              <label>Queue Number:</label>
+              <span>#{selectedAppointment.queueNumber}</span>
+            </div>
+            <div className="detail-item">
+              <label>Priority:</label>
+              <span
+                className={`priority-badge ${getPriorityColor(selectedAppointment.priority)}`}
               >
-                <X size={20} />
-              </button>
+                {selectedAppointment.priority}
+              </span>
             </div>
-
-            <div className="modal-body">
-              <div className="details-content">
-                {selectedAppointment.photo && (
-                  <div className="detail-photo">
-                    <img src={selectedAppointment.photo} alt={selectedAppointment.name} />
-                  </div>
-                )}
-
-                <div className="detail-grid">
-                  <div className="detail-item">
-                    <label>Patient Name</label>
-                    <span>{selectedAppointment.name}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Age</label>
-                    <span>{selectedAppointment.age || "Not specified"}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Gender</label>
-                    <span>{selectedAppointment.gender || "Not specified"}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Email</label>
-                    <span>{selectedAppointment.email}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Phone</label>
-                    <span>{selectedAppointment.phone}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Condition</label>
-                    <span>{selectedAppointment.type}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Date</label>
-                    <span>
-                      {new Date(selectedAppointment.date).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Time</label>
-                    <span>{selectedAppointment.time}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Doctor</label>
-                    <span>{selectedAppointment.doctor}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Queue Number</label>
-                    <span>#{selectedAppointment.queueNumber}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Priority</label>
-                    <span
-                      className={`priority-badge ${getPriorityColor(selectedAppointment.priority)}`}
-                    >
-                      {selectedAppointment.priority}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Status</label>
-                    <span
-                      className={`status-badge ${getStatusColor(selectedAppointment.status)}`}
-                    >
-                      {selectedAppointment.status}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Assigned By</label>
-                    <span>{selectedAppointment.assignedBy || "System"}</span>
-                  </div>
-                  {selectedAppointment.notes && (
-                    <div className="detail-item full-width">
-                      <label>Notes</label>
-                      <span>{selectedAppointment.notes}</span>
-                    </div>
-                  )}
-                </div>
+            <div className="detail-item">
+              <label>Status:</label>
+              <span
+                className={`status-badge ${getStatusColor(selectedAppointment.status)}`}
+              >
+                {selectedAppointment.status}
+              </span>
+            </div>
+            <div className="detail-item">
+              <label>Assigned By:</label>
+              <span 
+                className={`assigned-badge ${
+                  selectedAppointment.assignedBy?.toLowerCase() === 'patient' 
+                    ? 'assigned-patient' 
+                    : selectedAppointment.assignedBy?.toLowerCase() === 'staff'
+                    ? 'assigned-staff'
+                    : 'assigned-system'
+                }`}
+              >
+                {selectedAppointment.assignedBy || "System"}
+              </span>
+            </div>
+            {selectedAppointment.notes && (
+              <div className="detail-item full-width">
+                <label>Notes:</label>
+                <span>{selectedAppointment.notes}</span>
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      </div>
 
             <div className="modal-footer">
               <button
@@ -5579,7 +5587,6 @@ const handleLogout = async () => {
           </div>
         </div>
       )}
-
      {/* FOOTER - Inside main container */}
 <footer className="staff-footer">
   <div className="staff-footer-content">

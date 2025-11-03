@@ -301,7 +301,7 @@ body {
   text-align: center;
   color: var(--text-muted);
   border-radius: var(--radius-lg); /* ADDED: iOS style */
-  background: var(--bg-secondary);
+  background: transparent !important;
   margin: var(--space-md); /* ADDED: Added margin */
 }
 
@@ -599,20 +599,28 @@ body {
   font-weight: 700;
 }
 
-/* Fix for modal close (X) button */
+/* Fix for modal close (X) button - Removed box styling */
 .modal-close {
   color: var(--text-secondary) !important;
-  background: var(--bg-primary) !important;
-  border: 1px solid var(--border-light) !important;
+  background: transparent !important; /* Changed from var(--bg-primary) to transparent */
+  border: none !important; /* Removed border */
   width: 2rem !important;
   height: 2rem !important;
-  border-radius: var(--radius-md) !important;
+  border-radius: none important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-size: 1.2rem !important;
   font-weight: bold !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
 }
+
+.modal-close:hover {
+  background: none !important; /* Subtle hover effect */
+  color: var(--text-primary) !important;
+}
+
 
 /* Mobile: Position X button in top right corner */
 @media (max-width: 768px) {
@@ -630,8 +638,8 @@ body {
 }
 
 .modal-close:hover {
-  background: rgba(239, 68, 68, 0.1) !important;
-  border-color: var(--error) !important;
+  background: none !important;
+  border-color: none !important;
   color: var(--error) !important;
   transform: rotate(90deg) !important;
 }
@@ -2208,16 +2216,15 @@ select:active {
 
 .modal-close {
   background: none;
-  border: none;
+  border: none !important;
   cursor: pointer;
   padding: var(--space-xs);
-  border-radius: var(--border-radius-sm);
   color: var(--text-muted);
   transition: var(--transition-fast);
 }
 
 .modal-close:hover {
-  background: var(--bg-tertiary);
+  background: none !important;
   color: var(--text-primary);
 }
 
@@ -2698,7 +2705,7 @@ select:active {
 /* ===== BOOKING FORM ===== */
 .booking-form {
   padding: var(--space-xl);
-  border-radius: var(--radius-lg); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ smooth edges inside modal */
+  border-radius: var(--radius-lg); /* smooth edges inside modal */
   background: var(--bg-primary);
   display: flex;
   flex-direction: column;
@@ -2706,25 +2713,49 @@ select:active {
   transition: all 0.3s ease-in-out;
 }
 
-
-/* Form fields */
-.booking-form .form-group input,
-.booking-form .form-group select,
-.booking-form .form-group textarea {
-  border-radius: var(--radius-md); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ 12px iOS rounded corners */
-  border: 1px solid var(--border-light);
-  padding: var(--space-md);
-  font-size: var(--font-size-base);
-  background: var(--bg-secondary);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+/* Form fields - Higher specificity */
+.booking-modal .booking-form .form-group input,
+.booking-modal .booking-form .form-group select,
+.booking-modal .booking-form .form-group textarea {
+  border-radius: var(--radius-md) !important;
+  border: 2px solid #cbd5e0 !important; /* Default border */
+  padding: var(--space-md) !important;
+  font-size: var(--font-size-base) !important;
+  background: var(--bg-secondary) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
-.booking-form .form-group input:focus,
-.booking-form .form-group select:focus,
-.booking-form .form-group textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-  outline: none;
+/* Show dropdown arrow on select elements */
+.booking-modal .booking-form .form-group select {
+  -webkit-appearance: menulist !important;
+  -moz-appearance: menulist !important;
+  appearance: menulist !important;
+  cursor: pointer !important;
+}
+
+/* Date input visibility fixes */
+.booking-modal .booking-form .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+/* Focus state - Stronger highlight matching staff input */
+.booking-modal .booking-form .form-group input:focus,
+.booking-modal .booking-form .form-group select:focus,
+.booking-modal .booking-form .form-group textarea:focus {
+  outline: none !important;
+  border: 2px solid var(--dark-blue) !important;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.4) !important;
+  background: #fff !important;
+}
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+  .booking-modal .booking-form .form-group input[type="date"],
+  .booking-modal .booking-form .form-group select {
+    min-height: 44px !important;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
 }
 
 /* Form field grid layout */
@@ -4376,9 +4407,10 @@ select:active {
 
 .modal-close {
   background: rgba(255, 255, 255, 0.2);
-  border: none;
+  border: none !important;
   width: 36px;
   height: 36px;
+  border: none !important;
   border-radius: 8px;
   display: flex;
   align-items: center;
