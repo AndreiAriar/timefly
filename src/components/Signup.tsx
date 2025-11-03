@@ -20,17 +20,14 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// ✅ FIXED Helper function to get API URL
+// ✅ Helper function for Vercel deployment
 const getApiUrl = (endpoint: string) => {
-  // Remove any leading slash from endpoint
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   
   if (window.location.hostname === 'localhost') {
-    // Local development - connect to Express server directly
     return `http://localhost:5000/${cleanEndpoint}`;
   } else {
-    // Production - use Vercel serverless functions
-    return `/api/${cleanEndpoint}`;
+    return `https://timefly.vercel.app/api/${cleanEndpoint}`;
   }
 };
 

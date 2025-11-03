@@ -5,12 +5,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { db } from "../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-// ✅ Helper function to get API URL
+// ✅ Helper function for Vercel deployment
 const getApiUrl = (endpoint: string) => {
-  const baseUrl = window.location.hostname === 'localhost' 
-    ? '' 
-    : 'https://timefly.vercel.app';
-  return `${baseUrl}/api/${endpoint}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  
+  if (window.location.hostname === 'localhost') {
+    return `http://localhost:5000/${cleanEndpoint}`;
+  } else {
+    return `https://timefly.vercel.app/api/${cleanEndpoint}`;
+  }
 };
 
 const Feedback: React.FC = () => {
