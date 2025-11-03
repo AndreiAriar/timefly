@@ -2,8 +2,16 @@ import React, { useState } from "react";
 import "../styles/feedback.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { db } from "../../firebase"; // ✅ Import Firebase config
+import { db } from "../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+// ✅ Helper function to get API URL
+const getApiUrl = (endpoint: string) => {
+  const baseUrl = window.location.hostname === 'localhost' 
+    ? '' 
+    : 'https://timefly.vercel.app';
+  return `${baseUrl}/api/${endpoint}`;
+};
 
 const Feedback: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -25,8 +33,8 @@ const Feedback: React.FC = () => {
       setLoading(true);
       console.log("📤 Sending feedback to backend:", feedbackData);
 
-      // ✅ Send to backend (for email auto-reply)
-      const response = await fetch("http://localhost:5000/send-feedback", {
+      // ✅ Updated: Using helper function for API URL
+      const response = await fetch(getApiUrl('send-feedback'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(feedbackData),

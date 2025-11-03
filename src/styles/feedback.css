@@ -230,7 +230,7 @@
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: var(--feedback-primary-hover);
+  background: var(--feedback-primary-gradient);
   transform: translateY(-1px);
 }
 
