@@ -733,3 +733,93 @@
 .stat-bar-fill[data-width="98"] { width: 98%; }
 .stat-bar-fill[data-width="99"] { width: 99%; }
 .stat-bar-fill[data-width="100"] { width: 100%; }
+
+
+/* === Pie Chart Label Styles === */
+.pie-chart-label {
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure recharts doesn't add connecting lines */
+.recharts-pie-label-line {
+  display: none !important;
+  stroke: none !important;
+}
+
+/* === Pie Chart - Force Remove Lines === */
+.recharts-pie-label-line {
+  display: none !important;
+  stroke: none !important;
+  visibility: hidden !important;
+}
+
+/* Additional pie chart cleanup */
+.recharts-layer.recharts-pie-label-line {
+  opacity: 0 !important;
+}
+
+/* Ensure labels are properly styled */
+.piechart-card .recharts-pie-label-text {
+  pointer-events: none;
+}
+
+/* Remove any connecting paths */
+.piechart-card .recharts-pie path[stroke] {
+  stroke: none !important;
+}
+
+/* Override recharts default label line styling */
+.recharts-pie .recharts-pie-label-line {
+  stroke-width: 0 !important;
+}
+
+/* === Pie Chart Label Styles (Moved from inline) === */
+.pie-chart-label-text {
+  fill: white;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.pie-chart-label-percentage {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* === Pie Chart - Force Remove Lines === */
+.recharts-pie-label-line {
+  display: none !important;
+  stroke: none !important;
+  visibility: hidden !important;
+}
+
+/* Additional pie chart cleanup */
+.recharts-layer.recharts-pie-label-line {
+  opacity: 0 !important;
+}
+
+/* Ensure labels are properly styled */
+.piechart-card .recharts-pie-label-text {
+  pointer-events: none;
+}
+
+/* Remove any connecting paths */
+.piechart-card .recharts-pie path[stroke] {
+  stroke: none !important;
+}
+
+/* Override recharts default label line styling */
+.recharts-pie .recharts-pie-label-line {
+  stroke-width: 0 !important;
+}
+
+/* Ensure no label lines appear */
+.recharts-layer[clip-path] path {
+  stroke: none !important;
+}

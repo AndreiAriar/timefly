@@ -2214,18 +2214,48 @@ select:active {
   color: var(--text-primary);
 }
 
+/* Fix for modal close (X) button - Minimal styling like Comments */
 .modal-close {
-  background: none;
+  color: var(--text-secondary) !important;
+  background: transparent !important;
   border: none !important;
-  cursor: pointer;
-  padding: var(--space-xs);
-  color: var(--text-muted);
-  transition: var(--transition-fast);
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.2rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  padding: 0 !important;
 }
 
 .modal-close:hover {
-  background: none !important;
-  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: var(--error) !important;
+  transform: rotate(90deg) !important;
+}
+
+/* Mobile: Position X button in top right corner - aligned with title */
+@media (max-width: 768px) {
+  .modal-header {
+    position: relative;
+    padding: 1rem;
+    padding-right: 3rem; /* Space for X button */
+  }
+  
+  .modal-header h3 {
+    font-size: 1.1rem;
+    padding-right: 0.5rem;
+  }
+  
+  .modal-close {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    z-index: 10 !important;
+  }
 }
 
 /* Calendar Modal */
@@ -4432,12 +4462,11 @@ select:active {
   opacity: 0.95;
 }
 
-.modal-close {
+.calendar-header .modal-close {
   background: rgba(255, 255, 255, 0.2);
   border: none !important;
   width: 36px;
   height: 36px;
-  border: none !important;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -4445,11 +4474,32 @@ select:active {
   cursor: pointer;
   transition: all 0.2s ease;
   color: white;
+  flex-shrink: 0;
 }
 
-.modal-close:hover {
+.calendar-header .modal-close:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: scale(1.05);
+}
+
+/* Mobile adjustments for calendar header */
+@media (max-width: 768px) {
+  .calendar-header {
+    padding: 16px 20px;
+  }
+  
+  .calendar-title-section h2 {
+    font-size: 1.25rem;
+  }
+  
+  .calendar-title-section p {
+    font-size: 0.85rem;
+  }
+  
+  .calendar-header .modal-close {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 /* ===== WIZARD CONTENT WITH ANIMATIONS ===== */

@@ -22,6 +22,7 @@ interface NavbarProps {
   };
   currentView: 'home' | 'queue' | 'appointments';
   onViewChange: (view: 'home' | 'queue' | 'appointments') => void;
+  onPhotoUpdate?: (photoUrl: string) => void;
 }
 
 const DoctorNavbar = ({
@@ -31,6 +32,7 @@ const DoctorNavbar = ({
   onSearchChange,
   currentView,
   onViewChange,
+  onPhotoUpdate,
 }: NavbarProps) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -76,6 +78,63 @@ const DoctorNavbar = ({
     }
   };
 
+  // ✅ Handle photo upload with Base64 conversion
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      alert('Image size must be less than 5MB. Please choose a smaller image.');
+      e.target.value = '';
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      // Convert to Base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        
+        // Store in localStorage
+        if (auth.currentUser) {
+          localStorage.setItem(`doctorPhoto_${auth.currentUser.uid}`, base64String);
+          
+          // Call the callback to update parent component
+          if (onPhotoUpdate) {
+            onPhotoUpdate(base64String);
+          } else {
+            // Fallback: reload page if no callback provided
+            window.location.reload();
+          }
+        }
+      };
+
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Failed to upload photo. Please try again.');
+      };
+
+      reader.readAsDataURL(file);
+      
+      // Reset input and close dropdown
+      e.target.value = '';
+      setShowProfileDropdown(false);
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Failed to upload photo. Please try again.');
+      e.target.value = '';
+    }
+  };
+
   return (
     <nav className={`doctor-dashboard-navbar ${isScrolled ? 'doctor-navbar-scrolled' : ''}`}>
       <div className="doctor-navbar-container">
@@ -116,41 +175,42 @@ const DoctorNavbar = ({
 
         {/* Right Section */}
         <div className="doctor-navbar-right">
-         {/* Search - Expandable */}
-<div className={showSearch ? "doctor-navbar-search-expanded" : ""}>
-  {showSearch && (
-    <div className="doctor-search-wrapper">
-      <Search className="doctor-search-icon-left" size={18} />
-      <input
-        id="doctorNavbarSearch"
-        type="text"
-        placeholder="Search patients, appointments..."
-        className="doctor-search-input"
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
-        aria-label="Search patients and appointments"
-      />
-      <button
-        className="doctor-search-close-btn"
-        onClick={handleSearchToggle}
-        title="Close search"
-        aria-label="Close search"
-      >
-        <X size={18} />
-      </button>
-    </div>
-  )}
-  {!showSearch && (
-    <button
-      className="doctor-search-toggle-btn"
-      onClick={handleSearchToggle}
-      title="Search"
-      aria-label="Open search"
-    >
-      <Search size={20} />
-    </button>
-  )}
-</div>
+          {/* Search - Expandable */}
+          <div className={showSearch ? "doctor-navbar-search-expanded" : ""}>
+            {showSearch && (
+              <div className="doctor-search-wrapper">
+                <Search className="doctor-search-icon-left" size={18} />
+                <input
+                  id="doctorNavbarSearch"
+                  type="text"
+                  placeholder="Search patients, appointments..."
+                  className="doctor-search-input"
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  aria-label="Search patients and appointments"
+                />
+                <button
+                  className="doctor-search-close-btn"
+                  onClick={handleSearchToggle}
+                  title="Close search"
+                  aria-label="Close search"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            )}
+            {!showSearch && (
+              <button
+                className="doctor-search-toggle-btn"
+                onClick={handleSearchToggle}
+                title="Search"
+                aria-label="Open search"
+              >
+                <Search size={20} />
+              </button>
+            )}
+          </div>
+
           {/* Profile Dropdown */}
           <div
             className="doctor-profile-dropdown-container"
@@ -193,6 +253,7 @@ const DoctorNavbar = ({
                 id="doctorPhotoUpload"
                 accept="image/*"
                 className="doctor-hidden-file-input"
+                onChange={handlePhotoUpload}
                 title="Upload profile photo"
                 aria-label="Upload profile photo"
               />
@@ -204,7 +265,6 @@ const DoctorNavbar = ({
                     'doctorPhotoUpload'
                   ) as HTMLInputElement;
                   input?.click();
-                  setShowProfileDropdown(false);
                 }}
                 title="Change profile photo"
                 aria-label="Change profile photo"

@@ -103,80 +103,96 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* ===== NOTIFICATIONS ===== */
+/* === Notifications - Above Modals === */
 .notifications-container {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1000;
-  max-width: 400px;
+  z-index: 10000; /* High z-index to appear above modals */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
 }
 
 .notification {
+  pointer-events: auto;
+  min-width: 320px;
+  max-width: 420px;
+  background: white;
+  border-radius: var(--radius-md, 10px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  padding: 16px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px var(--shadow-medium);
-   -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-light);
-  animation: slideInRight 0.3s ease-out;
+  gap: 12px;
+  animation: slideIn 0.3s ease-out;
 }
 
-.notification-success {
-  background: linear-gradient(135deg, var(--white) 0%, #e8f5e8 100%);
-  border-left: 4px solid var(--success);
-}
-
-.notification-error {
-  background: linear-gradient(135deg, var(--white) 0%, #ffebee 100%);
-  border-left: 4px solid var(--error);
-}
-
-.notification-warning {
-  background: linear-gradient(135deg, var(--white) 0%, #fff3e0 100%);
-  border-left: 4px solid var(--warning);
-}
-
-.notification-info {
-  background: linear-gradient(135deg, var(--white) 0%, var(--primary-blue) 100%);
-  border-left: 4px solid var(--info);
-}
-
-.notification-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-}
-
-.notification-close {
-  background: none;
-  border: none;
-  color: var(--text-light);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.notification-close:hover {
-  background: var(--shadow-light);
-  color: var(--text-dark);
-}
-
-@keyframes slideInRight {
+@keyframes slideIn {
   from {
-    transform: translateX(100%);
+    transform: translateX(400px);
     opacity: 0;
   }
   to {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-message {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text, #0f172a);
+}
+
+.notification-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  color: var(--muted, #6b7280);
+  transition: background 0.2s, color 0.2s;
+}
+
+.notification-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text, #0f172a);
+}
+
+/* Notification type variants */
+.notification-success {
+  border-left: 4px solid var(--success, #10b981);
+}
+
+.notification-error {
+  border-left: 4px solid var(--danger, #ef4444);
+}
+
+.notification-info {
+  border-left: 4px solid var(--info, #06b6d4);
+}
+
+.notification-warning {
+  border-left: 4px solid var(--warning, #f59e0b);
 }
 
 /* ===================================================
@@ -1468,7 +1484,6 @@ select {
   background: var(--primary-blue);
   color: var(--dark-blue);
 }
-
 /* Filter dropdowns and button */
 .filters-row select,
 .filters-row input[type="date"] {
@@ -1491,6 +1506,101 @@ select {
 .filters-row .btn-primary {
   margin-left: auto;
   white-space: nowrap;
+}
+
+/* Mobile-specific date input fix - ENHANCED */
+@media (max-width: 768px) {
+  input[type="date"] {
+    min-height: 44px !important;
+    font-size: 16px !important;
+    color: #2c3e50 !important;
+    -webkit-text-fill-color: #2c3e50 !important;
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    padding-right: 40px !important;
+  }
+  
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    color: #2c3e50 !important;
+  }
+  
+  /* Show calendar icon on mobile */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 10px;
+    color: var(--accent-blue);
+    cursor: pointer;
+    opacity: 1;
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* Ensure date picker is visible and accessible */
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-clear-button {
+    display: none;
+  }
+  
+  .filters-row input[type="date"] {
+    min-width: 100%;
+    width: 100%;
+  }
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Enhanced date input styling for all screens */
+input[type="date"] {
+  position: relative;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .filters-row select,
+  .filters-row input[type="date"],
+  .filters-row .btn-primary {
+    width: 100%;
+    min-width: 100%;
+    margin-left: 0;
+  }
+  
+  .modal-header {
+    flex-wrap: nowrap;
+  }
+  
+  .modal-date {
+    font-size: 0.8rem;
+  }
 }
 
 /* ===================================================
@@ -4653,7 +4763,7 @@ body.mobile-menu-open {
 }
 
 .btn-confirm {
-  background-color: #2563eb;
+  background: #d9534f;
   color: #fff;
   padding: 0.5rem 1.2rem;
   border: none;

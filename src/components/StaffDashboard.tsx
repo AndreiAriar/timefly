@@ -39,7 +39,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
 } from 'recharts';
 // Firebase imports
 import {
@@ -316,14 +315,7 @@ useEffect(() => {
   return () => window.removeEventListener('resize', handleResize);
 }, []);
 
-// Lock body scroll when mobile menu is open
-useEffect(() => {
-  if (showMobileMenu) {
-    document.body.classList.add('mobile-menu-open');
-  } else {
-    document.body.classList.remove('mobile-menu-open');
-  }
-}, [showMobileMenu]);
+
 
 // Close profile dropdown when clicking outside
 useEffect(() => {
@@ -531,18 +523,8 @@ useEffect(() => {
     fetchDoctors();
   }, [staffProfile]);
   
- 
-// properly type the ref
-const profileButtonRef = useRef<HTMLButtonElement | null>(null);
 
-useEffect(() => {
-  if (profileButtonRef.current) {
-    profileButtonRef.current.setAttribute(
-      "aria-expanded",
-      showProfileDropdown ? "true" : "false"
-    );
-  }
-}, [showProfileDropdown]);
+
 // FIXED: Fetch Appointments - Ordered by Date ASC, Queue Number ASC
 useEffect(() => {
   if (!staffProfile) return;
@@ -2611,30 +2593,30 @@ const handleLogout = async () => {
     return (
       <div className="staff-dashboard">
         {/* Notifications */}
-        <div className="notifications-container" aria-live="polite">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`notification notification-${notification.type}`}
-              role="alert"
-            >
-              <div className="notification-content">
-                <div className="notification-icon">
-                  {getNotificationIcon(notification.type)}
-                </div>
-                <div className="notification-message">{notification.message}</div>
-              </div>
-              <button
-                className="notification-close"
-                onClick={() => removeNotification(notification.id)}
-                aria-label="Close notification"
-                title="Close notification"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          ))}
+       <div className="notifications-container" aria-live="polite">
+  {notifications.map((notification) => (
+    <div
+      key={notification.id}
+      className={`notification notification-${notification.type}`}
+      role="alert"
+    >
+      <div className="notification-content">
+        <div className="notification-icon">
+          {getNotificationIcon(notification.type)}
         </div>
+        <div className="notification-message">{notification.message}</div>
+      </div>
+      <button
+        className="notification-close"
+        onClick={() => removeNotification(notification.id)}
+        aria-label="Close notification"
+        title="Close notification"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  ))}
+</div>
         
 {/* Mobile Menu Overlay */}
 {showMobileMenu && (
@@ -2650,224 +2632,224 @@ const handleLogout = async () => {
         
  {/* Main Content */}
 <main className={`main-content-full ${activeTab === 'dashboard' ? 'dashboard-active' : ''}`}>
-  {/* Header with Navbar */}
-  <header className="staff-main-header">
-    <div className="staff-header-container">
-      <div className="staff-header-left">
-        <button
-          className="hamburger-menu"
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-          aria-label="Toggle menu"
-          aria-expanded={showMobileMenu}
-          aria-controls="staff-main-nav"
-        >
-          {showMobileMenu ? (
-            <X size={24} aria-hidden="true" />
-          ) : (
-            <Menu size={24} aria-hidden="true" />
-          )}
-        </button>
-
-        <button
-          className="staff-header-logo"
-          onClick={() => {
-            setActiveTab('dashboard');
-            setShowMobileMenu(false);
-          }}
-          aria-label="Go to Dashboard"
-        >
-          <img
-            src="/images/bird.png"
-            alt="TimeFly Logo"
-            className="staff-logo-icon"
-          />
-          <span className="staff-logo-text">TimeFly</span>
-        </button>
-      </div>
-
-      <nav
-        id="staff-main-nav"
-        className={`staff-header-nav ${showMobileMenu ? 'mobile-open' : ''}`}
+{/* Header with Navbar */}
+<header className="staff-main-header">
+  <div className="staff-header-container">
+    <div className="staff-header-left">
+      <button
+        className="hamburger-menu"
+        onClick={() => setShowMobileMenu(!showMobileMenu)}
+        aria-label="Toggle menu"
+        aria-expanded={showMobileMenu}
+        aria-controls="staff-main-nav"
       >
-       <button
-  className={`staff-nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
-  onClick={() => {
-    setActiveTab('appointments');
-    setShowMobileMenu(false);
-    document.body.classList.remove('mobile-menu-open');
-  }}
->
-  <Calendar size={18} aria-hidden="true" />
-  Appointments
-</button>
+        {showMobileMenu ? (
+          <X size={24} aria-hidden="true" />
+        ) : (
+          <Menu size={24} aria-hidden="true" />
+        )}
+      </button>
 
-<button
-  className={`staff-nav-link ${activeTab === 'queue' ? 'active' : ''}`}
-  onClick={() => {
-    setActiveTab('queue');
-    setShowMobileMenu(false);
-    document.body.classList.remove('mobile-menu-open');
-  }}
->
-  <Clock size={18} aria-hidden="true" />
-  Current Queue
-</button>
+      <button
+        className="staff-header-logo"
+        onClick={() => {
+          setActiveTab('dashboard');
+          setShowMobileMenu(false);
+        }}
+        aria-label="Go to Dashboard"
+      >
+        <img
+          src="/images/bird.png"
+          alt="TimeFly Logo"
+          className="staff-logo-icon"
+        />
+        <span className="staff-logo-text">TimeFly</span>
+      </button>
+    </div>
 
-<button
-  className={`staff-nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
-  onClick={() => {
-    setActiveTab('doctors');
-    setShowMobileMenu(false);
-    document.body.classList.remove('mobile-menu-open');
-  }}
->
-  <Stethoscope size={18} aria-hidden="true" />
-  Doctors
-</button>
+    <nav
+      id="staff-main-nav"
+      className={`staff-header-nav ${showMobileMenu ? 'mobile-open' : ''}`}
+    >
+      <button
+        className={`staff-nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('appointments');
+          setShowMobileMenu(false);
+          document.body.classList.remove('mobile-menu-open');
+        }}
+      >
+        <Calendar size={18} aria-hidden="true" />
+        Appointments
+      </button>
 
-<button
-  className={`staff-nav-link ${activeTab === 'calendar' ? 'active' : ''}`}
-  onClick={() => {
-    setActiveTab('calendar');
-    setShowMobileMenu(false);
-    document.body.classList.remove('mobile-menu-open');
-  }}
->
-  <CalendarDays size={18} aria-hidden="true" />
-  Calendar
-</button>
+      <button
+        className={`staff-nav-link ${activeTab === 'queue' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('queue');
+          setShowMobileMenu(false);
+          document.body.classList.remove('mobile-menu-open');
+        }}
+      >
+        <Clock size={18} aria-hidden="true" />
+        Current Queue
+      </button>
 
-<button
-  className={`staff-nav-link ${activeTab === 'reports' ? 'active' : ''}`}
-  onClick={() => {
-    setActiveTab('reports');
-    setShowMobileMenu(false);
-    document.body.classList.remove('mobile-menu-open');
-  }}
->
-  <MessageSquare size={18} aria-hidden="true" />
-  Reports
-</button>
+      <button
+        className={`staff-nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('doctors');
+          setShowMobileMenu(false);
+          document.body.classList.remove('mobile-menu-open');
+        }}
+      >
+        <Stethoscope size={18} aria-hidden="true" />
+        Doctors
+      </button>
 
-<button
-  className={`staff-nav-link ${activeTab === 'waiting-list' ? 'active' : ''}`}
-  onClick={() => {
-    setActiveTab('waiting-list');
-    setShowMobileMenu(false);
-    document.body.classList.remove('mobile-menu-open');
-  }}
->
-  <Users size={18} aria-hidden="true" />
-  Waiting List
-</button>
-      </nav>
+      <button
+        className={`staff-nav-link ${activeTab === 'calendar' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('calendar');
+          setShowMobileMenu(false);
+          document.body.classList.remove('mobile-menu-open');
+        }}
+      >
+        <CalendarDays size={18} aria-hidden="true" />
+        Calendar
+      </button>
 
-      <div className="staff-header-right">
-        <div className="staff-profile-dropdown-wrapper" ref={profileDropdownRef}>
-          <button
-            ref={profileButtonRef}
-            className="staff-profile-button"
-            onClick={() => setShowProfileDropdown((prev) => !prev)}
-            aria-label="Profile menu"
-            aria-expanded={showProfileDropdown}
-            aria-controls="staff-profile-dropdown"
-          >
-            <div className="staff-user-avatar">
-              {staffProfile?.photo ? (
-                <img
-                  src={staffProfile.photo}
-                  alt={staffProfile.name}
-                  className="staff-avatar-image"
-                />
-              ) : (
-                <User size={20} aria-hidden="true" />
-              )}
-            </div>
-          </button>
+      <button
+        className={`staff-nav-link ${activeTab === 'reports' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('reports');
+          setShowMobileMenu(false);
+          document.body.classList.remove('mobile-menu-open');
+        }}
+      >
+        <MessageSquare size={18} aria-hidden="true" />
+        Reports
+      </button>
 
-          {showProfileDropdown && (
-            <div id="staff-profile-dropdown" className="staff-profile-dropdown">
-              <div className="staff-profile-header">
-                <div className="staff-profile-avatar-lg">
-                  {staffProfile?.photo ? (
-                    <img
-                      src={staffProfile.photo}
-                      alt={staffProfile.name}
-                      className="staff-avatar-image"
-                    />
-                  ) : (
-                    <User size={24} aria-hidden="true" />
-                  )}
-                </div>
-                <div className="staff-profile-info">
-                  <p className="staff-profile-name">{staffProfile?.name}</p>
-                  <p className="staff-profile-email">{staffProfile?.email}</p>
-                </div>
-              </div>
+      <button
+        className={`staff-nav-link ${activeTab === 'waiting-list' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('waiting-list');
+          setShowMobileMenu(false);
+          document.body.classList.remove('mobile-menu-open');
+        }}
+      >
+        <Users size={18} aria-hidden="true" />
+        Waiting List
+      </button>
+    </nav>
 
-              <input
-                type="file"
-                id="profilePhotoUploadDropdown"
-                accept="image/*"
-                onChange={(e) => handlePhotoUpload(e, 'profileDropdown')}
-                className="hidden-file-input"
-                aria-label="Upload new profile picture"
+    <div className="staff-header-right">
+      <div className="staff-profile-dropdown-wrapper" ref={profileDropdownRef}>
+        <button
+          ref={profileButtonRef}
+          className="staff-profile-button"
+          onClick={() => setShowProfileDropdown((prev) => !prev)}
+          aria-label="Profile menu"
+          aria-expanded={showProfileDropdown}
+          aria-controls="staff-profile-dropdown"
+        >
+          <div className="staff-user-avatar">
+            {staffProfile?.photo ? (
+              <img
+                src={staffProfile.photo}
+                alt={staffProfile.name}
+                className="staff-avatar-image"
               />
+            ) : (
+              <User size={20} aria-hidden="true" />
+            )}
+          </div>
+        </button>
 
-              <button
-                className="staff-profile-action"
-                onClick={() => {
-                  const fileInput = document.getElementById('profilePhotoUploadDropdown');
-                  if (fileInput) {
-                    fileInput.click();
-                  }
-                }}
-              >
-                <Camera size={16} aria-hidden="true" />
-                Change Photo
-              </button>
-
-              <button
-                className="staff-logout-action"
-                onClick={() => {
-                  setShowProfileDropdown(false);
-                  setShowLogoutModal(true);
-                }}
-              >
-                <LogOut size={16} aria-hidden="true" />
-                Logout
-              </button>
-            </div>
-          )}
-
-          {showLogoutModal && (
-            <div className="logout-modal-overlay">
-              <div className="logout-modal">
-                <h3>Are you sure you want to logout?</h3>
-                <div className="logout-modal-actions">
-                  <button
-                    className="btn-confirm"
-                    onClick={() => {
-                      setShowLogoutModal(false);
-                      handleLogout();
-                    }}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    className="btn-cancel"
-                    onClick={() => setShowLogoutModal(false)}
-                  >
-                    No
-                  </button>
-                </div>
+        {showProfileDropdown && (
+          <div id="staff-profile-dropdown" className="staff-profile-dropdown">
+            <div className="staff-profile-header">
+              <div className="staff-profile-avatar-lg">
+                {staffProfile?.photo ? (
+                  <img
+                    src={staffProfile.photo}
+                    alt={staffProfile.name}
+                    className="staff-avatar-image"
+                  />
+                ) : (
+                  <User size={24} aria-hidden="true" />
+                )}
+              </div>
+              <div className="staff-profile-info">
+                <p className="staff-profile-name">{staffProfile?.name}</p>
+                <p className="staff-profile-email">{staffProfile?.email}</p>
               </div>
             </div>
-          )}
-        </div>
+
+            <input
+              type="file"
+              id="profilePhotoUploadDropdown"
+              accept="image/*"
+              onChange={(e) => handlePhotoUpload(e, 'profileDropdown')}
+              className="hidden-file-input"
+              aria-label="Upload new profile picture"
+            />
+
+            <button
+              className="staff-profile-action"
+              onClick={() => {
+                const fileInput = document.getElementById('profilePhotoUploadDropdown');
+                if (fileInput) {
+                  fileInput.click();
+                }
+              }}
+            >
+              <Camera size={16} aria-hidden="true" />
+              Change Photo
+            </button>
+
+            <button
+              className="staff-logout-action"
+              onClick={() => {
+                setShowProfileDropdown(false);
+                setShowLogoutModal(true);
+              }}
+            >
+              <LogOut size={16} aria-hidden="true" />
+              Logout
+            </button>
+          </div>
+        )}
+
+        {showLogoutModal && (
+          <div className="logout-modal-overlay">
+            <div className="logout-modal">
+              <h3>Are you sure you want to logout?</h3>
+              <div className="logout-modal-actions">
+                <button
+                  className="btn-cancel"
+                  onClick={() => setShowLogoutModal(false)}
+                >
+                  No
+                </button>
+                <button
+                  className="btn-confirm"
+                  onClick={() => {
+                    setShowLogoutModal(false);
+                    handleLogout();
+                  }}
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  </header>
+  </div>
+</header>
  {/* Dashboard Tab */}
 {activeTab === 'dashboard' && (
   <div className="dashboard-content-wrapper">
@@ -4368,41 +4350,65 @@ const handleLogout = async () => {
         </svg>
       </div>
     </div>
-
-    {/* Common Medical Conditions */}
-    <div className="report-section">
-      <div className="report-section-header">
-        <h3>Common Medical Conditions</h3>
-        <p>Distribution of most frequently diagnosed conditions</p>
-      </div>
-      <div className="report-card piechart-card">
-        <ResponsiveContainer width="100%" height={350}>
-          <PieChart>
-            <Pie
-              data={getConditionStats()}
-              dataKey="count"
-              nameKey="condition"
-              cx="50%"
-              cy="50%"
-              outerRadius={120}
-              labelLine={false}
-              label={(props) =>
-                props && typeof props.name === 'string' && typeof props.percent === 'number'
-                  ? `${props.name} ${(props.percent * 100).toFixed(1)}%`
-                  : ''
-              }
-            >
-              {getConditionStats().map((_, index) => {
-                const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
-                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-              })}
-            </Pie>
-            <Tooltip formatter={(value: number) => `${value} cases`} />
-            <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+{/* Common Medical Conditions - UPDATED: Fixed lines & centered labels */}
+<div className="report-section">
+  <div className="report-section-header">
+    <h3>Common Medical Conditions</h3>
+    <p>Distribution of most frequently diagnosed conditions</p>
+  </div>
+  <div className="report-card piechart-card">
+    <ResponsiveContainer width="100%" height={350}>
+      <PieChart>
+        <Pie
+          data={getConditionStats()}
+          dataKey="count"
+          nameKey="condition"
+          cx="50%"
+          cy="50%"
+          outerRadius={120}
+          innerRadius={0}
+          labelLine={false}
+          isAnimationActive={true}
+          label={(entry: any) => {
+            // Safely extract properties with type checking
+            const cx = typeof entry.cx === 'number' ? entry.cx : 0;
+            const cy = typeof entry.cy === 'number' ? entry.cy : 0;
+            const midAngle = typeof entry.midAngle === 'number' ? entry.midAngle : 0;
+            const percent = typeof entry.percent === 'number' ? entry.percent : 0;
+            const name = entry.name || '';
+            
+            // Calculate position at CENTER of the slice
+            const RADIAN = Math.PI / 180;
+            const radius = 5; // Keep as 5 for centered text
+            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+            
+            return (
+              <g>
+                <text
+                  x={x}
+                  y={y}
+                  className="pie-chart-label-text"
+                >
+                  <tspan x={x} dy="-8">{name}</tspan>
+                  <tspan x={x} dy="16" className="pie-chart-label-percentage">
+                    {`${(percent * 100).toFixed(1)}%`}
+                  </tspan>
+                </text>
+              </g>
+            );
+          }}
+        >
+          {getConditionStats().map((_, index) => {
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
+            return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+          })}
+        </Pie>
+        <Tooltip formatter={(value: number) => `${value} cases`} />
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 {/* Priority Level Analysis */}
 <div className="report-section">
   <div className="report-section-header">

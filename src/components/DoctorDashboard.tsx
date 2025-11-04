@@ -201,19 +201,22 @@ const DoctorDashboard = () => {
           }
         }
 
-        const profile: UserProfile = {
-          name: uData.name || user.displayName || '',
-          email: uData.email || user.email || '',
-          role: uData.role || 'Doctor',
-          phone: uData.phone || '',
-          department: uData.department || '',
-          specialty: uData.specialty || '',
-          photo: uData.photo || '',
-          uid: user.uid,
-          doctorId: resolvedDoctorId || ''
-        };
+        // ✅ Load photo from localStorage (Base64)
+const storedPhoto = localStorage.getItem(`doctorPhoto_${user.uid}`);
 
-        setUserProfile(profile);
+const profile: UserProfile = {
+  name: uData.name || user.displayName || '',
+  email: uData.email || user.email || '',
+  role: uData.role || 'Doctor',
+  phone: uData.phone || '',
+  department: uData.department || '',
+  specialty: uData.specialty || '',
+  photo: storedPhoto || uData.photo || '', // ✅ Prioritize localStorage
+  uid: user.uid,
+  doctorId: resolvedDoctorId || ''
+};
+
+setUserProfile(profile);
 
         if (resolvedDoctorId) {
           const doctorDoc = doctorsSnap.docs.find(d => d.id === resolvedDoctorId);
@@ -355,6 +358,14 @@ useEffect(() => {
   const handleLogout = async () => {
     addNotification('success', 'Logged out successfully');
   };
+
+
+// ✅ ADD THIS FUNCTION
+const handlePhotoUpdate = (photoUrl: string) => {
+  setUserProfile(prev => prev ? { ...prev, photo: photoUrl } : null);
+  addNotification('success', 'Profile photo updated successfully');
+};
+
 // ✅ UPDATED - Reads dynamic slot settings from staff dashboard
 const getCalendarDays = (): DaySchedule[] => {
   const year = calendarCurrentDate.getFullYear();
@@ -602,16 +613,17 @@ const formatDate = (dateString: string) => {
           ))}
         </div>
 
-        {/* Navbar */}
-        <DoctorNavbar
-          userProfile={userProfile}
-          onLogout={handleLogout}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          stats={stats}
-          currentView={currentView}
-          onViewChange={setCurrentView}
-        />
+       {/* Navbar */}
+<DoctorNavbar
+  userProfile={userProfile}
+  onLogout={handleLogout}
+  searchTerm={searchTerm}
+  onSearchChange={setSearchTerm}
+  stats={stats}
+  currentView={currentView}
+  onViewChange={setCurrentView}
+  onPhotoUpdate={handlePhotoUpdate}
+/>
 
         {/* HOME VIEW */}
         {currentView === 'home' && (
@@ -645,7 +657,7 @@ const formatDate = (dateString: string) => {
     })()}
 
     <h2 className="hero-title-doctor">
-      Dr. {userProfile?.name || "Doctor"}
+       {userProfile?.name || "Doctor"}
     </h2>
 
     <p className="hero-subtitle-doctor">
@@ -686,7 +698,7 @@ const formatDate = (dateString: string) => {
                         <div className="stat-subtitle">Currently consulting</div>
                       </div>
                     </div>
-                    <div className="stat-card stat-green">
+                    <div className="stat-card stat-yellow">
                       <div className="stat-icon">
                         <TrendingUp size={24} />
                       </div>
@@ -696,7 +708,7 @@ const formatDate = (dateString: string) => {
                         <div className="stat-subtitle">Future appointments</div>
                       </div>
                     </div>
-                    <div className="stat-card stat-purple">
+                    <div className="stat-card stat-green">
                       <div className="stat-icon">
                         <History size={24} />
                       </div>
