@@ -523,6 +523,9 @@ useEffect(() => {
     fetchDoctors();
   }, [staffProfile]);
   
+  
+  // properly type the ref
+const profileButtonRef = useRef<HTMLButtonElement | null>(null);
 
 
 // FIXED: Fetch Appointments - Ordered by Date ASC, Queue Number ASC
