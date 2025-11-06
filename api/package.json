@@ -6,6 +6,6 @@
     "express": "^4.18.2",
     "nodemailer": "^6.9.7",
     "cors": "^2.8.5",
-    "firebase-admin": "^12.0.0"
+    "firebase-admin": "^13.5.0"
   }
 }
