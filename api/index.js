@@ -851,4 +851,13 @@ app.use((req, res) => {
   res.status(404).json({ success: false, error: `Route not found: ${req.originalUrl}` });
 });
 
+// For local development
+const PORT = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+}
+
+// For Vercel serverless
 export default app;

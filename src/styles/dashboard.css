@@ -1019,7 +1019,7 @@ select:active {
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Morning */
+/* Morning */
 [data-time="morning"] .greeting-icon {
   color: #ffdf5d; /* brighter yellow for visibility */
 }
@@ -1050,10 +1050,10 @@ select:active {
   margin-right: auto;
   color: #ffffff !important;
   text-align: center;
-  font-weight: 600 !important; /* ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Matches greeting weight */
+  font-weight: 600 !important; /* Matches greeting weight */
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ Action Buttons */
+/*  Action Buttons */
 .hero-actions {
   display: flex;
   gap: var(--space-md);
@@ -1245,7 +1245,7 @@ select:active {
   box-shadow: none;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Dark Mode Support */
+/*  Dark Mode Support */
 [data-theme="dark"] .btn-primary {
   background: var(--primary-light);
   border-color: var(--primary-light);
@@ -2317,21 +2317,21 @@ select:active {
   gap: 2rem !important;
   margin-bottom: 1.5rem !important;
   width: 100% !important;
-  background: var(--bg-secondary) !important; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Match calendar dark blue */
+  background: var(--bg-secondary) !important; /*  Match calendar dark blue */
   border-radius: var(--radius-lg) !important;
   padding: 1rem 0 !important;
 }
 
 /* Dark mode */
 [data-theme="dark"] .calendar-navigation {
-  background: var(--bg-tertiary) !important; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Even darker tone */
+  background: var(--bg-tertiary) !important; /*  Even darker tone */
   border: 1px solid var(--border-light) !important;
 }
 
 
 /* Last button (Next) */
 .calendar-navigation .nav-btn:last-child {
-  order: 3 !important; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Force right position */
+  order: 3 !important; /*  Force right position */
 }
 
 .calendar-navigation .nav-btn:hover {
@@ -3053,7 +3053,7 @@ select:active {
   }
 }
 
-/* ===== TIME SLOTS (Booking Modal) ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Updated for iOS Look ===== */
+/* ===== TIME SLOTS (Booking Modal) Updated for iOS Look ===== */
 .time-slots-section {
   margin: var(--space-lg) 0;
 }
@@ -3068,25 +3068,25 @@ select:active {
 .time-slot {
   padding: var(--space-md);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ iOS-style rounded corners */
+  border-radius: var(--radius-lg); /*  iOS-style rounded corners */
   background: var(--bg-primary);
   cursor: pointer;
-  transition: all 0.25s ease-in-out; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ smoother animation */
+  transition: all 0.25s ease-in-out; /*  smoother animation */
   text-align: center;
   font-size: var(--font-size-sm);
   position: relative;
-  box-shadow: var(--shadow-sm); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ subtle shadow for depth */
+  box-shadow: var(--shadow-sm); /*  subtle shadow for depth */
 }
 
 .time-slot:hover:not(.booked):not(:disabled):not(.blocked) {
   border-color: var(--primary);
   background: var(--bg-secondary);
-  transform: translateY(-3px); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ lift effect */
-  box-shadow: var(--shadow-md); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ stronger shadow on hover */
+  transform: translateY(-3px); /*  lift effect */
+  box-shadow: var(--shadow-md); /*  stronger shadow on hover */
 }
 
 .time-slot:active:not(.booked):not(:disabled):not(.blocked) {
-  transform: scale(0.97); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ subtle press-down effect */
+  transform: scale(0.97); /*  subtle press-down effect */
   box-shadow: var(--shadow-sm);
 }
 
@@ -3095,7 +3095,7 @@ select:active {
   background: rgba(59, 130, 246, 0.12);
   color: var(--primary);
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ soft blue glow */
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); /*  soft blue glow */
 }
 
 .time-slot.booked {
@@ -3106,7 +3106,7 @@ select:active {
   box-shadow: none;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ===== BLOCKED SLOT (Staff Unavailable) ===== */
+/*  ===== BLOCKED SLOT (Staff Unavailable) ===== */
 .time-slot.blocked {
   background: #f0f0f0;
   border-color: #ccc;
@@ -3167,7 +3167,7 @@ select:active {
   opacity: 0.7;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Dark Mode for Blocked Slots */
+/*  Dark Mode for Blocked Slots */
 [data-theme="dark"] .time-slot.blocked {
   background: var(--bg-primary);
   border-color: var(--border-medium);
@@ -3223,7 +3223,7 @@ select:active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ centers vertically */
+  justify-content: center; /*  centers vertically */
   padding: var(--space-2xl) var(--space-xl);
   border: 2px dashed var(--border-medium);
   border-radius: var(--radius-lg);
@@ -3241,7 +3241,7 @@ select:active {
   box-shadow: var(--shadow-sm);
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Drag Over Active Glow */
+/*  Drag Over Active Glow */
 .photo-upload-box.drag-over {
   border-color: var(--primary);
   background: rgba(59, 130, 246, 0.05);
@@ -3250,7 +3250,7 @@ select:active {
   transition: all 0.2s ease-in-out;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Centered circular camera icon */
+/*  Centered circular camera icon */
 .upload-icon {
   display: flex;
   align-items: center;
@@ -3278,7 +3278,7 @@ select:active {
   transform: scale(1.05);
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Glow when dragging */
+/*  Glow when dragging */
 .photo-upload-box.drag-over .upload-icon {
   color: var(--primary);
   background: rgba(59, 130, 246, 0.15);
@@ -3565,9 +3565,9 @@ select:active {
 /* ===== DETAILS MODAL - GRID LAYOUT (SIDE BY SIDE) ===== */
 .detail-grid {
   display: grid !important;
-  grid-template-columns: auto 1fr !important; /* Ã¢Å“â€¦ Label on left, value on right */
+  grid-template-columns: auto 1fr !important; /*  Label on left, value on right */
   row-gap: 1rem !important;
-  column-gap: 1rem !important; /* Ã¢Å“â€¦ Space between label and value */
+  column-gap: 1rem !important; /*  Space between label and value */
   align-items: center !important;
   margin-top: 1.5rem !important;
   margin-bottom: 2rem !important;
@@ -3955,9 +3955,9 @@ select:active {
     font-size: var(--font-size-lg) !important;
   }
   
-  /* Ã¢Å“â€¦ KEEP SIDE-BY-SIDE FORMAT ON MOBILE */
+  /*  KEEP SIDE-BY-SIDE FORMAT ON MOBILE */
   .detail-grid {
-    grid-template-columns: auto 1fr !important; /* Ã¢Å“â€¦ Label: Value side by side */
+    grid-template-columns: auto 1fr !important; /*  Label: Value side by side */
     row-gap: 0.875rem !important;
     column-gap: 0.75rem !important;
     padding: var(--space-lg) var(--space-md) !important;
@@ -5368,7 +5368,7 @@ select:active {
 
 /* ===== CLOCK ICON COLOR FIX ===== */
 
-/* Light Mode ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ keep clock icons dark */
+/* Light Mode keep clock icons dark */
 .clock,
 .stat-icon.clock,
 .status-icon.clock,
@@ -5378,7 +5378,7 @@ svg.clock,
   stroke: #1e293b !important;
 }
 
-/* Dark Mode ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ make ALL clock icons white */
+/* Dark Mode make ALL clock icons white */
 [data-theme="dark"] .clock,
 [data-theme="dark"] .stat-icon.clock,
 [data-theme="dark"] .status-icon.clock,
@@ -5614,7 +5614,7 @@ svg.clock,
   overflow: visible !important;
 }
 
-/* ===== ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ Dark Mode Styles - Uses Dashboard Dark Blue Theme ===== */
+/* ===== Dark Mode Styles - Uses Dashboard Dark Blue Theme ===== */
 [data-theme="dark"] .profile-dropdown {
   background: var(--bg-secondary, #1e293b); /* Dark blue background */
   color: var(--text-primary, #f1f5f9);
@@ -6581,7 +6581,7 @@ svg.clock,
     margin: var(--space-sm) 0 !important;
   }
   
-  /* Ã¢Å“â€¦Ã¢Å“â€¦Ã¢Å“â€¦ CRITICAL FIX: CENTER ACTION BUTTONS Ã¢Å“â€¦Ã¢Å“â€¦Ã¢Å“â€¦ */
+  /*  CRITICAL FIX: CENTER ACTION BUTTONS  */
   .appointments-list .appointment-card .appointment-actions {
     width: 100% !important;
     display: flex !important;

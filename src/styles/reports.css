@@ -823,3 +823,436 @@
 .recharts-layer[clip-path] path {
   stroke: none !important;
 }
+
+
+/* === Enhanced Pie Chart Label Styles === */
+
+/* Base label styling */
+.pie-chart-label-text {
+  fill: white;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3),
+               0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Label name (condition name) */
+.pie-label-name {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* Label percentage */
+.pie-label-percent {
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+/* Dynamic font sizes via data attributes */
+.pie-label-name[data-font-size="15"] { font-size: 15px; }
+.pie-label-name[data-font-size="13"] { font-size: 13px; }
+.pie-label-name[data-font-size="12"] { font-size: 12px; }
+.pie-label-name[data-font-size="10"] { font-size: 10px; }
+
+.pie-label-percent[data-font-size="14"] { font-size: 14px; }
+.pie-label-percent[data-font-size="12"] { font-size: 12px; }
+.pie-label-percent[data-font-size="11"] { font-size: 11px; }
+.pie-label-percent[data-font-size="9"] { font-size: 9px; }
+
+/* Size-based styling classes */
+.pie-chart-label-text[data-size="large"] {
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.pie-chart-label-text[data-size="medium"] {
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.pie-chart-label-text[data-size="small"] {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.pie-chart-label-text[data-size="tiny"] {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4),
+               0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Force remove all label lines */
+.recharts-pie-label-line,
+.recharts-layer.recharts-pie-label-line,
+.piechart-card .recharts-pie-label-line {
+  display: none !important;
+  stroke: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  stroke-width: 0 !important;
+}
+
+.piechart-card .recharts-pie path[stroke] {
+  stroke: none !important;
+}
+
+.recharts-layer[clip-path] path {
+  stroke: none !important;
+}
+
+/* Pie chart container enhancement */
+.piechart-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 12px 24px 12px;
+  overflow: visible;
+}
+
+/* Smooth animations */
+@keyframes labelFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pie-chart-label-text {
+  animation: labelFadeIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pie-label-name[data-font-size="15"] { font-size: 13px; }
+  .pie-label-name[data-font-size="13"] { font-size: 11px; }
+  .pie-label-name[data-font-size="12"] { font-size: 10px; }
+  .pie-label-name[data-font-size="10"] { font-size: 9px; }
+  
+  .pie-label-percent[data-font-size="14"] { font-size: 12px; }
+  .pie-label-percent[data-font-size="12"] { font-size: 10px; }
+  .pie-label-percent[data-font-size="11"] { font-size: 9px; }
+  .pie-label-percent[data-font-size="9"] { font-size: 8px; }
+}
+
+@media (max-width: 480px) {
+  .piechart-card {
+    padding: 16px 8px 20px 8px;
+  }
+  
+  .pie-chart-label-text {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* === Pie Chart with Auto-Adjusting Legend Layout === */
+
+/* Main wrapper for the card */
+.piechart-wrapper {
+  padding: 24px;
+  overflow: visible;
+}
+
+/* Container: Pie chart on left, legend on right */
+.piechart-with-legend {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  min-height: 400px;
+}
+
+/* Left side - Pie chart */
+.piechart-left {
+  flex: 0 0 380px;
+  max-width: 380px;
+  height: 380px;
+  flex-shrink: 0;
+}
+
+/* Right side - Legend (Auto-adjusting columns) */
+.piechart-legend-right {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));  /* ← Columns fit content */
+  grid-auto-flow: row;
+  gap: 12px 0px;
+  padding: 0;
+  align-content: start;
+  min-width: 0;
+  column-gap: 24px;  /* ← Add specific column gap for spacing */
+}
+
+/* Individual legend row - NO BOX, just color + text */
+.legend-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  transition: transform 0.2s ease;
+  min-width: 0;
+}
+
+.legend-row:hover {
+  transform: translateX(3px);
+}
+
+/* Color indicator - small square */
+.legend-color-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Legend text container */
+.legend-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Condition name */
+.legend-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Case count */
+.legend-cases {
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Percentage labels inside pie slices */
+.pie-chart-percentage-label {
+  fill: white;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-weight: 800;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4),
+               0 3px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+/* Remove all label lines from pie chart */
+.recharts-pie-label-line,
+.recharts-layer.recharts-pie-label-line {
+  display: none !important;
+  stroke: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* === Pie Chart Color Classes (Extended to 20 colors) === */
+
+/* Pie chart cell colors */
+.pie-cell-0 { fill: #3b82f6; }
+.pie-cell-1 { fill: #8b5cf6; }
+.pie-cell-2 { fill: #10b981; }
+.pie-cell-3 { fill: #f59e0b; }
+.pie-cell-4 { fill: #ef4444; }
+.pie-cell-5 { fill: #06b6d4; }
+.pie-cell-6 { fill: #ec4899; }
+.pie-cell-7 { fill: #14b8a6; }
+.pie-cell-8 { fill: #f97316; }
+.pie-cell-9 { fill: #a855f7; }
+.pie-cell-10 { fill: #84cc16; }
+.pie-cell-11 { fill: #f43f5e; }
+.pie-cell-12 { fill: #0ea5e9; }
+.pie-cell-13 { fill: #d946ef; }
+.pie-cell-14 { fill: #22c55e; }
+.pie-cell-15 { fill: #fb923c; }
+.pie-cell-16 { fill: #6366f1; }
+.pie-cell-17 { fill: #eab308; }
+.pie-cell-18 { fill: #14b8a6; }
+.pie-cell-19 { fill: #f87171; }
+
+/* Legend color indicator backgrounds */
+.legend-color-0 { background-color: #3b82f6; }
+.legend-color-1 { background-color: #8b5cf6; }
+.legend-color-2 { background-color: #10b981; }
+.legend-color-3 { background-color: #f59e0b; }
+.legend-color-4 { background-color: #ef4444; }
+.legend-color-5 { background-color: #06b6d4; }
+.legend-color-6 { background-color: #ec4899; }
+.legend-color-7 { background-color: #14b8a6; }
+.legend-color-8 { background-color: #f97316; }
+.legend-color-9 { background-color: #a855f7; }
+.legend-color-10 { background-color: #84cc16; }
+.legend-color-11 { background-color: #f43f5e; }
+.legend-color-12 { background-color: #0ea5e9; }
+.legend-color-13 { background-color: #d946ef; }
+.legend-color-14 { background-color: #22c55e; }
+.legend-color-15 { background-color: #fb923c; }
+.legend-color-16 { background-color: #6366f1; }
+.legend-color-17 { background-color: #eab308; }
+.legend-color-18 { background-color: #14b8a6; }
+.legend-color-19 { background-color: #f87171; }
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .piechart-with-legend {
+    gap: 36px;
+  }
+  
+  .piechart-left {
+    flex: 0 0 350px;
+    max-width: 350px;
+    height: 350px;
+  }
+  
+  .piechart-legend-right {
+    gap: 12px 0px;
+  }
+  
+  .legend-name {
+    font-size: 0.86rem;
+  }
+  
+  .legend-cases {
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .piechart-with-legend {
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+  
+  .piechart-left {
+    flex: 0 0 auto;
+    max-width: 100%;
+    width: 100%;
+    max-width: 450px;
+    height: 400px;
+    margin: 0 auto;
+  }
+  
+  .piechart-legend-right {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 0px;
+  }
+  
+  .legend-name {
+    font-size: 0.88rem;
+  }
+  
+  .legend-cases {
+    font-size: 0.76rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .piechart-wrapper {
+    padding: 20px;
+  }
+  
+  .piechart-with-legend {
+    gap: 40px;
+  }
+  
+  .piechart-left {
+    height: 320px;
+    max-width: 380px;
+  }
+  
+  .piechart-legend-right {
+    max-width: 600px;
+    gap: 12px 0px;
+  }
+  
+  .legend-name {
+    font-size: 0.86rem;
+  }
+  
+  .legend-cases {
+    font-size: 0.74rem;
+  }
+  
+  .pie-chart-percentage-label {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (max-width: 640px) {
+  .piechart-wrapper {
+    padding: 16px;
+  }
+  
+  .piechart-with-legend {
+    gap: 36px;
+  }
+  
+  .piechart-left {
+    height: 300px;
+    max-width: 340px;
+  }
+  
+  .piechart-legend-right {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    gap: 12px;
+  }
+  
+  .legend-color-indicator {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .legend-name {
+    font-size: 0.85rem;
+  }
+  
+  .legend-cases {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .piechart-wrapper {
+    padding: 14px;
+  }
+  
+  .piechart-with-legend {
+    gap: 32px;
+  }
+  
+  .piechart-left {
+    height: 280px;
+    max-width: 300px;
+  }
+  
+  .piechart-legend-right {
+    gap: 10px;
+  }
+}

@@ -390,7 +390,7 @@ useEffect(() => {
             email: staffData.email,
             phone: staffData.phone,
             department: staffData.department,
-            photo: staffData.photo ?? '', // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ guaranteed string
+            photo: staffData.photo ?? '', // guaranteed string
           });
         } else {
           // If no user document exists, create a basic profile from auth
@@ -417,7 +417,7 @@ useEffect(() => {
             email: basicStaffData.email,
             phone: basicStaffData.phone,
             department: basicStaffData.department,
-            photo: basicStaffData.photo ?? '', // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ guaranteed string
+            photo: basicStaffData.photo ?? '', // guaranteed string
           });
         }
 
@@ -954,7 +954,7 @@ const getCalendarDays = (): DaySchedule[] => {
   return days;
 };
 
-// ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Calculate how many appointment slots a doctor has based on working hours
+// Calculate how many appointment slots a doctor has based on working hours
 const calculateDoctorDailySlots = (doctor: Doctor): number => {
   // Provide defaults if working hours are missing
   let workingHours = doctor.workingHours;
@@ -991,13 +991,13 @@ const calculateDoctorDailySlots = (doctor: Doctor): number => {
 const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeSlotSimple[] => {
   const slots: TimeSlotSimple[] = [];
   
-  // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Enhanced safety check
+  // Enhanced safety check
   if (!doctor.workingHours || !doctor.workingHours.start || !doctor.workingHours.end) {
     console.warn(` Doctor ${doctor.name} has no working hours defined`);
     return slots;
   }
 
-  // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Parse 12-hour format (e.g., "9:00 AM", "5:00 PM")
+  // Parse 12-hour format (e.g., "9:00 AM", "5:00 PM")
   const parseTime12Hour = (timeStr: string): { hour: number; minute: number } => {
     const [time, period] = timeStr.trim().split(' ');
     let [hours, minutes] = time.split(':').map(Number);
@@ -1008,7 +1008,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
     return { hour: hours, minute: minutes || 0 };
   };
 
-  // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Handle both 12-hour format ("9:00 AM") and 24-hour format ("09:00")
+  // Handle both 12-hour format ("9:00 AM") and 24-hour format ("09:00")
   let startHour: number, startMin: number, endHour: number, endMin: number;
 
   if (doctor.workingHours.start.includes('AM') || doctor.workingHours.start.includes('PM')) {
@@ -1026,7 +1026,7 @@ const generateTimeSlotsForDoctor = (doctor: Doctor, selectedDate: string): TimeS
   }
 
   const buffer = doctor.bufferTime || 15;
-  const active = doctor.consultationDuration || 30; // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Use consultation duration
+  const active = doctor.consultationDuration || 30; //  Use consultation duration
 
   // Get existing appointments for this doctor on this date
   const existingAppointments = appointments.filter(
@@ -1427,7 +1427,7 @@ useEffect(() => {
 }, [appointmentForm.doctorId, appointmentForm.date, appointmentForm.priority]);
 
 
-// Ã¢Å“â€¦ PHONE VALIDATION Ã¢â‚¬â€œ Philippine number (09XXXXXXXXX)
+// PHONE VALIDATION Philippine number (09XXXXXXXXX)
 const validatePhoneNumber = (phone: string): boolean => {
   const cleaned = phone.replace(/\D/g, ""); // remove non-numerics
   return /^09\d{9}$/.test(cleaned);
@@ -1464,11 +1464,11 @@ const validatePhoneNumber = (phone: string): boolean => {
           addNotification('success', 'Profile photo uploaded!');
           break;
         case 'profileDropdown':
-          // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Update BOTH form and visible profile immediately
+          //  Update BOTH form and visible profile immediately
           setProfileForm(prev => ({ ...prev, photo: photoURL }));
           setStaffProfile(prev => prev ? { ...prev, photo: photoURL } : prev);
           
-          // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Persist to Firestore
+          // Persist to Firestore
           try {
             const userQuery = query(
               collection(db, 'users'),
@@ -1485,7 +1485,7 @@ const validatePhoneNumber = (phone: string): boolean => {
           }
           
           addNotification('success', 'Profile photo updated!');
-          // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Keep dropdown open to see the change
+          // Keep dropdown open to see the change
           break;
         default:
           setAppointmentForm(prev => ({ ...prev, photo: photoURL }));
@@ -3679,7 +3679,7 @@ const handleLogout = async () => {
             <>
               {`${bookedSlots}/${totalSlots} slots booked`}
               {isFull && (
-                <span className="fully-booked-label"> â€” Fully Booked</span>
+                <span className="fully-booked-label"> Fully Booked</span>
               )}
             </>
           );
@@ -3824,7 +3824,7 @@ const handleLogout = async () => {
           const dayButtons = days.map((day: any) => {
             const isPastDate = new Date(day.date) < new Date(getTodayDate());
             const isToday = day.date === getTodayDate();
-            const totalSlots = getTotalSlotsForDate(day.date); // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ now sums all doctors' slots
+            const totalSlots = getTotalSlotsForDate(day.date); // now sums all doctors' slots
             const isFull =
               day.appointments.booked >= totalSlots && totalSlots > 0;
 
@@ -4353,63 +4353,82 @@ const handleLogout = async () => {
         </svg>
       </div>
     </div>
-{/* Common Medical Conditions - UPDATED: Fixed lines & centered labels */}
+{/* Common Medical Conditions - Pie chart on left, auto-adjusting legend on right */}
 <div className="report-section">
   <div className="report-section-header">
     <h3>Common Medical Conditions</h3>
     <p>Distribution of most frequently diagnosed conditions</p>
   </div>
-  <div className="report-card piechart-card">
-    <ResponsiveContainer width="100%" height={350}>
-      <PieChart>
-        <Pie
-          data={getConditionStats()}
-          dataKey="count"
-          nameKey="condition"
-          cx="50%"
-          cy="50%"
-          outerRadius={120}
-          innerRadius={0}
-          labelLine={false}
-          isAnimationActive={true}
-          label={(entry: any) => {
-            // Safely extract properties with type checking
-            const cx = typeof entry.cx === 'number' ? entry.cx : 0;
-            const cy = typeof entry.cy === 'number' ? entry.cy : 0;
-            const midAngle = typeof entry.midAngle === 'number' ? entry.midAngle : 0;
-            const percent = typeof entry.percent === 'number' ? entry.percent : 0;
-            const name = entry.name || '';
-            
-            // Calculate position at CENTER of the slice
-            const RADIAN = Math.PI / 180;
-            const radius = 5; // Keep as 5 for centered text
-            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-            
-            return (
-              <g>
-                <text
-                  x={x}
-                  y={y}
-                  className="pie-chart-label-text"
-                >
-                  <tspan x={x} dy="-8">{name}</tspan>
-                  <tspan x={x} dy="16" className="pie-chart-label-percentage">
+
+  <div className="report-card piechart-wrapper">
+    <div className="piechart-with-legend">
+      {/* Pie Chart - Left Side */}
+      <div className="piechart-left">
+        <ResponsiveContainer width="100%" height={380}>
+          <PieChart>
+            <Pie
+              data={getConditionStats()}
+              dataKey="count"
+              nameKey="condition"
+              cx="50%"
+              cy="50%"
+              outerRadius={140}
+              innerRadius={0}
+              labelLine={false}
+              isAnimationActive={true}
+              label={(entry: any) => {
+                const percent = typeof entry.percent === 'number' ? entry.percent : 0;
+                const cx = typeof entry.cx === 'number' ? entry.cx : 0;
+                const cy = typeof entry.cy === 'number' ? entry.cy : 0;
+                const midAngle = typeof entry.midAngle === 'number' ? entry.midAngle : 0;
+                const RADIAN = Math.PI / 180;
+                const radius = 140 * 0.55;
+                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                // Determine class based on percentage
+                let labelClass = 'pie-label-large';
+                if (percent < 0.08) {
+                  labelClass = 'pie-label-tiny';
+                } else if (percent < 0.15) {
+                  labelClass = 'pie-label-small';
+                } else if (percent < 0.25) {
+                  labelClass = 'pie-label-medium';
+                }
+
+                return (
+                  <text
+                    x={x}
+                    y={y}
+                    className={`pie-chart-percentage-label ${labelClass}`}
+                  >
                     {`${(percent * 100).toFixed(1)}%`}
-                  </tspan>
-                </text>
-              </g>
-            );
-          }}
-        >
-          {getConditionStats().map((_, index) => {
-            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
-            return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-          })}
-        </Pie>
-        <Tooltip formatter={(value: number) => `${value} cases`} />
-      </PieChart>
-    </ResponsiveContainer>
+                  </text>
+                );
+              }}
+            >
+              {getConditionStats().map((_, index) => (
+                <Cell key={`cell-${index}`} className={`pie-cell-${index % 20}`} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value: number) => `${value} cases`} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend - Right Side (Auto-adjusting) */}
+      <div className="piechart-legend-right">
+        {getConditionStats().map((item, index) => (
+          <div key={index} className="legend-row">
+            <div className={`legend-color-indicator legend-color-${index % 20}`}></div>
+            <div className="legend-info">
+              <span className="legend-name">{item.condition}</span>
+              <span className="legend-cases">{item.count} cases</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   </div>
 </div>
 {/* Priority Level Analysis */}
@@ -5031,177 +5050,193 @@ const handleLogout = async () => {
   </select>
 </div>
           {/* Date */}
-          <div className="form-group">
-            <label htmlFor="appointment-date">Date *</label>
-            <input
-              id="appointment-date"
-              type="date"
-              name="date"
-              value={appointmentForm.date}
-              onChange={handleAppointmentFormChange}
-              min={getTodayDate()}
-              required
-            />
+<div className="form-group">
+  <label htmlFor="appointment-date">Date *</label>
+  <input
+    id="appointment-date"
+    type="date"
+    name="date"
+    value={appointmentForm.date}
+    onChange={handleAppointmentFormChange}
+    min={getTodayDate()}
+    required
+  />
+</div>
+
+{/* Time Slots */}
+{appointmentForm.doctorId && appointmentForm.date && (() => {
+  const isDoctorAvailable = getDoctorAvailability(appointmentForm.doctorId, appointmentForm.date);
+  const isFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
+  
+  // Generate time slots to check if any are available
+  const timeSlots = generateTimeSlots(appointmentForm.doctorId, appointmentForm.date);
+  const hasAvailableSlots = timeSlots.some(slot => {
+    const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
+    const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
+    return slot.available && !isBlocked;
+  });
+
+  // ✅ If doctor is unavailable, show warning
+  if (!isDoctorAvailable) {
+    return (
+      <div className="form-group full-width">
+        <label>Available Time Slots *</label>
+        <div className="doctor-unavailable-warning">
+          <AlertTriangle size={24} />
+          <p><strong>Doctor Not Available</strong></p>
+          <p>This doctor is not available on {appointmentForm.date}</p>
+          <p className="sub-message">Please select another doctor or date</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ If doctor is fully booked, show message WITH BUTTON
+  if (isFullyBooked) {
+    return (
+      <div className="form-group full-width">
+        <label>Available Time Slots *</label>
+        <div className="doctor-fully-booked-message">
+          <XCircle size={24} />
+          <p><strong>This doctor is fully booked on {appointmentForm.date}</strong></p>
+          <p className="sub-message">Would you like to add this patient to the waiting list?</p>
+          
+          {/* ✅ UPDATED WAITING LIST SECTION WITH VALIDATION */}
+          <div className="waiting-list-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                setAppointmentForm(prev => ({ ...prev, doctorId: '', date: '' }));
+              }}
+            >
+              Choose Another Doctor/Date
+            </button>
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={
+                !appointmentForm.name ||
+                !appointmentForm.age ||
+                !appointmentForm.email ||
+                !appointmentForm.phone ||
+                !appointmentForm.gender ||
+                !appointmentForm.condition ||
+                (appointmentForm.condition === 'custom' && !appointmentForm.customCondition) ||
+                !appointmentForm.doctorId ||
+                !appointmentForm.date
+              }
+              onClick={async () => {
+                // Validate required fields before adding to waiting list
+                if (!appointmentForm.name || !appointmentForm.age || !appointmentForm.email || 
+                    !appointmentForm.phone || !appointmentForm.gender || !appointmentForm.condition ||
+                    (appointmentForm.condition === 'custom' && !appointmentForm.customCondition) ||
+                    !appointmentForm.doctorId || !appointmentForm.date) {
+                  addNotification('error', 'Please fill in all required fields before adding to waiting list');
+                  return;
+                }
+
+                try {
+                  const selectedDoctor = doctors.find(d => d.id === appointmentForm.doctorId);
+                  
+                  await addDoc(collection(db, 'waitingList'), {
+                    patientName: appointmentForm.name,
+                    patientEmail: appointmentForm.email,
+                    patientPhone: appointmentForm.phone,
+                    preferredDoctorId: appointmentForm.doctorId,
+                    preferredDoctorName: selectedDoctor?.name || '',
+                    preferredDate: appointmentForm.date,
+                    priority: appointmentForm.priority,
+                    addedAt: serverTimestamp(),
+                    originalAppointmentData: {
+                      name: appointmentForm.name,
+                      age: appointmentForm.age,
+                      email: appointmentForm.email,
+                      phone: appointmentForm.phone,
+                      gender: appointmentForm.gender,
+                      type: appointmentForm.condition === 'custom' ? appointmentForm.customCondition : appointmentForm.condition,
+                      photo: appointmentForm.photo,
+                      notes: appointmentForm.notes
+                    }
+                  });
+
+                  addNotification('success', `${appointmentForm.name} has been added to the waiting list. They'll be notified when a slot opens.`);
+                  setShowBookingForm(false);
+                  resetAppointmentForm();
+                } catch (error) {
+                  console.error('Error adding to waiting list:', error);
+                  addNotification('error', 'Failed to add to waiting list');
+                }
+              }}
+            >
+              Add to Waiting List
+            </button>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          {/* Time Slots */}
-          {appointmentForm.doctorId && appointmentForm.date && (() => {
-            const isDoctorAvailable = getDoctorAvailability(appointmentForm.doctorId, appointmentForm.date);
-            const isFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
+  // ✅ NEW: If no available time slots, show indicator
+  if (!hasAvailableSlots) {
+    return (
+      <div className="form-group full-width">
+        <label>Available Time Slots *</label>
+        <div className="no-slots-warning">
+          <p>No available time slots for this date. Please select another date.</p>
+        </div>
+      </div>
+    );
+  }
 
-            // ✅ If doctor is unavailable, show warning
-            if (!isDoctorAvailable) {
-              return (
-                <div className="form-group full-width">
-                  <label>Available Time Slots *</label>
-                  <div className="doctor-unavailable-warning">
-                    <AlertTriangle size={24} />
-                    <p><strong>Doctor Not Available</strong></p>
-                    <p>This doctor is not available on {appointmentForm.date}</p>
-                    <p className="sub-message">Please select another doctor or date</p>
-                  </div>
-                </div>
-              );
-            }
+  // Show time slots with emergency buffer labels
+  return (
+    <div className="form-group full-width">
+      <label>Available Time Slots *</label>
+      <div className="time-slots-grid">
+        {timeSlots.map((slot) => {
+          const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
+          const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
-            // ✅ If doctor is fully booked, show message WITH BUTTON
-            if (isFullyBooked) {
-              return (
-                <div className="form-group full-width">
-                  <label>Available Time Slots *</label>
-                  <div className="doctor-fully-booked-message">
-                    <XCircle size={24} />
-                    <p><strong>This doctor is fully booked on {appointmentForm.date}</strong></p>
-                    <p className="sub-message">Would you like to add this patient to the waiting list?</p>
-                    
-                    {/* ✅ UPDATED WAITING LIST SECTION WITH VALIDATION */}
-                    <div className="waiting-list-actions">
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        onClick={() => {
-                          setAppointmentForm(prev => ({ ...prev, doctorId: '', date: '' }));
-                        }}
-                      >
-                        Choose Another Doctor/Date
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        disabled={
-                          !appointmentForm.name ||
-                          !appointmentForm.age ||
-                          !appointmentForm.email ||
-                          !appointmentForm.phone ||
-                          !appointmentForm.gender ||
-                          !appointmentForm.condition ||
-                          (appointmentForm.condition === 'custom' && !appointmentForm.customCondition) ||
-                          !appointmentForm.doctorId ||
-                          !appointmentForm.date
-                        }
-                        onClick={async () => {
-                          // Validate required fields before adding to waiting list
-                          if (!appointmentForm.name || !appointmentForm.age || !appointmentForm.email || 
-                              !appointmentForm.phone || !appointmentForm.gender || !appointmentForm.condition ||
-                              (appointmentForm.condition === 'custom' && !appointmentForm.customCondition) ||
-                              !appointmentForm.doctorId || !appointmentForm.date) {
-                            addNotification('error', 'Please fill in all required fields before adding to waiting list');
-                            return;
-                          }
-
-                          try {
-                            const selectedDoctor = doctors.find(d => d.id === appointmentForm.doctorId);
-                            
-                            await addDoc(collection(db, 'waitingList'), {
-                              patientName: appointmentForm.name,
-                              patientEmail: appointmentForm.email,
-                              patientPhone: appointmentForm.phone,
-                              preferredDoctorId: appointmentForm.doctorId,
-                              preferredDoctorName: selectedDoctor?.name || '',
-                              preferredDate: appointmentForm.date,
-                              priority: appointmentForm.priority,
-                              addedAt: serverTimestamp(),
-                              originalAppointmentData: {
-                                name: appointmentForm.name,
-                                age: appointmentForm.age,
-                                email: appointmentForm.email,
-                                phone: appointmentForm.phone,
-                                gender: appointmentForm.gender,
-                                type: appointmentForm.condition === 'custom' ? appointmentForm.customCondition : appointmentForm.condition,
-                                photo: appointmentForm.photo,
-                                notes: appointmentForm.notes
-                              }
-                            });
-
-                            addNotification('success', `${appointmentForm.name} has been added to the waiting list. They'll be notified when a slot opens.`);
-                            setShowBookingForm(false);
-                            resetAppointmentForm();
-                          } catch (error) {
-                            console.error('Error adding to waiting list:', error);
-                            addNotification('error', 'Failed to add to waiting list');
-                          }
-                        }}
-                      >
-                        Add to Waiting List
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
-            // Show time slots with emergency buffer labels
-            return (
-              <div className="form-group full-width">
-                <label>Available Time Slots *</label>
-                <div className="time-slots-grid">
-                  {generateTimeSlots(
-                    appointmentForm.doctorId,
-                    appointmentForm.date
-                  ).map((slot) => {
-                    const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
-                    const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
-
-                    return (
-                      <button
-                        key={slot.time}
-                        type="button"
-                        className={`time-slot 
-                          ${isBlocked ? "blocked" : ""} 
-                          ${!slot.available ? "booked" : ""} 
-                          ${slot.emergency ? "emergency-buffer" : ""}
-                          ${appointmentForm.time === slot.time ? "selected" : ""}`}
-                        onClick={() =>
-                          slot.available &&
-                          !isBlocked &&
-                          setAppointmentForm((prev) => ({
-                            ...prev,
-                            time: slot.time,
-                          }))
-                        }
-                        disabled={!slot.available || isBlocked}
-                      >
-                        {slot.time}
-                        
-                        {slot.emergency && slot.available && !isBlocked && (
-                          <span className="emergency-buffer-label">Emergency Buffer</span>
-                        )}
-                        
-                        {isBlocked && (
-                          <span className="unavailable-indicator">Unavailable</span>
-                        )}
-                        
-                        {!isBlocked && !slot.available && (
-                          <span className="booked-indicator">Booked</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })()}
-
+          return (
+            <button
+              key={slot.time}
+              type="button"
+              className={`time-slot 
+                ${isBlocked ? "blocked" : ""} 
+                ${!slot.available ? "booked" : ""} 
+                ${slot.emergency ? "emergency-buffer" : ""}
+                ${appointmentForm.time === slot.time ? "selected" : ""}`}
+              onClick={() =>
+                slot.available &&
+                !isBlocked &&
+                setAppointmentForm((prev) => ({
+                  ...prev,
+                  time: slot.time,
+                }))
+              }
+              disabled={!slot.available || isBlocked}
+            >
+              {slot.time}
+              
+              {slot.emergency && slot.available && !isBlocked && (
+                <span className="emergency-buffer-label">Emergency Buffer</span>
+              )}
+              
+              {isBlocked && (
+                <span className="unavailable-indicator">Unavailable</span>
+              )}
+              
+              {!isBlocked && !slot.available && (
+                <span className="booked-indicator">Booked</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+})()}
           {/* Notes (Optional) */}
           <div className="form-group full-width">
             <label htmlFor="appointment-notes">Additional Notes</label>
