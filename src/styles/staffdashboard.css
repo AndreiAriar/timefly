@@ -1027,13 +1027,13 @@ body {
 }
 
 .stat-card {
-  padding: 0.5rem;
-  border-radius: 16px;
+  padding: 0.5rem !important;
+  border-radius: 16px !important;
   transition: all 0.3s ease;
   border: 1px solid var(--border-light);
   background: transparent; /* made transparent */
   color: black !important; /* force solid black text */
-  margin-top: -15px;
+  margin-top: -15px !important;
 }
 
 .stat-card:hover {
@@ -2188,6 +2188,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   font-weight: 600;
   margin-bottom: 0;
   line-height: 1.2;
+  gap: 4px;
 }
 
 .queue-time .wait-time {
@@ -3025,17 +3026,17 @@ input[type="date"]::-webkit-clear-button {
 }
 
 .time-slot.booked {
-  background: #ffebee;
-  border-color: #ffcdd2;
-  color: var(--error);
-  cursor: not-allowed;
+  background: #ffebee !important;
+  border-color: #ffcdd2 !important;
+  color: var(--error) !important;
+  cursor: not-allowed !important;
 }
 
 .time-slot.blocked {
-  background: #f5f5f5;
-  border-color: #e0e0e0;
-  color: #9e9e9e;
-  cursor: not-allowed;
+  background: #f5f5f5 !important;
+  border-color: #e0e0e0 ;
+  color: #9e9e9e !important;
+  cursor: not-allowed !important;
 }
 
 /* ===== EMERGENCY-ONLY SLOT STYLING ===== */
@@ -3057,26 +3058,43 @@ input[type="date"]::-webkit-clear-button {
   background: #ef5350;
   color: var(--white);
 }
-
 .emergency-buffer-label {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #d32f2f;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 3px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.3px;
-  margin-top: 4px;
-  white-space: nowrap;
-  border: 1px solid #ef5350;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  font-size: 0.5rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  color: #d32f2f !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  letter-spacing: 0.3px !important;
+  margin-top: 4px !important;
+  white-space: nowrap !important;
+  border: none !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+.emergency-buffer-label .buffer-icon {
+  font-size: 10px !important;
+  margin-bottom: 1px !important;
+}
+
+.emergency-buffer-label .buffer-text {
+  display: block !important;
+  font-size: 0.5rem !important;
+  letter-spacing: 0.3px !important;
+  line-height: 1 !important;
 }
 
 .time-slot.emergency-buffer.selected .emergency-buffer-label {
-  color: var(--white);
-  background: rgba(211, 47, 47, 0.9);
-  border-color: var(--white);
+  color: var(--white) !important;
+  background: transparent !important;
+  border: none !important;
 }
 
 /* ===== TIME SLOT LABELS - POSITIONED BELOW TIME ===== */
@@ -3095,15 +3113,20 @@ input[type="date"]::-webkit-clear-button {
 }
 
 .emergency-buffer-label {
+  font-size: 0.55rem;
   color: #d32f2f;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ef5350;
+  background: transparent;
+  border: none;
+  padding: 0;
+  white-space: pre-line;
+  line-height: 1.1;
+  text-align: center;
 }
 
 .time-slot.emergency-buffer.selected .emergency-buffer-label {
   color: var(--white);
-  background: rgba(211, 47, 47, 0.9);
-  border-color: var(--white);
+  background: transparent;
+  border: none;
 }
 
 .unavailable-indicator {
@@ -5515,3 +5538,22 @@ body {
   color: #856404;
 }
 
+/* Urgent buffer slot styling */
+.time-slot.urgent-buffer {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%) !important;
+  border: 2px solid #f59e0b;
+  color: #92400e;
+}
+
+.time-slot.urgent-buffer:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.urgent-buffer-label {
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 4px;
+  color: #92400e;
+  font-weight: 600;
+}

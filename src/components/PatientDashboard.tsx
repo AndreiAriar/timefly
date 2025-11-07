@@ -114,6 +114,7 @@ interface TimeSlot {
   available: boolean;
   booked?: boolean;
   emergency?: boolean;
+  urgent?: boolean; 
 }
 
 interface DaySchedule {
@@ -699,8 +700,7 @@ const calculateDoctorDailySlots = (doctor: Doctor): number => {
   
   return slots > 0 ? slots : 10; // Fallback to 10 if calculation fails
 };
-
-// ✅ Generate time slots (with block + emergency logic + fallback for new doctors + lunch break filter)
+// ✅ Generate time slots (emergency + urgent + normal slots with 15-min intervals)
 const generateTimeSlots = () => {
   const slots: TimeSlot[] = [];
 
@@ -708,51 +708,46 @@ const generateTimeSlots = () => {
   const dateToUse = selectedCalendarDate || formData.date;
   const selectedDoctor = doctors.find((doc) => doc.id === doctorId);
 
-if (!selectedDoctor || !dateToUse) {
-  // Return empty slots silently to avoid console spam
-  return [];
-}
+  if (!selectedDoctor || !dateToUse) {
+    return [];
+  }
 
-  // 🚫 Helper function to check if time is lunch break (12:00 PM or 12:30 PM)
+  // 🚫 Helper function to check if time is lunch break (12:00 PM - 12:45 PM)
   const isLunchTime = (time12: string): boolean => {
-    return time12 === '12:00 PM' || time12 === '12:30 PM';
+    return time12 === '12:00 PM' || 
+           time12 === '12:15 PM' || 
+           time12 === '12:30 PM' || 
+           time12 === '12:45 PM';
   };
 
   // 🩺 Use custom schedule if available
   const scheduleForDate = selectedDoctor.scheduleSettings?.[dateToUse];
   let workingHours = selectedDoctor.workingHours;
 
-  // ✅ Fallback for new doctors (no working hours yet)
+  // ✅ Fallback for new doctors
   if (!workingHours || !workingHours.start || !workingHours.end) {
-    workingHours = { start: "09:00", end: "17:00" }; // default 9 AM – 5 PM
+    workingHours = { start: "9:00 AM", end: "5:00 PM" };
   }
 
-  // ✅ Apply custom hours override if any
   if (scheduleForDate?.customHours) {
     workingHours = scheduleForDate.customHours;
   }
 
-  // ✅ Default buffer if missing
-  const bufferTime = selectedDoctor.bufferTime ?? 15; // Default 15-minute buffer
-
-  // Safely parse hours (supports both 24h "09:00" and "9:00 AM" formats)
-  const parseTimeToMinutes = (timeStr: string) => {
-    const hasPeriod = /AM|PM/i.test(timeStr);
-    if (hasPeriod) {
-      const [time, period] = timeStr.split(" ");
-      let [hours, minutes] = time.split(":").map(Number);
-      if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
-      if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
-      return hours * 60 + (minutes || 0);
-    } else {
-      const [hours, minutes] = timeStr.split(":").map(Number);
-      return hours * 60 + (minutes || 0);
-    }
+  // Parse time to minutes
+  const parseTime = (timeStr: string): number => {
+    const [time, period] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    return hours * 60 + (minutes || 0);
   };
 
-  const startTotalMinutes = parseTimeToMinutes(workingHours.start);
-  const endTotalMinutes = parseTimeToMinutes(workingHours.end);
+  const startTotalMinutes = parseTime(workingHours.start);
+  const endTotalMinutes = parseTime(workingHours.end);
 
+  // Get current time
   const now = new Date();
   const philippinesNow = new Date(
     now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
@@ -761,34 +756,49 @@ if (!selectedDoctor || !dateToUse) {
   const currentTotalMinutes =
     philippinesNow.getHours() * 60 + philippinesNow.getMinutes();
 
-  // Each cycle = 15 active mins + buffer time
-  const activeDuration = 15;
-  const slotDuration = activeDuration + bufferTime;
-
-  for (
-    let totalMinutes = startTotalMinutes;
-    totalMinutes + slotDuration <= endTotalMinutes;
-    totalMinutes += slotDuration
-  ) {
-    const appointmentStart = totalMinutes;
-    const appointmentEnd = appointmentStart + activeDuration;
-    const bufferStart = appointmentEnd;
-
-    const time24 = `${Math.floor(appointmentStart / 60)
-      .toString()
-      .padStart(2, "0")}:${(appointmentStart % 60).toString().padStart(2, "0")}`;
+  // ✅ Generate slots every 15 minutes
+  for (let totalMinutes = startTotalMinutes; totalMinutes < endTotalMinutes; totalMinutes += 15) {
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = totalMinutes % 60;
+    const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
     const time12 = convertTo12Hour(time24);
 
-    // 🚫 Skip lunch time slots (12:00 PM and 12:30 PM)
+    // 🚫 SKIP ENTIRE LUNCH HOUR (12:00 PM - 12:45 PM)
     if (isLunchTime(time12)) {
-      console.log(`⏰ Skipping lunch break: ${time12}`);
       continue;
     }
 
-    // Skip past times if date is today
-    if (dateToUse === currentDateStr && appointmentStart < currentTotalMinutes)
+    // Skip past time slots if booking for today
+    if (dateToUse === currentDateStr && totalMinutes < currentTotalMinutes) {
       continue;
+    }
 
+    // ✅ Determine slot type based on minutes
+    const isEmergencySlot = minute === 15 || minute === 45; // Emergency buffers
+    const isUrgentSlot = minute === 30;                      // Urgent buffer
+    const isNormalSlot = minute === 0;                       // Normal slots
+
+    // ✅ SLOT VISIBILITY LOGIC:
+    let shouldShowSlot = false;
+    let slotType: 'emergency' | 'urgent' | 'normal' = 'normal';
+
+    if (isEmergencySlot) {
+      slotType = 'emergency';
+      shouldShowSlot = formData.priority === 'emergency'; // Only emergency patients see these
+    } else if (isUrgentSlot) {
+      slotType = 'urgent';
+      shouldShowSlot = formData.priority === 'emergency' || formData.priority === 'urgent'; // Emergency and urgent see these
+    } else if (isNormalSlot) {
+      slotType = 'normal';
+      shouldShowSlot = true; // Everyone sees normal slots
+    }
+
+    // Skip if not visible for current priority
+    if (!shouldShowSlot) {
+      continue;
+    }
+
+    // Check if booked
     const isBooked = appointments.some(
       (apt) =>
         apt.date === dateToUse &&
@@ -798,47 +808,22 @@ if (!selectedDoctor || !dateToUse) {
         (editingAppointment ? apt.id !== editingAppointment.id : true)
     );
 
-    // 🧱 Check if slot is blocked
+    // Check if blocked by staff
     const slotKey = `${doctorId}_${dateToUse}_${time12}`;
     const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
-    // Normal slot
     slots.push({
       time: time12,
       available: !isBooked && !isBlocked,
       booked: isBooked,
-      emergency: false,
-    });
-
-    // Emergency buffer slot
-    const bufferTime24 = `${Math.floor(bufferStart / 60)
-      .toString()
-      .padStart(2, "0")}:${(bufferStart % 60).toString().padStart(2, "0")}`;
-    const bufferTime12 = convertTo12Hour(bufferTime24);
-
-    // 🚫 Skip lunch break buffer slots too
-    if (isLunchTime(bufferTime12)) {
-      console.log(`⏰ Skipping lunch break buffer: ${bufferTime12}`);
-      continue; // Skip adding this buffer slot
-    }
-
-    const bufferKey = `${doctorId}_${dateToUse}_${bufferTime12}`;
-    const bufferBlocked = doctorAvailabilitySlots?.[bufferKey] === false;
-
-    slots.push({
-      time: bufferTime12,
-      available:
-        formData.priority === "emergency" && !isBooked && !bufferBlocked,
-      booked: isBooked,
-      emergency: true,
+      emergency: slotType === 'emergency',
+      urgent: slotType === 'urgent' // Add urgent flag
     });
   }
 
-  console.log(
-    `✅ Generated ${slots.length} slots for ${selectedDoctor.name || "Doctor"}`
-  );
   return slots;
 };
+
   const convertTo12Hour = (time24: string): string => {
     const [hours, minutes] = time24.split(':');
     const hour = parseInt(hours);
@@ -904,11 +889,6 @@ const getCurrentQueue = () => {
   });
 };
 
-
-  const getNextPatient = () => {
-    const queue = getCurrentQueue();
-    return queue.find(apt => (apt.queueNumber || 0) > 1);
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -1387,8 +1367,6 @@ const handleCancelAppointment = async (id: string, reason: string) => {
   // Calculate stats and queue data
   const stats = getStatusStats();
   const queue = getCurrentQueue();
-  const nextPatient = getNextPatient();
-  const currentPatient = queue.find(apt => apt.queueNumber === 1);
   const timeSlots = generateTimeSlots();
   const filteredAppointments = getFilteredAppointments();
   const calendarDays = getCalendarDays();
@@ -1878,113 +1856,119 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   </div>
   {/* Now Serving */}
-  <div className="queue-summary">
-    <span className="serving-label">Now Serving</span>
-    <span className="serving-number">
-      #{currentPatient?.queueNumber || 'None'}
-    </span>
-  </div>
-  {/* Next Patient */}
-  {nextPatient && (
+<div className="queue-summary">
+  <span className="serving-label">Now Serving</span>
+  <span className="serving-number">
+    #{(() => {
+      const currentPatient = queue.find(q => q.status === 'confirmed');
+      return currentPatient?.queueNumber || 'None';
+    })()}
+  </span>
+</div>
+{/* Next Patient */}
+{(() => {
+  const nextPatient = queue.find(q => q.status === 'pending');
+  return nextPatient ? (
     <div className="queue-summary next-patient">
       <span className="serving-label">Up Next</span>
       <span className="serving-number">#{nextPatient.queueNumber}</span>
     </div>
-  )}
-  {/* Queue List */}
-  <div className="queue-list">
-    <div className="queue-header">
-      <span>Queue showing all appointments</span>
-    </div>
-    {queue.length > 0 ? (
-      queue.map((patient) => {
-        // ✅ Calculate wait time for each patient
-        const calculateWaitTime = () => {
-          if (patient.status === 'confirmed') {
-            return 'Being Served';
-          }
+  ) : null;
+})()}
+{/* Queue List */}
+<div className="queue-list">
+  <div className="queue-header">
+    <span>Queue showing all appointments</span>
+  </div>
+  {queue.length > 0 ? (
+    queue.map((patient) => {
+      // ✅ Calculate wait time for each patient
+      const calculateWaitTime = () => {
+        if (patient.status === 'confirmed') {
+          return 'Being Served';
+        }
 
-          const now = new Date();
-          const currentTime = now.getHours() * 60 + now.getMinutes();
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
 
-          // Parse appointment time
-          const [time, period] = patient.time.split(' ');
-          let [hours, minutes] = time.split(':').map(Number);
+        // Parse appointment time
+        const [time, period] = patient.time.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
 
-          if (period === 'PM' && hours !== 12) hours += 12;
-          if (period === 'AM' && hours === 12) hours = 0;
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
 
-          const appointmentTimeInMinutes = hours * 60 + minutes;
-          const waitMinutes = Math.max(0, appointmentTimeInMinutes - currentTime);
+        const appointmentTimeInMinutes = hours * 60 + minutes;
+        const waitMinutes = Math.max(0, appointmentTimeInMinutes - currentTime);
 
-          if (waitMinutes >= 60) {
-            const hrs = Math.floor(waitMinutes / 60);
-            const mins = waitMinutes % 60;
-            return `Wait: ${hrs}h ${mins}min`;
-          }
-          return `Wait: ${waitMinutes}min`;
-        };
+        if (waitMinutes >= 60) {
+          const hrs = Math.floor(waitMinutes / 60);
+          const mins = waitMinutes % 60;
+          return `Wait: ${hrs}h ${mins}min`;
+        }
+        return `Wait: ${waitMinutes}min`;
+      };
 
-        return (
-          <div
-            key={patient.id}
-            className={`queue-card 
-              status-${(patient.status || '').toLowerCase()} 
-              priority-${(patient.priority || '').toLowerCase()} 
-              ${patient.priority === 'emergency' ? 'emergency-blinking' : ''}`}
-          >
-            {/* Top Row */}
-            <div className="queue-top">
-              <span className="queue-number">#{patient.queueNumber}</span>
-              <div className="queue-time">
-                <div className="appointment-time">{patient.time}</div>
-                <div className="appointment-date">
-                  {(() => {
-                    const [year, month, day] = patient.date.split('-');
-                    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-                    return dateObj.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    });
-                  })()}
-                </div>
-              </div>
-            </div>
-            {/* Middle */}
-            <div className="queue-body">
-              <div className="booking-status-row">
-                {/* Status Pill */}
-                <span
-                  className={`status-pill ${patient.status?.toLowerCase() || ''}`}
-                >
-                  {patient.status}
-                </span>
-                {/* Priority Pill */}
-                <span
-                  className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}
-                >
-                  {patient.priority === 'emergency' && '🚨 Emergency'}
-                  {patient.priority === 'urgent' && '⚠️ Urgent'}
-                  {patient.priority === 'normal' && 'Normal'}
-                </span>
-              </div>
-
-              {/* ✅ NEW: Wait Time Display */}
-              <div className="queue-wait-time">
-                <Clock size={14} aria-hidden="true" />
-                <span>{calculateWaitTime()}</span>
+      return (
+        <div
+          key={patient.id}
+          className={`queue-card 
+            status-${(patient.status || '').toLowerCase()} 
+            priority-${(patient.priority || '').toLowerCase()} 
+            ${patient.priority === 'emergency' ? 'emergency-blinking' : ''}`}
+        >
+          {/* Top Row */}
+          <div className="queue-top">
+            <span className="queue-number">#{patient.queueNumber}</span>
+            <div className="queue-time">
+              <div className="appointment-time">{patient.time}</div>
+              <div className="appointment-date">
+                {(() => {
+                  const [year, month, day] = patient.date.split('-');
+                  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+                  return dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  });
+                })()}
               </div>
             </div>
           </div>
-        );
-      })
-    ) : (
-      <div className="empty-queue">
-        <p>No patients in queue for today</p>
-      </div>
-    )}
-  </div>
+          {/* Middle */}
+          <div className="queue-body">
+            <div className="booking-status-row">
+              {/* Status Pill */}
+              <span
+                className={`status-pill ${patient.status?.toLowerCase() || ''}`}
+              >
+                {patient.status}
+              </span>
+              {/* Priority Pill */}
+              <span
+                className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}
+              >
+                {patient.priority === 'emergency' && '🚨 Emergency'}
+                {patient.priority === 'urgent' && '⚠️ Urgent'}
+                {patient.priority === 'normal' && 'Normal'}
+              </span>
+            </div>
+
+            {/* ✅ NEW: Wait Time Display */}
+            <div className="queue-wait-time">
+              <Clock size={14} aria-hidden="true" />
+              <span>{calculateWaitTime()}</span>
+            </div>
+          </div>
+        </div>
+      );
+    })
+  ) : (
+    <div className="empty-queue">
+      <p>No patients in queue for today</p>
+    </div>
+  )}
+</div>
 </section>
 </div>
 {/* ✅ Close main-content div here */}
@@ -2932,12 +2916,8 @@ const handleCancelAppointment = async (id: string, reason: string) => {
         </div>
       ) : (
         <div className="time-slots-grid">
-          {timeSlots
-            .filter((slot) =>
-              formData.priority === "emergency" ? true : !slot.emergency
-            )
-            .map((slot) => {
-              const slotKey = `${formData.doctor}_${formData.date}_${slot.time}`;
+           {timeSlots.map((slot) => {
+             const slotKey = `${formData.doctor}_${formData.date}_${slot.time}`;
               const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
               return (
@@ -2948,6 +2928,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
                     ${!slot.available ? "booked" : ""} 
                     ${isBlocked ? "blocked" : ""} 
                     ${slot.emergency ? "emergency-slot" : ""} 
+                    ${slot.urgent ? "urgent-slot" : ""} 
                     ${formData.time === slot.time ? "selected" : ""}`}
                   onClick={() => {
                     if (!slot.available || isBlocked) return;
@@ -2956,38 +2937,24 @@ const handleCancelAppointment = async (id: string, reason: string) => {
                       time: slot.time,
                     }));
                   }}
-                  disabled={
-                    !slot.available ||
-                    isBlocked ||
-                    (slot.emergency && formData.priority !== "emergency")
-                  }
-                  aria-label={`${slot.time} ${
-                    isBlocked
-                      ? "Blocked"
-                      : slot.available
-                      ? "available"
-                      : "booked"
-                  }`}
-                  title={
-                    isBlocked
-                      ? "Unavailable – set by staff"
-                      : slot.emergency
-                      ? "Emergency Only"
-                      : `${slot.time} ${
-                          slot.available ? "available" : "booked"
-                        }`
-                  }
+                  disabled={!slot.available || isBlocked}
                 >
                   {slot.time}
+                  
+                  {/* ✅ Show slot type labels */}
+                  {slot.emergency && slot.available && !isBlocked && (
+                    <span className="emergency-buffer-label">🚨 Emergency Buffer</span>
+                  )}
+                  
+                  {slot.urgent && slot.available && !isBlocked && (
+                    <span className="patient-urgent-buffer-label">⚠️ Urgent Buffer</span>
+                  )}
+                  
                   {isBlocked && (
-                    <span className="blocked-indicator">Blocked</span>
+                    <span className="unavailable-indicator">Unavailable</span>
                   )}
-                  {slot.emergency && (
-                    <span className="emergency-badge">
-                      Emergency Only
-                    </span>
-                  )}
-                  {!slot.available && !slot.emergency && !isBlocked && (
+                  
+                  {!isBlocked && !slot.available && (
                     <span className="booked-indicator">Booked</span>
                   )}
                 </button>

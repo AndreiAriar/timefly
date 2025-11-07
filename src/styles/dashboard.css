@@ -6489,8 +6489,12 @@ svg.clock,
   color: #065f46;
 }
 
- [data-theme="dark"] .queue-card.status-confirmed .queue-wait-time { 
-  color: #34d399;
+[data-theme="dark"] .queue-wait-time { 
+  color: #34d399 !important;
+ }
+
+ [data-theme="dark"] .queue-card.status-confirmed{ 
+  color: #34d399 !important;
  }
 
 .queue-card.status-confirmed .queue-wait-time svg {
@@ -7201,4 +7205,25 @@ div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-we
   div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-webkit-scrollbar-thumb:hover {
     background: #6b7280 !important;
   }
+}
+
+
+/* Urgent buffer slot styling */
+.time-slot.patient-urgent-buffer {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%) !important;
+  border: 2px solid #f59e0b !important;
+  color: #92400e !important;
+}
+
+.time-slot.patient-urgent-buffer:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+}
+
+.patient-urgent-buffer-label {
+  display: block !important;
+  font-size: 0.7rem !important;
+  margin-top: 4px ;
+  color: #92400e;
+  font-weight: 600;
 }

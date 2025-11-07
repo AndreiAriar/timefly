@@ -8,7 +8,7 @@
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* ✅ Prevent horizontal scroll */
+  overflow-x: hidden !important; /* ✅ Prevent horizontal scroll */
 }
 
 /* ✅ Keep hero section with dark background */
@@ -1007,7 +1007,7 @@
 /* ✅ Eye Icon Button */
 .doctor-dashboard-page .view-btn {
   background: none !important;
-  color: #000000 !important;
+  color: #3b82f6 !important;
   border: none !important;
   box-shadow: none !important;
   padding: 8px;
@@ -1450,9 +1450,9 @@
 
 /* ✅ Completed */
 .doctor-dashboard-page .appointment-status.status-completed {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 /* ✅ View Button (Eye Icon) */
@@ -3012,7 +3012,7 @@
     background: #ffffff !important;
     margin-top: 0 !important;
     padding: 24px 16px;
-    overflow: hidden;
+    overflow: hidden !important;
   }
   
   /* ✅ Remove any lingering dark gradients */

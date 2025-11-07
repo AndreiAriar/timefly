@@ -164,6 +164,7 @@ interface TimeSlot {
   available: boolean;
   booked?: boolean;
   emergency?: boolean;
+  urgent?: boolean; // ✅ NEW: Add urgent flag
 }
 
 interface DoctorAvailability {
@@ -783,6 +784,7 @@ const getApiUrl = (endpoint: string) => {
     }
 
   };
+
  // ✅ Generate Time Slots - WITH EMERGENCY BUFFER BETWEEN ALL SLOTS (SKIP ENTIRE LUNCH HOUR)
 const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
   if (!doctorId || !date) return [];
@@ -831,15 +833,16 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
       apt.status !== 'cancelled'
   );
 
-  console.log(`Generating slots for doctor ${doctorId} on ${date}`);
+  console.log(`📅 Generating slots for doctor ${doctorId} on ${date}`);
   console.log(` Is today: ${date === currentDateStr}, Current time: ${philippinesNow.toLocaleTimeString()}`);
   console.log(` Found ${existingAppointments.length} existing appointments`);
   console.log(` Current form priority: ${appointmentForm.priority}`);
 
   const slots: TimeSlot[] = [];
   
-  // Check if current form has emergency priority selected
+  // ✅ Check priority being booked
   const isCreatingEmergency = appointmentForm.priority === 'emergency';
+  const isCreatingUrgent = appointmentForm.priority === 'urgent';
 
   // ✅ Generate slots every 15 minutes
   for (let totalMinutes = startTotalMinutes; totalMinutes < endTotalMinutes; totalMinutes += 15) {
@@ -859,12 +862,33 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
       continue;
     }
 
-    // ✅ Determine if this is an emergency buffer slot
-    // Emergency slots are at :15 and :45 minutes (9:15 AM, 9:45 AM, 10:15 AM, etc.)
-    const isEmergencySlot = minute === 15 || minute === 45;
+    // ✅ UPDATED: Determine slot type based on minutes
+    const isEmergencySlot = minute === 15 || minute === 45; // Emergency buffers
+    const isUrgentSlot = minute === 30;                      // Urgent buffer
+    const isNormalSlot = minute === 0;                       // Normal slots
 
-    // ✅ Skip emergency slots if NOT creating emergency appointment
-    if (isEmergencySlot && !isCreatingEmergency) {
+    // ✅ SLOT VISIBILITY LOGIC:
+    // - Emergency patients: See all slots (emergency, urgent, normal)
+    // - Urgent patients: See urgent and normal slots (NOT emergency)
+    // - Normal patients: See ONLY normal slots (NOT emergency or urgent)
+    
+    let shouldShowSlot = false;
+    let slotType: 'emergency' | 'urgent' | 'normal' = 'normal';
+
+    if (isEmergencySlot) {
+      slotType = 'emergency';
+      shouldShowSlot = isCreatingEmergency; // Only show to emergency bookings
+    } else if (isUrgentSlot) {
+      slotType = 'urgent';
+      shouldShowSlot = isCreatingEmergency || isCreatingUrgent; // Show to emergency and urgent
+    } else if (isNormalSlot) {
+      slotType = 'normal';
+      shouldShowSlot = true; // Show to everyone
+    }
+
+    // Skip this slot if it shouldn't be visible for current priority
+    if (!shouldShowSlot) {
+      console.log(`🚫 Hidden ${slotType} slot: ${time12} (not visible for ${appointmentForm.priority} booking)`);
       continue;
     }
 
@@ -878,23 +902,23 @@ const generateTimeSlots = (doctorId: string, date: string): TimeSlot[] => {
     const slotKey = `${doctorId}_${date}_${time12}`;
     const isBlocked = doctorAvailabilitySlots?.[slotKey] === false;
 
-    // Add slot (either regular or emergency)
+    // Add slot with type indicator
     slots.push({
       time: time12,
       available: !isBooked && !isBlocked,
       booked: isBooked,
-      emergency: isEmergencySlot
+      emergency: slotType === 'emergency',
+      urgent: slotType === 'urgent' // NEW: Add urgent flag
     });
 
     console.log(
-      ` ${isEmergencySlot ? '🚨' : '✅'} ${time12} - ${
+      ` ${slotType === 'emergency' ? '🚨' : slotType === 'urgent' ? '⚠️' : '✅'} ${time12} - ${
         isBooked ? 'Booked' : isBlocked ? 'Blocked' : 'Available'
-      }${isEmergencySlot ? ' (Emergency Buffer)' : ''}`
+      } (${slotType.toUpperCase()} slot)`
     );
   }
 
-  console.log(`Generated ${slots.length} total slots`);
-  console.log(`Emergency mode: ${isCreatingEmergency ? 'ON - showing emergency buffer slots' : 'OFF - regular slots only'}`);
+  console.log(`Generated ${slots.length} total slots for ${appointmentForm.priority} booking`);
 
   return slots;
 };
@@ -1279,35 +1303,64 @@ const getCurrentQueue = (): QueueItem[] => {
     apt.status !== 'completed'
   );
   
-  // ✅ Sort by: status → appointment time → priority
+  // ✅ SORT BY TIME ONLY (Chronological Order)
   const sortedQueue = todayAppointments.sort((a, b) => {
-    // 1️⃣ Confirmed status comes first (being served)
+    // 1️⃣ Currently being served comes FIRST
     if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
     if (b.status === 'confirmed' && a.status !== 'confirmed') return 1;
     
-    // 2️⃣ Sort by appointment time
-    const timeComparison = a.time.localeCompare(b.time);
-    if (timeComparison !== 0) return timeComparison;
+    // 2️⃣ Sort by APPOINTMENT TIME (Chronological - earliest first)
+    const parseTime = (timeStr: string): number => {
+      const [time, period] = timeStr.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      
+      return hours * 60 + minutes;
+    };
     
-    // 3️⃣ Priority as tiebreaker
+    const aMinutes = parseTime(a.time);
+    const bMinutes = parseTime(b.time);
+    
+    if (aMinutes !== bMinutes) {
+      return aMinutes - bMinutes; // Earlier time comes first
+    }
+    
+    // 3️⃣ If same time (shouldn't happen), priority as tiebreaker
     const priorityOrder = { emergency: 3, urgent: 2, normal: 1 };
     const aPriority = priorityOrder[a.priority] || 1;
     const bPriority = priorityOrder[b.priority] || 1;
-    return bPriority - aPriority;
+    
+    if (aPriority !== bPriority) {
+      return bPriority - aPriority; // Higher priority first
+    }
+    
+    // 4️⃣ Final tiebreaker: original booking number
+    return (a.queueNumber || 0) - (b.queueNumber || 0);
   });
   
-  // ✅ Calculate wait times based on actual appointment times
+  // ✅ Calculate realistic wait times
   const now = new Date();
-  const currentTime = now.getHours() * 60 + now.getMinutes();
+  const philippinesNow = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
+  );
+  const currentTime = philippinesNow.getHours() * 60 + philippinesNow.getMinutes();
   
-  return sortedQueue.map((apt) => {
+  // Get consultation time from doctor
+  const getConsultationTime = (doctorId: string): number => {
+    const doctor = doctors.find(d => d.id === doctorId);
+    return doctor ? (doctor.consultationDuration || 30) : 30;
+  };
+  
+  return sortedQueue.map((apt, index) => {
     let waitMinutes = 0;
     
     if (apt.status === 'confirmed') {
-      // Currently being served - no wait time
+      // Currently being served - no wait
       waitMinutes = 0;
     } else {
-      // Parse appointment time (e.g., "9:15 AM")
+      // Parse appointment time
       const [time, period] = apt.time.split(' ');
       let [hours, minutes] = time.split(':').map(Number);
       
@@ -1316,8 +1369,26 @@ const getCurrentQueue = (): QueueItem[] => {
       
       const appointmentTimeInMinutes = hours * 60 + minutes;
       
-      // Calculate difference from now
-      waitMinutes = Math.max(0, appointmentTimeInMinutes - currentTime);
+      // Calculate wait time
+      const timeDiff = appointmentTimeInMinutes - currentTime;
+      const peopleAhead = index; // Position in queue
+      const consultationTime = getConsultationTime(apt.doctorId);
+      
+      if (timeDiff > 0) {
+        // Appointment is in future - use time difference
+        waitMinutes = timeDiff;
+        
+        // If people are ahead, add their consultation time
+        if (peopleAhead > 0) {
+          const queueWait = peopleAhead * consultationTime;
+          waitMinutes = Math.max(timeDiff, queueWait);
+        }
+      } else {
+        // Appointment time passed - calculate by queue position
+        waitMinutes = peopleAhead * consultationTime;
+      }
+      
+      waitMinutes = Math.max(0, waitMinutes);
     }
     
     return {
@@ -1328,6 +1399,7 @@ const getCurrentQueue = (): QueueItem[] => {
     };
   });
 };
+
   // Get doctor availability for a specific date - Fixed logic
   const getDoctorAvailability = (doctorId: string, date: string): boolean => {
     if (!date) return true; // Default available if no date selected
@@ -3443,7 +3515,6 @@ const handleLogout = async () => {
       <div className="current-serving">
         <h3>Now Serving</h3>
 
-        {/* UPDATED CODE (Show Any Confirmed Patient) */}
         <div className="serving-display">
           {(() => {
             const confirmedPatient = queue.find(q => q.status === 'confirmed');
@@ -3458,7 +3529,7 @@ const handleLogout = async () => {
                     <div className="serving-status">Currently Being Served</div>
                   </div>
                 </div>
-              );
+                              );
             } else if (queue.length > 0) {
               return (
                 <div className="no-patients-in-serving">
@@ -3489,116 +3560,137 @@ const handleLogout = async () => {
           <span className="value">{queue.filter(q => q.status === 'confirmed').length}</span>
         </div>
         <div className="stat">
-          <span className="label">Average Wait</span>
-          <span className="value">30 min</span>
+          <span className="label">Emergency</span>
+          <span className="value">{queue.filter(q => q.priority === 'emergency').length}</span>
+        </div>
+        <div className="stat">
+          <span className="label">Urgent</span>
+          <span className="value">{queue.filter(q => q.priority === 'urgent').length}</span>
         </div>
       </div>
     </div>
 
-    {/* Queue List */}
+    {/* ✅ UPDATED: Queue List with Proper Ordering Display */}
     <div className="queue-list">
-      {queue.length > 0 && queue.map((patient) => (
-        <div
-          key={patient.id}
-          className={`queue-item ${
-            patient.status === 'confirmed' ? 'current' : ''
-          } ${patient.status === 'pending' ? 'pending' : ''}`}
-        >
-          <div className="queue-position">#{patient.queueNumber}</div>
+      {queue.length === 0 ? (
+        <div className="empty-queue">
+          <Clock size={48} aria-hidden="true" />
+          <p>No patients in queue today</p>
+        </div>
+                ) : (
+                queue.map((patient) => (
+            <div
+              key={patient.id}
+              className={`queue-item ${
+                patient.status === 'confirmed' ? 'current' : ''
+              } ${patient.status === 'pending' ? 'pending' : ''} ${
+                patient.priority === 'emergency' ? 'emergency-patient' : ''
+              } ${patient.priority === 'urgent' ? 'urgent-patient' : ''}`}
+            >
+              {/* ✅ FIXED: Show original booking number, cards sorted by time/priority */}
+              <div className="queue-position">
+                <div className="position-number">#{patient.queueNumber}</div>
+              </div>
 
-          <div className="patient-avatar">
-            {patient.photo ? (
-              <img src={patient.photo} alt={patient.name} />
-            ) : (
-              <User size={20} aria-hidden="true" />
-            )}
-          </div>
-
-          <div className="patient-details">
-            <div className="patient-name">{patient.name}</div>
-            <div className="patient-type">{patient.type}</div>
-            <div className="patient-doctor">{patient.doctor}</div>
-            <div className="patient-status">
-              <span className={`status-badge ${getStatusColor(patient.status)}`}>
-                {patient.status}
-              </span>
-              {patient.status === 'confirmed' && (
-                <span className="now-serving-badge">Now Serving</span>
+            <div className="patient-avatar">
+              {patient.photo ? (
+                <img src={patient.photo} alt={patient.name} />
+              ) : (
+                <User size={20} aria-hidden="true" />
               )}
             </div>
-          </div>
 
-          <div className="queue-priority">
-            <span className={`priority-badge ${getPriorityColor(patient.priority)}`}>
-              {patient.priority}
-            </span>
-          </div>
+            <div className="patient-details">
+              <div className="patient-name">{patient.name}</div>
+              <div className="patient-type">{patient.type}</div>
+              <div className="patient-doctor">{patient.doctor}</div>
+              <div className="patient-status">
+                <span className={`status-badge ${getStatusColor(patient.status)}`}>
+                  {patient.status}
+                </span>
+                {patient.status === 'confirmed' && (
+                  <span className="now-serving-badge">Now Serving</span>
+                )}
+              </div>
+            </div>
 
-          <div className="queue-time">
-            <div className="appointment-time">{patient.time}</div>
-            <div className="wait-time">
-  {patient.status === 'confirmed'
-    ? 'Being Served'
-    : (() => {
-        const minutes = patient.estimatedWaitTime || 0;
-        if (minutes >= 60) {
-          const hours = Math.floor(minutes / 60);
-          const mins = minutes % 60;
-          return `Wait: ${hours}h ${mins}min`;
-        }
-        return `Wait: ${minutes}min`;
-      })()}
-</div>
-          </div>
+            {/* ✅ UPDATED: Show priority prominently */}
+            <div className="queue-priority">
+              <span className={`priority-badge ${getPriorityColor(patient.priority)}`}>
+                {patient.priority === 'emergency' && '🚨 '}
+                {patient.priority === 'urgent' && '⚠️ '}
+                {patient.priority.toUpperCase()}
+              </span>
+            </div>
 
-          {/* UPDATED CODE (Show Complete Button for All Confirmed) */}
-          <div className="queue-actions">
-            {patient.status === 'confirmed' ? (
+            <div className="queue-time">
+              <div className="appointment-time">
+                <Clock size={14} aria-hidden="true" />
+                {patient.time}
+              </div>
+              <div className="wait-time">
+                {patient.status === 'confirmed'
+                  ? '⏱️ Being Served'
+                  : (() => {
+                      const minutes = patient.estimatedWaitTime || 0;
+                      if (minutes >= 60) {
+                        const hours = Math.floor(minutes / 60);
+                        const mins = minutes % 60;
+                        return `⏳ Wait: ${hours}h ${mins}min`;
+                      }
+                      return `⏳ Wait: ${minutes}min`;
+                    })()}
+              </div>
+            </div>
+
+            <div className="queue-actions">
+              {patient.status === 'confirmed' ? (
+                <button
+                  className="action-btn complete"
+                  onClick={() => handleAppointmentStatusChange(patient.id, 'completed')}
+                  aria-label={`Mark ${patient.name} as completed`}
+                  title={`Mark ${patient.name} as completed`}
+                >
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  Complete
+                </button>
+              ) : patient.status === 'pending' ? (
+                <button
+                  className="action-btn confirm"
+                  onClick={() => handleAppointmentStatusChange(patient.id, 'confirmed')}
+                  aria-label={`Confirm ${patient.name}`}
+                  title={`Confirm ${patient.name}`}
+                >
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  Confirm
+                </button>
+              ) : null}
+
               <button
-                className="action-btn complete"
-                onClick={() => handleAppointmentStatusChange(patient.id, 'completed')}
-                aria-label={`Mark ${patient.name} as completed`}
-                title={`Mark ${patient.name} as completed`}
+                className="action-btn notify"
+                onClick={async () => {
+                  try {
+                    await sendNotificationToPatient(
+                      patient.email,
+                      patient.phone,
+                      'appointment_confirmed',
+                      patient
+                    );
+                    addNotification('success', `Notification sent to ${patient.name}`);
+                  } catch (error) {
+                    console.error('Error sending notification:', error);
+                    addNotification('error', 'Failed to send notification');
+                  }
+                }}
+                aria-label={`Send confirmation notification to ${patient.name}`}
+                title={`Send confirmation notification to ${patient.name}`}
               >
-                <CheckCircle2 size={16} aria-hidden="true" />
-                Complete
+                <MessageSquare size={16} aria-hidden="true" />
               </button>
-            ) : patient.status === 'pending' ? (
-              <button
-                className="action-btn confirm"
-                onClick={() => handleAppointmentStatusChange(patient.id, 'confirmed')}
-                aria-label={`Confirm ${patient.name}`}
-                title={`Confirm ${patient.name}`}
-              >
-                <CheckCircle2 size={16} aria-hidden="true" />
-                Confirm
-              </button>
-            ) : null}
-
-            <button
-  className="action-btn notify"
-  onClick={async () => {
-    try {
-      await sendNotificationToPatient(
-        patient.email,
-        patient.phone,
-        'appointment_confirmed',
-        patient
-      );
-      addNotification('success', `Notification sent to ${patient.name}`);
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      addNotification('error', 'Failed to send notification');
-    }
-  }}
-  aria-label={`Send confirmation notification to ${patient.name}`}
-  title={`Send confirmation notification to ${patient.name}`}
->
-  <MessageSquare size={16} aria-hidden="true" />
-</button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
     </div>
   </div>
 )}
@@ -5062,13 +5154,11 @@ const handleLogout = async () => {
     required
   />
 </div>
-
 {/* Time Slots */}
 {appointmentForm.doctorId && appointmentForm.date && (() => {
   const isDoctorAvailable = getDoctorAvailability(appointmentForm.doctorId, appointmentForm.date);
   const isFullyBooked = isDailyLimitReached(appointmentForm.doctorId, appointmentForm.date);
   
-  // Generate time slots to check if any are available
   const timeSlots = generateTimeSlots(appointmentForm.doctorId, appointmentForm.date);
   const hasAvailableSlots = timeSlots.some(slot => {
     const slotKey = `${appointmentForm.doctorId}_${appointmentForm.date}_${slot.time}`;
@@ -5076,7 +5166,6 @@ const handleLogout = async () => {
     return slot.available && !isBlocked;
   });
 
-  // ✅ If doctor is unavailable, show warning
   if (!isDoctorAvailable) {
     return (
       <div className="form-group full-width">
@@ -5091,7 +5180,6 @@ const handleLogout = async () => {
     );
   }
 
-  // ✅ If doctor is fully booked, show message WITH BUTTON
   if (isFullyBooked) {
     return (
       <div className="form-group full-width">
@@ -5101,7 +5189,6 @@ const handleLogout = async () => {
           <p><strong>This doctor is fully booked on {appointmentForm.date}</strong></p>
           <p className="sub-message">Would you like to add this patient to the waiting list?</p>
           
-          {/* ✅ UPDATED WAITING LIST SECTION WITH VALIDATION */}
           <div className="waiting-list-actions">
             <button
               type="button"
@@ -5127,7 +5214,6 @@ const handleLogout = async () => {
                 !appointmentForm.date
               }
               onClick={async () => {
-                // Validate required fields before adding to waiting list
                 if (!appointmentForm.name || !appointmentForm.age || !appointmentForm.email || 
                     !appointmentForm.phone || !appointmentForm.gender || !appointmentForm.condition ||
                     (appointmentForm.condition === 'custom' && !appointmentForm.customCondition) ||
@@ -5177,7 +5263,6 @@ const handleLogout = async () => {
     );
   }
 
-  // ✅ NEW: If no available time slots, show indicator
   if (!hasAvailableSlots) {
     return (
       <div className="form-group full-width">
@@ -5189,7 +5274,6 @@ const handleLogout = async () => {
     );
   }
 
-  // Show time slots with emergency buffer labels
   return (
     <div className="form-group full-width">
       <label>Available Time Slots *</label>
@@ -5206,6 +5290,7 @@ const handleLogout = async () => {
                 ${isBlocked ? "blocked" : ""} 
                 ${!slot.available ? "booked" : ""} 
                 ${slot.emergency ? "emergency-buffer" : ""}
+                ${slot.urgent ? "urgent-buffer" : ""} 
                 ${appointmentForm.time === slot.time ? "selected" : ""}`}
               onClick={() =>
                 slot.available &&
@@ -5219,8 +5304,13 @@ const handleLogout = async () => {
             >
               {slot.time}
               
+              {/* ✅ NEW: Show buffer type labels */}
               {slot.emergency && slot.available && !isBlocked && (
-                <span className="emergency-buffer-label">Emergency Buffer</span>
+                <span className="emergency-buffer-label">🚨 Emergency Buffer</span>
+              )}
+              
+              {slot.urgent && slot.available && !isBlocked && (
+                <span className="urgent-buffer-label">⚠️ Urgent Buffer</span>
               )}
               
               {isBlocked && (
