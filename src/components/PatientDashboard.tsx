@@ -20,7 +20,8 @@ import {
   LogOut,
   CloudSun,
   Moon,
-  Sun
+  Sun,
+  Info
 } from 'lucide-react';
 // Firebase imports
 import {
@@ -70,6 +71,7 @@ interface Appointment {
   bookedBy: 'patient' | 'staff';
   staffUserId?: string;
   patientUserId?: string;
+  confirmationNote?: string; 
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -180,7 +182,8 @@ const [formData, setFormData] = useState({
   phone: '',
   doctor: '',
   photo: '',
-  gender: ''
+  gender: '',
+  confirmationNote: '' // ✅ NEW: Add this field
 });
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -202,6 +205,17 @@ const getApiUrl = (endpoint: string) => {
   }
 };
 
+
+// ✅ Add this helper function at component level (before return statement)
+const convertTo24Hour = (timeStr: string): number => {
+  const [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  
+  return hours * 60 + minutes;
+};
 
   // Add notification function
   const addNotification = (
@@ -1053,7 +1067,8 @@ const handleSubmit = async () => {
         phone: '',
         doctor: '',
         photo: '',
-        gender: ''
+        gender: '',
+        confirmationNote: ''
       });
       return;
     } catch (error) {
@@ -1124,6 +1139,7 @@ const handleSubmit = async () => {
       userId: currentUser.uid,
       bookedBy: 'patient' as const,
       patientUserId: currentUser.uid,
+      confirmationNote: formData.confirmationNote || '',
       updatedAt: serverTimestamp()
     };
 
@@ -1150,7 +1166,7 @@ const handleSubmit = async () => {
 
       const appointmentRef = doc(db, "appointments", editingAppointment.id);
       await updateDoc(appointmentRef, appointmentData);
-      addNotification("success", "Appointment rescheduled successfully!");
+      addNotification("success", "Appointment updated successfully!");
       setEditingAppointment(null);
     } else {
       const queueNumber = await getNextQueueNumber(formData.date);
@@ -1179,7 +1195,8 @@ const handleSubmit = async () => {
       phone: '',
       doctor: '',
       photo: '',
-      gender: ''
+      gender: '',
+      confirmationNote: ''
     });
   } catch (error) {
     console.error('Error saving appointment:', error);
@@ -1326,7 +1343,8 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       phone: appointment.phone,
       doctor: appointment.doctorId,
       photo: appointment.photo || '',
-      gender: appointment.gender || ''
+      gender: appointment.gender || '',
+      confirmationNote: appointment.confirmationNote || ''
     });
     setShowBookingForm(true);
   };
@@ -1674,7 +1692,7 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
 
 {/* Actions */}
-    <div className="appointment-actions mobile-center-actions">
+    <div className="patient-appointment-actions mobile-center-actions">
       <button
         className="action-btn view-btn"
         onClick={() => {
@@ -1804,47 +1822,46 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       </div>
     </div>
 
-{/* Actions */}
-    <div className="appointment-actions mobile-center-actions">
-      <button
-        className="action-btn view-btn"
-        onClick={() => {
-          setSelectedAppointment(appointment);
-          setShowDetailsModal(true);
-        }}
-        aria-label={`View details for ${appointment.name}`}
-        title={`View details for ${appointment.name}`}
-      >
-        <Eye size={16} />
-      </button>
-      <button
-        className="action-btn edit-btn"
-        onClick={() => handleReschedule(appointment)}
-        aria-label={`Reschedule appointment for ${appointment.name}`}
-        title={`Reschedule appointment for ${appointment.name}`}
-      >
-        <Edit size={16} />
-      </button>
-      <button
-        className="action-btn cancel-btn"
-        onClick={() => {
-          setSelectedAppointment(appointment);
-          setShowCancelModal(true);
-        }}
-        aria-label={`Cancel appointment for ${appointment.name}`}
-        title={`Cancel appointment for ${appointment.name}`}
-      >
-        <Trash2 size={16} />
-      </button>
-    </div>
-  </div>
-))
+    {/* Actions */}
+        <div className="patient-appointment-actions mobile-center-actions">
+          <button
+            className="action-btn view-btn"
+            onClick={() => {
+              setSelectedAppointment(appointment);
+              setShowDetailsModal(true);
+            }}
+            aria-label={`View details for ${appointment.name}`}
+            title={`View details for ${appointment.name}`}
+          >
+            <Eye size={16} />
+              </button>
+              <button
+                className="action-btn edit-btn"
+                onClick={() => handleReschedule(appointment)}
+                aria-label={`Reschedule appointment for ${appointment.name}`}
+                title={`Reschedule appointment for ${appointment.name}`}
+              >
+                <Edit size={16} />
+              </button>
+              <button
+                className="action-btn cancel-btn"
+                onClick={() => {
+                  setSelectedAppointment(appointment);
+                  setShowCancelModal(true);
+                }}
+                aria-label={`Cancel appointment for ${appointment.name}`}
+                title={`Cancel appointment for ${appointment.name}`}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))
         )}
       </div>
     </section>
   </div>
-
- {/* Right Column - Current Queue */}
+{/* Right Column - Current Queue */}
 <section className="queue-section">
   <div className="section-header">
     <div className="section-title">
@@ -1855,120 +1872,146 @@ const handleCancelAppointment = async (id: string, reason: string) => {
       Real-time queue status - All appointments for today
     </div>
   </div>
+
   {/* Now Serving */}
-<div className="queue-summary">
-  <span className="serving-label">Now Serving</span>
-  <span className="serving-number">
-    #{(() => {
-      const currentPatient = queue.find(q => q.status === 'confirmed');
-      return currentPatient?.queueNumber || 'None';
-    })()}
-  </span>
-</div>
-{/* Next Patient */}
-{(() => {
-  const nextPatient = queue.find(q => q.status === 'pending');
-  return nextPatient ? (
-    <div className="queue-summary next-patient">
-      <span className="serving-label">Up Next</span>
-      <span className="serving-number">#{nextPatient.queueNumber}</span>
-    </div>
-  ) : null;
-})()}
-{/* Queue List */}
-<div className="queue-list">
-  <div className="queue-header">
-    <span>Queue showing all appointments</span>
+  <div className="queue-summary">
+    <span className="serving-label">Now Serving</span>
+    <span className="serving-number">
+      #{(() => {
+        // ✅ Sort queue by time first
+        const sortedQueue = [...queue].sort((a, b) => {
+          const timeA = convertTo24Hour(a.time);
+          const timeB = convertTo24Hour(b.time);
+          return timeA - timeB;
+        });
+
+        // Find first confirmed patient in sorted order
+        const currentIndex = sortedQueue.findIndex(q => q.status === 'confirmed');
+        return currentIndex !== -1 ? currentIndex + 1 : 'None';
+      })()}
+    </span>
   </div>
-  {queue.length > 0 ? (
-    queue.map((patient) => {
-      // ✅ Calculate wait time for each patient
-      const calculateWaitTime = () => {
-        if (patient.status === 'confirmed') {
-          return 'Being Served';
-        }
 
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
+  {/* Next Patient */}
+  {(() => {
+    // ✅ Sort queue by time first
+    const sortedQueue = [...queue].sort((a, b) => {
+      const timeA = convertTo24Hour(a.time);
+      const timeB = convertTo24Hour(b.time);
+      return timeA - timeB;
+    });
 
-        // Parse appointment time
-        const [time, period] = patient.time.split(' ');
-        let [hours, minutes] = time.split(':').map(Number);
+    // Find first pending patient after confirmed
+    const confirmedIndex = sortedQueue.findIndex(q => q.status === 'confirmed');
+    const nextPatient = sortedQueue.find((q, idx) => 
+      q.status === 'pending' && (confirmedIndex === -1 || idx > confirmedIndex)
+    );
+    const nextIndex = sortedQueue.findIndex(q => q.id === nextPatient?.id);
 
-        if (period === 'PM' && hours !== 12) hours += 12;
-        if (period === 'AM' && hours === 12) hours = 0;
+    return nextPatient ? (
+      <div className="queue-summary next-patient">
+        <span className="serving-label">Up Next</span>
+        <span className="serving-number">#{nextIndex + 1}</span>
+      </div>
+    ) : null;
+  })()}
 
-        const appointmentTimeInMinutes = hours * 60 + minutes;
-        const waitMinutes = Math.max(0, appointmentTimeInMinutes - currentTime);
+  {/* Queue List */}
+  <div className="queue-list">
+    <div className="queue-header">
+      <span>Queue showing all appointments</span>
+    </div>
+    {queue.length > 0 ? (
+      (() => {
+        // ✅ Sort queue by appointment time ONLY (chronological order)
+        const sortedQueue = [...queue].sort((a, b) => {
+          const timeA = convertTo24Hour(a.time);
+          const timeB = convertTo24Hour(b.time);
+          return timeA - timeB;
+        });
 
-        if (waitMinutes >= 60) {
-          const hrs = Math.floor(waitMinutes / 60);
-          const mins = waitMinutes % 60;
-          return `Wait: ${hrs}h ${mins}min`;
-        }
-        return `Wait: ${waitMinutes}min`;
-      };
+        return sortedQueue.map((patient, index) => {
+          // ✅ Queue number is now based on position in sorted array
+          const queueNumber = index + 1;
 
-      return (
-        <div
-          key={patient.id}
-          className={`queue-card 
-            status-${(patient.status || '').toLowerCase()} 
-            priority-${(patient.priority || '').toLowerCase()} 
-            ${patient.priority === 'emergency' ? 'emergency-blinking' : ''}`}
-        >
-          {/* Top Row */}
-          <div className="queue-top">
-            <span className="queue-number">#{patient.queueNumber}</span>
-            <div className="queue-time">
-              <div className="appointment-time">{patient.time}</div>
-              <div className="appointment-date">
-                {(() => {
-                  const [year, month, day] = patient.date.split('-');
-                  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-                  return dateObj.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  });
-                })()}
+          // ✅ Calculate wait time for each patient
+          const calculateWaitTime = () => {
+            if (patient.status === 'confirmed') {
+              return 'Being Served';
+            }
+
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            const appointmentTimeInMinutes = convertTo24Hour(patient.time);
+            const waitMinutes = Math.max(0, appointmentTimeInMinutes - currentTime);
+
+            if (waitMinutes >= 60) {
+              const hrs = Math.floor(waitMinutes / 60);
+              const mins = waitMinutes % 60;
+              return `Wait: ${hrs}h ${mins}min`;
+            }
+            return `Wait: ${waitMinutes}min`;
+          };
+
+          return (
+            <div
+              key={patient.id}
+              className={`queue-card 
+                status-${(patient.status || '').toLowerCase()} 
+                priority-${(patient.priority || '').toLowerCase()} 
+                ${patient.priority === 'emergency' ? 'emergency-blinking' : ''}`}
+            >
+              {/* Top Row */}
+              <div className="queue-top">
+                <span className="queue-number">#{queueNumber}</span>
+                <div className="queue-time">
+                  <div className="appointment-time">{patient.time}</div>
+                  <div className="appointment-date">
+                    {(() => {
+                      const [year, month, day] = patient.date.split('-');
+                      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+                      return dateObj.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      });
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle */}
+              <div className="queue-body">
+                <div className="booking-status-row">
+                  {/* Status Pill */}
+                  <span className={`status-pill ${patient.status?.toLowerCase() || ''}`}>
+                    {patient.status}
+                  </span>
+
+                  {/* Priority Pill */}
+                  <span className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}>
+                    {patient.priority === 'emergency' && '🚨 Emergency'}
+                    {patient.priority === 'urgent' && '⚠️ Urgent'}
+                    {patient.priority === 'normal' && 'Normal'}
+                  </span>
+                </div>
+
+                {/* Wait Time Display */}
+                <div className="queue-wait-time">
+                  <Clock size={14} aria-hidden="true" />
+                  <span>{calculateWaitTime()}</span>
+                </div>
               </div>
             </div>
-          </div>
-          {/* Middle */}
-          <div className="queue-body">
-            <div className="booking-status-row">
-              {/* Status Pill */}
-              <span
-                className={`status-pill ${patient.status?.toLowerCase() || ''}`}
-              >
-                {patient.status}
-              </span>
-              {/* Priority Pill */}
-              <span
-                className={`priority-pill ${patient.priority?.toLowerCase() || ''}`}
-              >
-                {patient.priority === 'emergency' && '🚨 Emergency'}
-                {patient.priority === 'urgent' && '⚠️ Urgent'}
-                {patient.priority === 'normal' && 'Normal'}
-              </span>
-            </div>
-
-            {/* ✅ NEW: Wait Time Display */}
-            <div className="queue-wait-time">
-              <Clock size={14} aria-hidden="true" />
-              <span>{calculateWaitTime()}</span>
-            </div>
-          </div>
-        </div>
-      );
-    })
-  ) : (
-    <div className="empty-queue">
-      <p>No patients in queue for today</p>
-    </div>
-  )}
-</div>
+          );
+        });
+      })()
+    ) : (
+      <div className="empty-queue">
+        <p>No patients in queue for today</p>
+      </div>
+    )}
+  </div>
 </section>
 </div>
 {/* ✅ Close main-content div here */}
@@ -2569,7 +2612,6 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   </div>
 )}
-
 {/* Booking Form Modal */}
 {showBookingForm && (
   <div className="modal-overlay" onClick={() => setShowBookingForm(false)}>
@@ -2890,7 +2932,8 @@ const handleCancelAppointment = async (id: string, reason: string) => {
           phone: '',
           doctor: '',
           photo: '',
-          gender: ''
+          gender: '',
+          confirmationNote: ''
         });
       } catch (error) {
         console.error('Error adding to waiting list:', error);
@@ -2965,6 +3008,32 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   );
 })()}
+
+        {/* ✅ NEW: Confirmation Note Input - Only shows when status is confirmed */}
+        {editingAppointment && editingAppointment.status === 'confirmed' && (
+          <div className="form-group full-width">
+            <label htmlFor="confirmationNote" className="confirmation-note-label">
+              <Info size={16} />
+              Confirmation Note
+            </label>
+            <div className="confirmation-note-helper">
+              Please confirm if you can attend this appointment
+            </div>
+            <textarea
+              id="confirmationNote"
+              className="confirmation-note-input"
+              placeholder="Example: Yes, I can attend | Sorry, I need to reschedule | I'll be 10 minutes late..."
+              value={formData.confirmationNote || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, confirmationNote: e.target.value }))}
+              rows={3}
+              maxLength={500}
+            />
+            <div className="character-count">
+              {(formData.confirmationNote || '').length}/500 characters
+            </div>
+          </div>
+        )}
+
         {!formData.date && !formData.doctor && (
           <div className="form-hint-box">
             Please select a doctor and date to view available time slots.
@@ -3080,168 +3149,174 @@ const handleCancelAppointment = async (id: string, reason: string) => {
     </div>
   </div>
 )}
-
 {/* Appointment Details Modal */}
-{showDetailsModal && (selectedAppointment || selectedProfile) && (
-  <div
-    className="modal-overlay"
-    onClick={() => {
-      setShowDetailsModal(false);
-      setSelectedProfile(null);
-    }}
-  >
-    <div
-      className="modal-content details-modal"
-      onClick={e => e.stopPropagation()}
-    >
-      <div className="modal-header">
-        <h3>Appointment Details</h3>
-        <button
-          className="modal-close"
-          onClick={() => {
-            setShowDetailsModal(false);
-            setSelectedProfile(null);
-          }}
-          aria-label="Close appointment details"
-          title="Close appointment details"
-        >
-          <XCircle size={20} />
-        </button>
-      </div>
-<div className="details-content">
-  {/* Header with Photo */}
-  <div className="detail-header">
-    <div className="detail-photo">
-      {(selectedAppointment || selectedProfile)?.photo ? (
-        <img
-          src={(selectedAppointment || selectedProfile)!.photo}
-          alt={(selectedAppointment || selectedProfile)!.name}
-        />
-      ) : (
-        <div className="detail-photo-placeholder">
-          {(selectedAppointment || selectedProfile)!.name.charAt(0)}
+              {showDetailsModal && (selectedAppointment || selectedProfile) && (
+                <div
+                  className="modal-overlay"
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedProfile(null);
+                  }}
+                >
+                  <div
+                    className="modal-content details-modal"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <div className="modal-header">
+                      <h3>Appointment Details</h3>
+                      <button
+                        className="modal-close"
+                        onClick={() => {
+                          setShowDetailsModal(false);
+                          setSelectedProfile(null);
+                        }}
+                        aria-label="Close appointment details"
+                        title="Close appointment details"
+                      >
+                        <XCircle size={20} />
+                      </button>
+                    </div>
+              <div className="details-content">
+                {/* Header with Photo */}
+                <div className="detail-header">
+                  <div className="detail-photo">
+                    {(selectedAppointment || selectedProfile)?.photo ? (
+                      <img
+                        src={(selectedAppointment || selectedProfile)!.photo}
+                        alt={(selectedAppointment || selectedProfile)!.name}
+                      />
+                    ) : (
+                      <div className="detail-photo-placeholder">
+                        {(selectedAppointment || selectedProfile)!.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <h2 className="detail-title">Appointment Details</h2>
+                </div>
+
+                {/* Queue Number */}
+                <div className="detail-queue-container">
+                  <span className="detail-queue-number">
+                    Queue #{(selectedAppointment || selectedProfile)!.queueNumber}
+                  </span>
+                </div>
+
+                  {/* Details Grid */}
+                <div className="detail-grid">
+                  <span className="detail-label">Patient Name</span>
+                  <span className="detail-value">
+                    {(selectedAppointment || selectedProfile)!.name}
+                  </span>
+
+                  <span className="detail-label">Age</span>
+                  <span className="detail-value">
+                    {(selectedAppointment || selectedProfile)!.age || "Not specified"}
+                  </span>
+
+                  <span className="detail-label">Appointment Type</span>
+                  <span className="detail-value">
+                    {(selectedAppointment || selectedProfile)!.type}
+                  </span>
+
+                  <span className="detail-label">Doctor</span>
+                  <span className="detail-value">
+                    {(selectedAppointment || selectedProfile)!.doctor}
+                  </span>
+
+                  <span className="detail-label">Date & Time</span>
+                  <span className="detail-value">
+                    {(() => {
+                      const apt = selectedAppointment || selectedProfile;
+                      if (!apt) return "";
+                      const [year, month, day] = apt.date.split("-");
+                      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+                      const formattedDate = dateObj.toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      });
+                      return `${formattedDate} at ${apt.time}`;
+                    })()}
+                  </span>
+
+                  <span className="detail-label">Email</span>
+                  <span className="detail-value">
+                    {(selectedAppointment || selectedProfile)!.email}
+                  </span>
+
+                  <span className="detail-label">Gender</span>
+                  <span className="detail-value">
+                    {(selectedAppointment || selectedProfile)!.gender || "Not specified"}
+                  </span>
+
+                  <span className="detail-label">Priority</span>
+                  <span className="detail-value">
+                    <span
+                      className={`detail-priority priority-${
+                        (selectedAppointment || selectedProfile)!.priority
+                      }`}
+                    >
+                      {(selectedAppointment || selectedProfile)!.priority}
+                    </span>
+                  </span>
+
+                  <span className="detail-label">Status</span>
+                  <span className="detail-value">
+                    <span
+                      className={`detail-status status-${
+                        (selectedAppointment || selectedProfile)!.status
+                      }`}
+                    >
+                      {(selectedAppointment || selectedProfile)!.status}
+                    </span>
+                  </span>
+
+                  {/* ✅ NEW: Show Confirmation Note if exists */}
+                  {(selectedAppointment || selectedProfile)?.confirmationNote && (
+                    <>
+                      <span className="detail-label">Patient Confirmation</span>
+                      <span className="detail-value confirmation-note-display">
+                        {(selectedAppointment || selectedProfile)!.confirmationNote}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                  {/* Actions */}
+                  <div className="detail-actions">
+                    <button
+                      className="detail-action-btn primary"
+                      onClick={() => {
+                        const appointment = selectedAppointment || selectedProfile;
+                        if (appointment) {
+                          setShowDetailsModal(false);
+                          setSelectedProfile(null);
+                          handleReschedule(appointment);
+                        }
+                      }}
+                    >
+                    <Edit size={16} /> Reschedule
+                  </button>
+                  <button
+                    className="detail-action-btn danger"
+                    onClick={() => {
+                      const appointment = selectedAppointment || selectedProfile;
+                      if (appointment) {
+                        setShowDetailsModal(false);
+                        setSelectedProfile(null);
+                        setSelectedAppointment(appointment);
+                        setShowCancelModal(true);
+                      }
+                    }}
+                  >
+                <Trash2 size={16} /> Cancel Appointment
+              </button>
+            </div>
+          </div>
+          </div>
         </div>
       )}
     </div>
-    <h2 className="detail-title">Appointment Details</h2>
-  </div>
-
-  {/* Queue Number */}
-  <div className="detail-queue-container">
-    <span className="detail-queue-number">
-      Queue #{(selectedAppointment || selectedProfile)!.queueNumber}
-    </span>
-  </div>
-
-  {/* Details Grid */}
- <div className="detail-grid">
-  <span className="detail-label">Patient Name</span>
-  <span className="detail-value">
-    {(selectedAppointment || selectedProfile)!.name}
-  </span>
-
-  <span className="detail-label">Age</span>
-  <span className="detail-value">
-    {(selectedAppointment || selectedProfile)!.age || "Not specified"}
-  </span>
-
-  <span className="detail-label">Appointment Type</span>
-  <span className="detail-value">
-    {(selectedAppointment || selectedProfile)!.type}
-  </span>
-
-  <span className="detail-label">Doctor</span>
-  <span className="detail-value">
-    {(selectedAppointment || selectedProfile)!.doctor}
-  </span>
-
-  <span className="detail-label">Date & Time</span>
-  <span className="detail-value">
-    {(() => {
-      const apt = selectedAppointment || selectedProfile;
-      if (!apt) return "";
-      const [year, month, day] = apt.date.split("-");
-      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-      const formattedDate = dateObj.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      return `${formattedDate} at ${apt.time}`;
-    })()}
-  </span>
-
-  <span className="detail-label">Email</span>
-  <span className="detail-value">
-    {(selectedAppointment || selectedProfile)!.email}
-  </span>
-
-  <span className="detail-label">Gender</span>
-  <span className="detail-value">
-    {(selectedAppointment || selectedProfile)!.gender || "Not specified"}
-  </span>
-
-  <span className="detail-label">Priority</span>
-  <span className="detail-value">
-    <span
-      className={`detail-priority priority-${
-        (selectedAppointment || selectedProfile)!.priority
-      }`}
-    >
-      {(selectedAppointment || selectedProfile)!.priority}
-    </span>
-  </span>
-
-  <span className="detail-label">Status</span>
-  <span className="detail-value">
-    <span
-      className={`detail-status status-${
-        (selectedAppointment || selectedProfile)!.status
-      }`}
-    >
-      {(selectedAppointment || selectedProfile)!.status}
-    </span>
-  </span>
-</div>
-
-  {/* Actions */}
-  <div className="detail-actions">
-    <button
-      className="detail-action-btn primary"
-      onClick={() => {
-        const appointment = selectedAppointment || selectedProfile;
-        if (appointment) {
-          setShowDetailsModal(false);
-          setSelectedProfile(null);
-          handleReschedule(appointment);
-        }
-      }}
-    >
-      <Edit size={16} /> Reschedule
-    </button>
-    <button
-      className="detail-action-btn danger"
-      onClick={() => {
-        const appointment = selectedAppointment || selectedProfile;
-        if (appointment) {
-          setShowDetailsModal(false);
-          setSelectedProfile(null);
-          setSelectedAppointment(appointment);
-          setShowCancelModal(true);
-        }
-      }}
-    >
-      <Trash2 size={16} /> Cancel Appointment
-    </button>
-  </div>
-</div>
-
-    </div>
-  </div>
-)}
-
-    </div>
   );
 };
-
 export default PatientDashboard;

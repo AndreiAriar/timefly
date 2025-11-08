@@ -1033,7 +1033,6 @@ body {
   border: 1px solid var(--border-light);
   background: transparent; /* made transparent */
   color: black !important; /* force solid black text */
-  margin-top: -15px !important;
 }
 
 .stat-card:hover {
@@ -1434,7 +1433,6 @@ select {
   align-items: center; /* ✅ ensures vertical alignment with button */
   flex-wrap: wrap;
 }
-
 /*  Search bar inside filter row */
 .filters-row .tab-search-container {
   flex: 1;
@@ -1443,14 +1441,14 @@ select {
   max-width: 400px;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* ✅ centers icon & input */
+  justify-content: flex-start;
   gap: 8px;
   padding: 0.5rem 0.75rem;
   background: var(--light-gray);
   border-radius: 8px;
   border: 1px solid var(--border-light);
   transition: all 0.3s ease;
-  margin-top: 24px; /* ✅ small tweak for perfect alignment */
+  margin-top: 24px;
 }
 
 .filters-row .tab-search-container:focus-within {
@@ -1461,11 +1459,26 @@ select {
 
 .filters-row .tab-search-input {
   flex: 1;
-  border: none;
-  background: transparent;
+  border: none !important; /* ✅ Force removes ALL borders */
+  background: transparent !important; /* ✅ Force transparent background */
   font-size: 0.9rem;
   color: var(--text-dark);
-  outline: none;
+  outline: none !important; /* ✅ Force removes focus outline */
+  padding: 0 !important; /* ✅ Force removes padding */
+  margin: 0 !important; /* ✅ Force removes margin */
+  box-shadow: none !important; /* ✅ Force removes shadow */
+  -webkit-appearance: none; /* ✅ Removes iOS/Safari styling */
+  -moz-appearance: none; /* ✅ Removes Firefox styling */
+  appearance: none; /* ✅ Removes browser default styling */
+  width: 100%; /* ✅ Takes full width of container */
+  height: 100%; /* ✅ Takes full height of container */
+}
+
+/* ✅ Extra safety: removes focus ring specifically */
+.filters-row .tab-search-input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .filters-row .tab-search-input::placeholder {
@@ -5556,4 +5569,33 @@ body {
   margin-top: 4px;
   color: #92400e;
   font-weight: 600;
+}
+
+/* ===================================
+   CONFIRMATION NOTE DISPLAY (STAFF)
+   =================================== */
+
+.confirmation-note-display.staff-view {
+  background: linear-gradient(135deg, #fff9e6 0%, #ffe6b3 100%);
+  border-left: 4px solid #ff9800;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  margin-top: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.confirmation-note-display.staff-view .confirmation-icon {
+  color: #ff9800;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.confirmation-note-display.staff-view span {
+  flex: 1;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }

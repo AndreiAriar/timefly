@@ -3340,3 +3340,37 @@
     overflow: hidden !important; /* ✅ CRITICAL */
   }
 }
+
+/* ===================================
+   CONFIRMATION NOTE DISPLAY (DOCTOR)
+   =================================== */
+
+.confirmation-note-display.doctor-view {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-left: 4px solid #4caf50;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  margin-top: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.confirmation-note-display.doctor-view .confirmation-icon {
+  color: #4caf50;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.confirmation-note-display.doctor-view span {
+  flex: 1;
+  color: #1b5e20;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}

@@ -598,15 +598,14 @@ body {
   font-size: 1.25rem;
   font-weight: 700;
 }
-
 /* Fix for modal close (X) button - Removed box styling */
 .modal-close {
   color: var(--text-secondary) !important;
-  background: transparent !important; /* Changed from var(--bg-primary) to transparent */
-  border: none !important; /* Removed border */
+  background: transparent !important;
+  border: none !important;
   width: 2rem !important;
   height: 2rem !important;
-  border-radius: none important;
+  border-radius: none !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -617,31 +616,38 @@ body {
 }
 
 .modal-close:hover {
-  background: none !important; /* Subtle hover effect */
-  color: var(--text-primary) !important;
-}
-
-
-/* Mobile: Position X button in top right corner */
-@media (max-width: 768px) {
-  .modal-header {
-    position: relative;
-    padding-right: 3.5rem; /* Space for X button */
-  }
-  
-  .modal-close {
-    position: absolute !important;
-    top: 1rem !important;
-    right: 1rem !important;
-    z-index: 10 !important;
-  }
-}
-
-.modal-close:hover {
   background: none !important;
   border-color: none !important;
   color: var(--error) !important;
   transform: rotate(90deg) !important;
+}
+
+/* Mobile: Position X button aligned with title */
+@media (max-width: 768px) {
+  .modal-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+  }
+  
+  .modal-header h2 {
+    margin: 0 !important;
+    line-height: 2rem !important;
+  }
+  
+  .modal-close {
+    position: relative !important;
+    flex-shrink: 0 !important;
+    
+    /* ADJUST THESE TWO LINES TO ALIGN THE BUTTON: */
+    margin-top: -6px !important;    /* Change this: negative moves UP, positive moves DOWN */
+    margin-right: 0px !important;  /* Change this: negative moves RIGHT, positive moves LEFT */
+  }
+  
+  .modal-close:hover {
+    transform: rotate(90deg) !important;
+  }
 }
 
 .profile-top {
@@ -1807,7 +1813,7 @@ select:active {
    =============================== */
 
 /* Container for action buttons */
-.appointment-actions {
+.patient-appointment-actions {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -3692,9 +3698,9 @@ select:active {
 }
 
 .status-completed { 
-  background: rgba(107, 114, 128, 0.1); 
-  color: #374151; 
-  border: 1px solid rgba(107, 114, 128, 0.2);
+  background: rgba(134, 239, 172, 0.1); 
+  color: #15803d; 
+  border: 1px solid rgba(134, 239, 172, 0.3);
 }
 
 .status-cancelled { 
@@ -3896,9 +3902,9 @@ select:active {
 }
 
 [data-theme="dark"] .status-completed { 
-  background: rgba(107, 114, 128, 0.15); 
-  color: #9ca3af; 
-  border-color: rgba(107, 114, 128, 0.3);
+  background: rgba(16, 185, 129, 0.15); 
+  color: #34d399; 
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 [data-theme="dark"] .status-cancelled { 
@@ -4486,6 +4492,9 @@ select:active {
 @media (max-width: 768px) {
   .calendar-header {
     padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
   
   .calendar-title-section h2 {
@@ -4499,6 +4508,10 @@ select:active {
   .calendar-header .modal-close {
     width: 32px;
     height: 32px;
+    
+    /* ADJUST THESE TWO LINES TO ALIGN THE BUTTON: */
+    margin-top: 8px !important;     /* Change this: positive moves DOWN, negative moves UP */
+    margin-right: 0px !important;   /* Change this if needed: negative moves RIGHT, positive moves LEFT */
   }
 }
 
@@ -6586,7 +6599,7 @@ svg.clock,
   }
   
   /*  CRITICAL FIX: CENTER ACTION BUTTONS  */
-  .appointments-list .appointment-card .appointment-actions {
+  .appointments-list .appointment-card .patient-appointment-actions {
     width: 100% !important;
     display: flex !important;
     flex-direction: row !important;
@@ -6707,10 +6720,10 @@ svg.clock,
   }
   
   /* ⚡ CRITICAL FIX: CENTER ACTION BUTTONS ⚡ */
-  .appointment-actions,
-  .appointments-list .appointment-card .appointment-actions,
-  .my-appointments .appointment-card .appointment-actions,
-  .today-appointments .appointment-card .appointment-actions {
+  .patient-appointment-actions,
+  .appointments-list .appointment-card .patient-appointment-actions,
+  .my-appointments .appointment-card .patient-appointment-actions,
+  .today-appointments .appointment-card .patient-appointment-actions {
     width: 100% !important;
     max-width: 200px !important;
     display: flex !important;
@@ -6723,11 +6736,11 @@ svg.clock,
   }
   
   /* Make buttons uniform size */
-  .appointment-actions .action-btn,
-  .appointment-actions .cancel-btn,
-  .appointment-actions .view-btn,
-  .appointment-actions .edit-btn,
-  .appointment-actions .delete-btn,
+  .patient-appointment-actions .action-btn,
+  .patient-appointment-actions .cancel-btn,
+  .patient-appointment-actions .view-btn,
+  .patient-appointment-actions  .edit-btn,
+  .patient-appointment-actions .delete-btn,
   .appointments-list .action-btn,
   .appointments-list .cancel-btn {
     width: 48px !important;
@@ -7226,4 +7239,87 @@ div.modal-overlay.cancel-appointment-modal > div.modal-content.cancel-modal::-we
   margin-top: 4px ;
   color: #92400e;
   font-weight: 600;
+}
+
+/* ===================================
+   CONFIRMATION NOTE STYLING
+   =================================== */
+
+.confirmation-note-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.confirmation-note-helper {
+  font-size: 0.875rem;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.confirmation-note-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.3s ease;
+}
+
+.confirmation-note-input:focus {
+  outline: none;
+  border-color: var(--dark-blue);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.1);
+}
+
+.confirmation-note-input::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+.character-count {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* Display confirmation note in details modal */
+.confirmation-note-display {
+  background: #e3f2fd;
+  border-left: 4px solid var(--dark-blue);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.confirmation-note-display.staff-view,
+.confirmation-note-display.doctor-view {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  background: #fff3cd;
+  border-left-color: #ff9800;
+}
+
+.confirmation-icon {
+  flex-shrink: 0;
+  color: #ff9800;
+  margin-top: 2px;
+}
+
+/* Full width for confirmation note in detail grid */
+.detail-item.full-width {
+  grid-column: 1 / -1;
 }

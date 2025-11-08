@@ -18,7 +18,8 @@ import {
   History,
   Sun,
   CloudSun,
-  Moon
+  Moon,
+  Info
 } from 'lucide-react';
 
 import {
@@ -61,6 +62,7 @@ interface Appointment {
   bookedBy: 'patient' | 'staff';
   staffUserId?: string;
   patientUserId?: string;
+  confirmationNote?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -1075,7 +1077,7 @@ const formatDate = (dateString: string) => {
           </div>
         )}
 
-        {/* Appointment Details Modal */}
+      {/* Appointment Details Modal */}
         {showDetailsModal && selectedAppointment && (
           <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
             <div className="modal-content details-modal" onClick={e => e.stopPropagation()}>
@@ -1156,6 +1158,19 @@ const formatDate = (dateString: string) => {
                       <strong>Booked By:</strong> {selectedAppointment.bookedBy === 'patient' ? 'Patient Booking' : 'Staff Booking'}
                     </span>
                   </div>
+                  
+                  {/* ✅ NEW: Show Patient Confirmation Note if exists */}
+                  {selectedAppointment.confirmationNote && (
+                    <div className="detail-item full-width">
+                      <span className="detail-text">
+                        <strong>Patient Confirmation:</strong>
+                      </span>
+                      <div className="confirmation-note-display doctor-view">
+                        <Info size={16} className="confirmation-icon" />
+                        <span>{selectedAppointment.confirmationNote}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

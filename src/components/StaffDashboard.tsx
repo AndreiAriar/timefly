@@ -82,6 +82,7 @@ interface Appointment {
   bookedBy: 'staff',
   assignedBy: string;
   notes?: string;
+  confirmationNote?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -642,6 +643,18 @@ useEffect(() => {
     };
     fetchDoctorAvailabilitySlots();
   }, []);
+
+
+  // ✅ Add this helper function at component level (before return statement)
+const convertTo24Hour = (timeStr: string): number => {
+  const [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  
+  return hours * 60 + minutes;
+};
   
   // ✅ UPDATED: Image Upload with 5MB limit and compression
 const uploadImage = async (file: File): Promise<string> => {
@@ -3263,7 +3276,8 @@ const handleLogout = async () => {
                     <span>{formattedDate}</span>
                   </div>
                 </div>
-{/* ✅ UPDATED: Action Buttons with Confirmation */}
+                
+                {/* ✅ UPDATED: Action Buttons with Confirmation */}
                 <div className="appointment-right">
                   <div className="appointment-status">
                     <span className={appointment.priority}>
@@ -3517,19 +3531,28 @@ const handleLogout = async () => {
 
         <div className="serving-display">
           {(() => {
-            const confirmedPatient = queue.find(q => q.status === 'confirmed');
+            // ✅ Sort queue by time
+            const sortedQueue = [...queue].sort((a, b) => {
+              const timeA = convertTo24Hour(a.time);
+              const timeB = convertTo24Hour(b.time);
+              return timeA - timeB;
+            });
+
+            const confirmedPatient = sortedQueue.find(q => q.status === 'confirmed');
 
             if (confirmedPatient) {
+              const queueNumber = sortedQueue.findIndex(q => q.id === confirmedPatient.id) + 1;
+              
               return (
                 <div className="current-patient">
-                  <div className="queue-number">#{confirmedPatient.queueNumber}</div>
+                  <div className="queue-number">#{queueNumber}</div>
                   <div className="patient-info">
                     <div className="patient-name">{confirmedPatient.name}</div>
                     <div className="patient-doctor">{confirmedPatient.doctor}</div>
                     <div className="serving-status">Currently Being Served</div>
                   </div>
                 </div>
-                              );
+              );
             } else if (queue.length > 0) {
               return (
                 <div className="no-patients-in-serving">
@@ -3570,126 +3593,154 @@ const handleLogout = async () => {
       </div>
     </div>
 
-    {/* ✅ UPDATED: Queue List with Proper Ordering Display */}
+    {/* ✅ Queue List - Sorted by Time */}
     <div className="queue-list">
       {queue.length === 0 ? (
         <div className="empty-queue">
           <Clock size={48} aria-hidden="true" />
           <p>No patients in queue today</p>
         </div>
-                ) : (
-                queue.map((patient) => (
-            <div
-              key={patient.id}
-              className={`queue-item ${
-                patient.status === 'confirmed' ? 'current' : ''
-              } ${patient.status === 'pending' ? 'pending' : ''} ${
-                patient.priority === 'emergency' ? 'emergency-patient' : ''
-              } ${patient.priority === 'urgent' ? 'urgent-patient' : ''}`}
-            >
-              {/* ✅ FIXED: Show original booking number, cards sorted by time/priority */}
-              <div className="queue-position">
-                <div className="position-number">#{patient.queueNumber}</div>
-              </div>
+      ) : (
+        (() => {
+          // ✅ Sort queue by appointment time (chronological order)
+          const sortedQueue = [...queue].sort((a, b) => {
+            const timeA = convertTo24Hour(a.time);
+            const timeB = convertTo24Hour(b.time);
+            return timeA - timeB;
+          });
 
-            <div className="patient-avatar">
-              {patient.photo ? (
-                <img src={patient.photo} alt={patient.name} />
-              ) : (
-                <User size={20} aria-hidden="true" />
-              )}
-            </div>
+          return sortedQueue.map((patient, index) => {
+            // ✅ Queue number based on sorted position
+            const queueNumber = index + 1;
 
-            <div className="patient-details">
-              <div className="patient-name">{patient.name}</div>
-              <div className="patient-type">{patient.type}</div>
-              <div className="patient-doctor">{patient.doctor}</div>
-              <div className="patient-status">
-                <span className={`status-badge ${getStatusColor(patient.status)}`}>
-                  {patient.status}
-                </span>
-                {patient.status === 'confirmed' && (
-                  <span className="now-serving-badge">Now Serving</span>
-                )}
-              </div>
-            </div>
+            // ✅ Calculate estimated wait time
+            const calculateWaitTime = () => {
+              if (patient.status === 'confirmed') {
+                return 0; // Currently being served
+              }
 
-            {/* ✅ UPDATED: Show priority prominently */}
-            <div className="queue-priority">
-              <span className={`priority-badge ${getPriorityColor(patient.priority)}`}>
-                {patient.priority === 'emergency' && '🚨 '}
-                {patient.priority === 'urgent' && '⚠️ '}
-                {patient.priority.toUpperCase()}
-              </span>
-            </div>
+              // Count how many patients are ahead
+              const patientsAhead = index;
+              
+              // Assume 15 minutes per patient on average
+              return patientsAhead * 15;
+            };
 
-            <div className="queue-time">
-              <div className="appointment-time">
-                <Clock size={14} aria-hidden="true" />
-                {patient.time}
-              </div>
-              <div className="wait-time">
-                {patient.status === 'confirmed'
-                  ? '⏱️ Being Served'
-                  : (() => {
-                      const minutes = patient.estimatedWaitTime || 0;
-                      if (minutes >= 60) {
-                        const hours = Math.floor(minutes / 60);
-                        const mins = minutes % 60;
-                        return `⏳ Wait: ${hours}h ${mins}min`;
-                      }
-                      return `⏳ Wait: ${minutes}min`;
-                    })()}
-              </div>
-            </div>
+            const estimatedWaitTime = calculateWaitTime();
 
-            <div className="queue-actions">
-              {patient.status === 'confirmed' ? (
-                <button
-                  className="action-btn complete"
-                  onClick={() => handleAppointmentStatusChange(patient.id, 'completed')}
-                  aria-label={`Mark ${patient.name} as completed`}
-                  title={`Mark ${patient.name} as completed`}
-                >
-                  <CheckCircle2 size={16} aria-hidden="true" />
-                  Complete
-                </button>
-              ) : patient.status === 'pending' ? (
-                <button
-                  className="action-btn confirm"
-                  onClick={() => handleAppointmentStatusChange(patient.id, 'confirmed')}
-                  aria-label={`Confirm ${patient.name}`}
-                  title={`Confirm ${patient.name}`}
-                >
-                  <CheckCircle2 size={16} aria-hidden="true" />
-                  Confirm
-                </button>
-              ) : null}
-
-              <button
-                className="action-btn notify"
-                onClick={async () => {
-                  try {
-                    await sendNotificationToPatient(
-                      patient.email,
-                      patient.phone,
-                      'appointment_confirmed',
-                      patient
-                    );
-                    addNotification('success', `Notification sent to ${patient.name}`);
-                  } catch (error) {
-                    console.error('Error sending notification:', error);
-                    addNotification('error', 'Failed to send notification');
-                  }
-                }}
-                aria-label={`Send confirmation notification to ${patient.name}`}
-                title={`Send confirmation notification to ${patient.name}`}
+            return (
+              <div
+                key={patient.id}
+                className={`queue-item ${
+                  patient.status === 'confirmed' ? 'current' : ''
+                } ${patient.status === 'pending' ? 'pending' : ''} ${
+                  patient.priority === 'emergency' ? 'emergency-patient' : ''
+                } ${patient.priority === 'urgent' ? 'urgent-patient' : ''}`}
               >
-                <MessageSquare size={16} aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        ))
+                {/* ✅ Queue number based on chronological order */}
+                <div className="queue-position">
+                  <div className="position-number">#{queueNumber}</div>
+                </div>
+
+                <div className="patient-avatar">
+                  {patient.photo ? (
+                    <img src={patient.photo} alt={patient.name} />
+                  ) : (
+                    <User size={20} aria-hidden="true" />
+                  )}
+                </div>
+
+                <div className="patient-details">
+                  <div className="patient-name">{patient.name}</div>
+                  <div className="patient-type">{patient.type}</div>
+                  <div className="patient-doctor">{patient.doctor}</div>
+                  <div className="patient-status">
+                    <span className={`status-badge ${getStatusColor(patient.status)}`}>
+                      {patient.status}
+                    </span>
+                    {patient.status === 'confirmed' && (
+                      <span className="now-serving-badge">Now Serving</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Priority Badge */}
+                <div className="queue-priority">
+                  <span className={`priority-badge ${getPriorityColor(patient.priority)}`}>
+                    {patient.priority === 'emergency' && '🚨 '}
+                    {patient.priority === 'urgent' && '⚠️ '}
+                    {patient.priority.toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="queue-time">
+                  <div className="appointment-time">
+                    <Clock size={14} aria-hidden="true" />
+                    {patient.time}
+                  </div>
+                  <div className="wait-time">
+                    {patient.status === 'confirmed'
+                      ? '⏱️ Being Served'
+                      : (() => {
+                          if (estimatedWaitTime >= 60) {
+                            const hours = Math.floor(estimatedWaitTime / 60);
+                            const mins = estimatedWaitTime % 60;
+                            return `⏳ Wait: ${hours}h ${mins}min`;
+                          }
+                          return `⏳ Wait: ${estimatedWaitTime}min`;
+                        })()}
+                  </div>
+                </div>
+
+                <div className="queue-actions">
+                  {patient.status === 'confirmed' ? (
+                    <button
+                      className="action-btn complete"
+                      onClick={() => handleAppointmentStatusChange(patient.id, 'completed')}
+                      aria-label={`Mark ${patient.name} as completed`}
+                      title={`Mark ${patient.name} as completed`}
+                    >
+                      <CheckCircle2 size={16} aria-hidden="true" />
+                      Complete
+                    </button>
+                  ) : patient.status === 'pending' ? (
+                    <button
+                      className="action-btn confirm"
+                      onClick={() => handleAppointmentStatusChange(patient.id, 'confirmed')}
+                      aria-label={`Confirm ${patient.name}`}
+                      title={`Confirm ${patient.name}`}
+                    >
+                      <CheckCircle2 size={16} aria-hidden="true" />
+                      Confirm
+                    </button>
+                  ) : null}
+
+                  <button
+                    className="action-btn notify"
+                    onClick={async () => {
+                      try {
+                        await sendNotificationToPatient(
+                          patient.email,
+                          patient.phone,
+                          'appointment_confirmed',
+                          patient
+                        );
+                        addNotification('success', `Notification sent to ${patient.name}`);
+                      } catch (error) {
+                        console.error('Error sending notification:', error);
+                        addNotification('error', 'Failed to send notification');
+                      }
+                    }}
+                    aria-label={`Send confirmation notification to ${patient.name}`}
+                    title={`Send confirmation notification to ${patient.name}`}
+                  >
+                    <MessageSquare size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            );
+          });
+        })()
       )}
     </div>
   </div>
@@ -5760,102 +5811,112 @@ const handleLogout = async () => {
           <X size={20} />
         </button>
       </div>
+<div className="modal-body">
+  <div className="details-content">
+    {selectedAppointment.photo && (
+      <div className="detail-photo">
+        <img src={selectedAppointment.photo} alt={selectedAppointment.name} />
+      </div>
+    )}
 
-      <div className="modal-body">
-        <div className="details-content">
-          {selectedAppointment.photo && (
-            <div className="detail-photo">
-              <img src={selectedAppointment.photo} alt={selectedAppointment.name} />
-            </div>
-          )}
-
-          <div className="detail-grid">
-            <div className="detail-item">
-              <label>Patient Name:</label>
-              <span>{selectedAppointment.name}</span>
-            </div>
-            <div className="detail-item">
-              <label>Age:</label>
-              <span>{selectedAppointment.age || "Not specified"}</span>
-            </div>
-            <div className="detail-item">
-              <label>Gender:</label>
-              <span>{selectedAppointment.gender || "Not specified"}</span>
-            </div>
-            <div className="detail-item">
-              <label>Email:</label>
-              <span>{selectedAppointment.email}</span>
-            </div>
-            <div className="detail-item">
-              <label>Phone:</label>
-              <span>{selectedAppointment.phone}</span>
-            </div>
-            <div className="detail-item">
-              <label>Condition:</label>
-              <span>{selectedAppointment.type}</span>
-            </div>
-            <div className="detail-item">
-              <label>Date:</label>
-              <span>
-                {new Date(selectedAppointment.date).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-            <div className="detail-item">
-              <label>Time:</label>
-              <span>{selectedAppointment.time}</span>
-            </div>
-            <div className="detail-item">
-              <label>Doctor:</label>
-              <span>{selectedAppointment.doctor}</span>
-            </div>
-            <div className="detail-item">
-              <label>Queue Number:</label>
-              <span>#{selectedAppointment.queueNumber}</span>
-            </div>
-            <div className="detail-item">
-              <label>Priority:</label>
-              <span
-                className={`priority-badge ${getPriorityColor(selectedAppointment.priority)}`}
-              >
-                {selectedAppointment.priority}
-              </span>
-            </div>
-            <div className="detail-item">
-              <label>Status:</label>
-              <span
-                className={`status-badge ${getStatusColor(selectedAppointment.status)}`}
-              >
-                {selectedAppointment.status}
-              </span>
-            </div>
-            <div className="detail-item">
-              <label>Assigned By:</label>
-              <span 
-                className={`assigned-badge ${
-                  selectedAppointment.assignedBy?.toLowerCase() === 'patient' 
-                    ? 'assigned-patient' 
-                    : selectedAppointment.assignedBy?.toLowerCase() === 'staff'
-                    ? 'assigned-staff'
-                    : 'assigned-system'
-                }`}
-              >
-                {selectedAppointment.assignedBy || "System"}
-              </span>
-            </div>
-            {selectedAppointment.notes && (
-              <div className="detail-item full-width">
-                <label>Notes:</label>
-                <span>{selectedAppointment.notes}</span>
-              </div>
-            )}
+    <div className="detail-grid">
+      <div className="detail-item">
+        <label>Patient Name:</label>
+        <span>{selectedAppointment.name}</span>
+      </div>
+      <div className="detail-item">
+        <label>Age:</label>
+        <span>{selectedAppointment.age || "Not specified"}</span>
+      </div>
+      <div className="detail-item">
+        <label>Gender:</label>
+        <span>{selectedAppointment.gender || "Not specified"}</span>
+      </div>
+      <div className="detail-item">
+        <label>Email:</label>
+        <span>{selectedAppointment.email}</span>
+      </div>
+      <div className="detail-item">
+        <label>Phone:</label>
+        <span>{selectedAppointment.phone}</span>
+      </div>
+      <div className="detail-item">
+        <label>Condition:</label>
+        <span>{selectedAppointment.type}</span>
+      </div>
+      <div className="detail-item">
+        <label>Date:</label>
+        <span>
+          {new Date(selectedAppointment.date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </span>
+      </div>
+      <div className="detail-item">
+        <label>Time:</label>
+        <span>{selectedAppointment.time}</span>
+      </div>
+      <div className="detail-item">
+        <label>Doctor:</label>
+        <span>{selectedAppointment.doctor}</span>
+      </div>
+      <div className="detail-item">
+        <label>Queue Number:</label>
+        <span>#{selectedAppointment.queueNumber}</span>
+      </div>
+      <div className="detail-item">
+        <label>Priority:</label>
+        <span
+          className={`priority-badge ${getPriorityColor(selectedAppointment.priority)}`}
+        >
+          {selectedAppointment.priority}
+        </span>
+      </div>
+      <div className="detail-item">
+        <label>Status:</label>
+        <span
+          className={`status-badge ${getStatusColor(selectedAppointment.status)}`}
+        >
+          {selectedAppointment.status}
+        </span>
+      </div>
+      <div className="detail-item">
+        <label>Assigned By:</label>
+        <span 
+          className={`assigned-badge ${
+            selectedAppointment.assignedBy?.toLowerCase() === 'patient' 
+              ? 'assigned-patient' 
+              : selectedAppointment.assignedBy?.toLowerCase() === 'staff'
+              ? 'assigned-staff'
+              : 'assigned-system'
+          }`}
+        >
+          {selectedAppointment.assignedBy || "System"}
+        </span>
+      </div>
+      
+      {/* ✅ NEW: Show Patient Confirmation Note if exists */}
+      {selectedAppointment.confirmationNote && (
+        <div className="detail-item full-width">
+          <label>Patient Confirmation:</label>
+          <div className="confirmation-note-display staff-view">
+            <Info size={16} className="confirmation-icon" />
+            <span>{selectedAppointment.confirmationNote}</span>
           </div>
         </div>
-      </div>
-
+      )}
+      
+      {selectedAppointment.notes && (
+        <div className="detail-item full-width">
+          <label>Staff Notes:</label>
+          <span>{selectedAppointment.notes}</span>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
             <div className="modal-footer">
               <button
                 className="btn-secondary"
