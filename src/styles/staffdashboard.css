@@ -1003,6 +1003,7 @@ body {
 
 .dashboard-welcome p {
   font-size: 1.2rem;
+  font-weight: 700;
    color: black;
   max-width: 600px;
   margin: 0 auto;
@@ -1211,7 +1212,7 @@ body {
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* subtle black line */
-  align-items: center;
+  position: relative !important;
   transition: all 0.2s ease;
   background: transparent; /* transparent rows */
   color: black !important; /* force all text black */
@@ -1227,7 +1228,7 @@ body {
 
 .patient-info {
   display: flex;
-  align-items: center;
+  position: relative;
   gap: 12px;
   background: transparent; /* transparent */
   color: black !important; /* ensure text black */
@@ -1315,7 +1316,7 @@ body {
 
 .status-completed {
   background: transparent;
-  color: #2196f3 !important; /* info blue */
+  color: #4caf50 !important;  /* info green */
 }
 
 .status-cancelled {
@@ -2061,6 +2062,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .patient-info .patient-name {
+  position: relative;
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-dark);
@@ -2444,11 +2446,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: var(--primary-blue);
   color: var(--dark-blue);
 }
-
-/* =============================== */
-/* Appointment Details Modal - UPDATED */
-/* =============================== */
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -2478,14 +2475,26 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   overflow: hidden;
 }
 
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-30px) scale(0.95);
+/* 🔧 Mobile-specific modal width fix */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 1rem;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  
+  .modal-content {
+    width: calc(100% - 2rem);
+    max-width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal-content {
+    width: calc(100% - 1rem);
+    max-width: calc(100% - 1rem);
   }
 }
 
@@ -2524,13 +2533,35 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: var(--light-gray);
   color: var(--text-dark);
 }
-/* Modal Body - Scrollable Area */
+
 .modal-body {
-  padding: 2rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1 1 auto;
-  min-height: 0;
+  padding: 2rem !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/*  Mobile modal body - critical width fix */
+@media (max-width: 768px) {
+  .modal-body {
+    padding: 1.5rem 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-body {
+    padding: 1rem 0.5rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .modal-body {
+    padding: 0.75rem 0.375rem !important;
+  }
 }
 
 /* Style the scrollbar (keep it visible and thin) */
@@ -3153,6 +3184,8 @@ input[type="date"]::-webkit-clear-button {
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid #ef4444;
 }
+
+
 /* ========================================
    CALENDAR STYLES - CLEAN CENTERED VERSION (UPDATED)
    ======================================== */
@@ -3819,7 +3852,7 @@ input.slot-input:focus,
 
   .patient-info {
     flex-direction: column;
-    text-align: center;
+    position: relative;
   }
 
   .time-slots-grid {
@@ -4221,156 +4254,27 @@ textarea:focus-visible {
   color: #e63946; /* soft red for visibility */
   font-weight: 600;
 }
-/* ===== DOCTOR UNAVAILABLE / FULLY BOOKED MESSAGES ===== */
-.doctor-unavailable-message,
-.doctor-fully-booked-message {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 1.5rem 1rem !important;
-  background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%) !important;
-  border: 2px solid #ffc107 !important;
-  border-radius: 12px !important;
-  text-align: center !important;
-  gap: 0.5rem !important;
-  margin: 0.5rem 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-
-.doctor-fully-booked-message {
-  background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%) !important;
-  border-color: #ef5350 !important;
-}
-
-.doctor-unavailable-message svg,
-.doctor-fully-booked-message svg {
-  width: 36px !important;
-  height: 36px !important;
-  flex-shrink: 0 !important;
-  margin-bottom: 0.25rem !important;
-}
-
-.doctor-unavailable-message svg {
-  color: #f57c00 !important;
-}
-
-.doctor-fully-booked-message svg {
-  color: #ef5350 !important;
-}
-
-.doctor-unavailable-message p,
-.doctor-fully-booked-message p {
-  margin: 0 !important;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
-  color: var(--text-dark) !important;
-  line-height: 1.3 !important;
-  word-wrap: break-word !important;
-  word-break: break-word !important;
-  max-width: 100% !important;
-  padding: 0 0.25rem !important;
-}
-
-.sub-message {
-  font-size: 0.75rem !important;
-  font-weight: 400 !important;
-  color: var(--text-light) !important;
-  line-height: 1.3 !important;
-  margin-top: 0.25rem !important;
-}
-
-/* Tablet responsiveness */
-@media (max-width: 768px) {
-  .doctor-unavailable-message,
-  .doctor-fully-booked-message {
-    padding: 1.25rem 0.875rem !important;
-    gap: 0.4rem !important;
-    border-radius: 10px !important;
-  }
-  
-  .doctor-unavailable-message svg,
-  .doctor-fully-booked-message svg {
-    width: 32px !important;
-    height: 32px !important;
-  }
-  
-  .doctor-unavailable-message p,
-  .doctor-fully-booked-message p {
-    font-size: 0.8125rem !important;
-  }
-  
-  .sub-message {
-    font-size: 0.7rem !important;
-  }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 480px) {
-  .doctor-unavailable-message,
-  .doctor-fully-booked-message {
-    padding: 1rem 0.75rem !important;
-    gap: 0.375rem !important;
-    border-radius: 8px !important;
-    border-width: 1.5px !important;
-  }
-  
-  .doctor-unavailable-message svg,
-  .doctor-fully-booked-message svg {
-    width: 28px !important;
-    height: 28px !important;
-    margin-bottom: 0.125rem !important;
-  }
-  
-  .doctor-unavailable-message p,
-  .doctor-fully-booked-message p {
-    font-size: 0.75rem !important;
-    line-height: 1.25 !important;
-    padding: 0 0.125rem !important;
-  }
-  
-  .sub-message {
-    font-size: 0.65rem !important;
-    line-height: 1.25 !important;
-  }
-}
-
-/* Extra small screens */
-@media (max-width: 380px) {
-  .doctor-unavailable-message,
-  .doctor-fully-booked-message {
-    padding: 0.875rem 0.625rem !important;
-    gap: 0.3rem !important;
-    border-radius: 6px !important;
-  }
-  
-  .doctor-unavailable-message svg,
-  .doctor-fully-booked-message svg {
-    width: 24px !important;
-    height: 24px !important;
-  }
-  
-  .doctor-unavailable-message p,
-  .doctor-fully-booked-message p {
-    font-size: 0.7rem !important;
-    line-height: 1.2 !important;
-  }
-  
-  .sub-message {
-    font-size: 0.625rem !important;
-    line-height: 1.2 !important;
-  }
-}
-
-/* Ensure parent container doesn't restrict width */
+/* 🔥 Ensure parent containers don't restrict width */
 .form-group,
-.appointment-form-container {
+.appointment-form-container,
+.modal-body > *,
+.form-grid,
+.modal-body .form-group {
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 0 !important;
   overflow: visible !important;
+  box-sizing: border-box !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 🔥 Force full-width class */
+.form-group.full-width,
+.full-width {
+  width: 100% !important;
+  max-width: 100% !important;
+  grid-column: 1 / -1 !important;
 }
 
 /* ===== EMERGENCY BUFFER TIME SLOT STYLING ===== */
@@ -4703,11 +4607,14 @@ textarea:focus-visible {
   font-weight: 500;
 }
 
+/* ===== WAITING LIST ACTIONS BUTTONS (INSIDE FULLY BOOKED MESSAGE) ===== */
 .waiting-list-actions {
   display: flex;
   gap: 12px;
   margin-top: 16px;
   justify-content: center;
+  width: 100%;
+  flex-wrap: wrap; /* Allow buttons to wrap on small screens */
 }
 
 .waiting-list-actions button {
@@ -4718,56 +4625,106 @@ textarea:focus-visible {
   transition: all 0.2s;
   border: none;
   outline: none;
+  font-size: 0.875rem;
+  white-space: nowrap; /* Prevent text wrapping inside button */
+  flex: 1 1 auto; /* Allow buttons to grow/shrink */
+  min-width: 0; /* Allow buttons to shrink below content width */
+  max-width: 48%; /* Prevent buttons from being too wide side-by-side */
 }
 
-/* Primary button (Join Waiting List) */
+/* Primary button (Choose Another Doctor/Date) */
 .waiting-list-actions .btn-primary {
   background-color: #2563eb;
   color: white;
 }
 
 .waiting-list-actions .btn-primary:hover {
-  background-color: #2563eb;
+  background-color: #1d4ed8;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .waiting-list-actions .btn-primary:active {
-  background-color: #2563eb;
+  background-color: #1e40af;
   transform: translateY(0);
 }
 
-.waiting-list-actions .btn-primary:focus {
-  background-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-}
-
-/* Secondary button (Choose Another Doctor) */
+/* Secondary button (Add to Waiting List) */
 .waiting-list-actions .btn-secondary {
   background-color: #374151;
   color: white;
 }
 
 .waiting-list-actions .btn-secondary:hover {
-  background-color: #374151;
+  background-color: #1f2937;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
 }
 
 .waiting-list-actions .btn-secondary:active {
-  background-color: #374151;
+  background-color: #111827;
   transform: translateY(0);
 }
 
-.waiting-list-actions .btn-secondary:focus {
-  background-color: #374151;
-  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.3);
+/* 🔥 Tablet responsiveness (769px - 1024px) */
+@media (max-width: 1024px) {
+  .waiting-list-actions button {
+    font-size: 0.8125rem;
+    padding: 9px 18px;
+  }
 }
 
-.doctor-fully-booked-warning,
-.doctor-fully-booked-message {
-  padding: 20px;
-  text-align: center;
+/* 🔥 Mobile responsiveness (481px - 768px) */
+@media (max-width: 768px) {
+  .waiting-list-actions {
+    gap: 10px;
+    margin-top: 12px;
+  }
+  
+  .waiting-list-actions button {
+    font-size: 0.8rem;
+    padding: 9px 16px;
+    max-width: 48%; /* Keep side-by-side if space allows */
+  }
+}
+
+/* 🔥 Small mobile (max-width: 480px) - Stack buttons vertically */
+@media (max-width: 480px) {
+  .waiting-list-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  .waiting-list-actions button {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 0.75rem;
+    padding: 10px 12px;
+    white-space: normal; /* Allow text to wrap on very small screens */
+    line-height: 1.3;
+  }
+}
+
+/* 🔥 Extra small screens (max-width: 380px) */
+@media (max-width: 380px) {
+  .waiting-list-actions {
+    gap: 6px;
+    margin-top: 8px;
+  }
+  
+  .waiting-list-actions button {
+    font-size: 0.7rem;
+    padding: 8px 10px;
+  }
+}
+
+/* 🔥 Ensure buttons don't break out of parent */
+.doctor-fully-booked-message .waiting-list-actions,
+.doctor-unavailable-message .waiting-list-actions {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* ===== BASE STYLES - ENSURE PROPER SCROLLING ===== */
@@ -5598,4 +5555,148 @@ body {
   color: #333;
   font-size: 0.95rem;
   line-height: 1.6;
+}
+
+/* ===== DOCTOR UNAVAILABLE / FULLY BOOKED MESSAGES ===== */
+.doctor-unavailable-message,
+.doctor-fully-booked-message {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5rem 1rem !important;
+  background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%) !important;
+  border: 2px solid #ffc107 !important;
+  border-radius: 12px !important;
+  text-align: center !important;
+  gap: 0.5rem !important;
+  margin: 0.5rem 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.doctor-fully-booked-message {
+  background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%) !important;
+  border-color: #ef5350 !important;
+}
+
+.doctor-unavailable-message svg,
+.doctor-fully-booked-message svg {
+  width: 36px !important;
+  height: 36px !important;
+  flex-shrink: 0 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.doctor-unavailable-message svg {
+  color: #f57c00 !important;
+}
+
+.doctor-fully-booked-message svg {
+  color: #ef5350 !important;
+}
+
+.doctor-unavailable-message p,
+.doctor-fully-booked-message p {
+  margin: 0 !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: var(--text-dark) !important;
+  line-height: 1.3 !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  padding: 0 0.25rem !important;
+}
+
+.sub-message {
+  font-size: 0.75rem !important;
+  font-weight: 400 !important;
+  color: var(--text-light) !important;
+  line-height: 1.3 !important;
+  margin-top: 0.25rem !important;
+}
+
+/* Tablet responsiveness */
+@media (max-width: 768px) {
+  .doctor-unavailable-message,
+  .doctor-fully-booked-message {
+    padding: 1.25rem 0.875rem !important;
+    gap: 0.4rem !important;
+    border-radius: 10px !important;
+  }
+  
+  .doctor-unavailable-message svg,
+  .doctor-fully-booked-message svg {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .doctor-unavailable-message p,
+  .doctor-fully-booked-message p {
+    font-size: 0.8125rem !important;
+  }
+  
+  .sub-message {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .doctor-unavailable-message,
+  .doctor-fully-booked-message {
+    padding: 1rem 0.75rem !important;
+    gap: 0.375rem !important;
+    border-radius: 8px !important;
+    border-width: 1.5px !important;
+  }
+  
+  .doctor-unavailable-message svg,
+  .doctor-fully-booked-message svg {
+    width: 28px !important;
+    height: 28px !important;
+    margin-bottom: 0.125rem !important;
+  }
+  
+  .doctor-unavailable-message p,
+  .doctor-fully-booked-message p {
+    font-size: 0.75rem !important;
+    line-height: 1.25 !important;
+    padding: 0 0.125rem !important;
+  }
+  
+  .sub-message {
+    font-size: 0.65rem !important;
+    line-height: 1.25 !important;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+  .doctor-unavailable-message,
+  .doctor-fully-booked-message {
+    padding: 0.875rem 0.625rem !important;
+    gap: 0.3rem !important;
+    border-radius: 6px !important;
+  }
+  
+  .doctor-unavailable-message svg,
+  .doctor-fully-booked-message svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  .doctor-unavailable-message p,
+  .doctor-fully-booked-message p {
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  .sub-message {
+    font-size: 0.625rem !important;
+    line-height: 1.2 !important;
+  }
 }

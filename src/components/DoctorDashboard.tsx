@@ -726,185 +726,200 @@ const formatDate = (dateString: string) => {
         )}
 
      {/* CURRENT QUEUE VIEW */}
-        {currentView === 'queue' && (
-          <section className="queue-status-section">
-            <div className="section-header">
-              <div className="section-title">
-                <Users size={20} />
-                Current Queue Status
-              </div>
-              <div className="section-subtitle">
-                Real-time patient queue for today
-              </div>
-            </div>
+{currentView === 'queue' && (
+  <section className="queue-status-section">
+    <div className="section-header">
+      <div className="section-title">
+        <Users size={20} />
+        Current Queue Status
+      </div>
+      <div className="section-subtitle">
+        Real-time patient queue for today
+      </div>
+    </div>
 
-            <div className="queue-summary">
-              <div className="current-patient-card">
-                <div className="patient-status">
-                  <span className="status-label">Currently Consulting</span>
-                  {(() => {
-                    const currentPatient = queue.find(q => q.status === 'confirmed');
-                    return currentPatient ? (
-                      <div className="patient-info">
-                        <div
-                          className="patient-avatar clickable"
-                          onClick={() => setPreviewPhoto(currentPatient.photo ?? null)}
-                        >
-                          {currentPatient.photo ? (
-                            <img src={currentPatient.photo} alt={currentPatient.name} />
-                          ) : (
-                            <User size={24} />
-                          )}
-                        </div>
-                        <div className="patient-details">
-                          <span className="queue-number">Queue #{currentPatient.queueNumber}</span>
-                          <span className="patient-name">Name: {currentPatient.name}</span>
-                          {currentPatient.age && (
-                            <span className="patient-age">Age: {currentPatient.age}</span>
-                          )}
-                          <span className="patient-condition">Condition: {currentPatient.type}</span>
-                          <span className="patient-date">Date: {formatDate(currentPatient.date)}</span>
-                          <span className="patient-time">Time: {currentPatient.time}</span>
-                          <div className={`booking-indicator booking-${currentPatient.bookedBy}`}>
-                            {currentPatient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="no-patient">
-                        <span>No patient currently being consulted</span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              {(() => {
-                const nextPatient = queue.find(q => q.status === 'pending');
-                return nextPatient ? (
-                  <div className="next-patient-card">
-                    <div className="patient-status">
-                      <span className="status-label">Next Patient</span>
-                      <div className="patient-info">
-                        <div
-                          className="patient-avatar clickable"
-                          onClick={() => setPreviewPhoto(nextPatient.photo ?? null)}
-                        >
-                          {nextPatient.photo ? (
-                            <img src={nextPatient.photo} alt={nextPatient.name} />
-                          ) : (
-                            <User size={20} />
-                          )}
-                        </div>
-                        <div className="patient-details">
-                          <span className="queue-number">Queue #{nextPatient.queueNumber}</span>
-                          <span className="patient-name">Name: {nextPatient.name}</span>
-                          {nextPatient.age && (
-                            <span className="patient-age">Age: {nextPatient.age}</span>
-                          )}
-                          <span className="patient-condition">Condition: {nextPatient.type}</span>
-                          <span className="patient-date">Date: {formatDate(nextPatient.date)}</span>
-                          <span className="patient-time">Time: {nextPatient.time}</span>
-                          <div className={`booking-indicator booking-${nextPatient.bookedBy}`}>
-                            {nextPatient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : null;
-              })()}
-            </div>
-
-            <div className="queue-list">
-              <div className="queue-header">
-                <span>Today's Queue ({queue.length} patients)</span>
-              </div>
-
-              {queue.length > 0 ? (
-                <div className="todays-queue-list">
-                {queue.map((patient) => (
-                  <div
-                    key={patient.id}
-                    className={`todays-queue-item ${getPriorityColor(patient.priority)}`}
+    <div className="queue-summary">
+      <div className="current-patient-card">
+        <div className="patient-status">
+          <span className="status-label">Currently Consulting</span>
+          {(() => {
+            const currentPatient = queue.find(q => q.status === 'confirmed');
+            return currentPatient ? (
+              <div className="patient-info">
+                {currentPatient.photo ? (
+                  <img 
+                    src={currentPatient.photo} 
+                    alt={currentPatient.name}
+                    className="patient-avatar clickable"
+                    onClick={() => setPreviewPhoto(currentPatient.photo ?? null)}
+                  />
+                ) : (
+                  <div 
+                    className="patient-avatar patient-avatar-placeholder clickable"
+                    onClick={() => setPreviewPhoto(currentPatient.photo ?? null)}
                   >
-                    {/* ✅ Avatar - Column 1 */}
-                    <div
-                      className="patient-avatar clickable"
-                      onClick={() => setPreviewPhoto(patient.photo ?? null)}
-                    >
-                      {patient.photo ? (
-                        <img src={patient.photo} alt={patient.name} />
-                      ) : (
-                        <User size={16} />
-                      )}
-                    </div>
-
-                    {/* ✅ Patient Details - Column 2 */}
-                    <div className="patient-details">
-                      <span className="queue-number">Queue #{patient.queueNumber}</span>
-                      <span className="patient-name">Name: {patient.name}</span>
-                      {patient.age && <span className="patient-age">Age: {patient.age}</span>}
-                      <span className="patient-condition">Condition: {patient.type}</span>
-                      <span className="patient-date">Date: {formatDate(patient.date)}</span>
-                      <span className="patient-time">Time: {patient.time}</span>
-                      <div className={`booking-indicator booking-${patient.bookedBy}`}>
-                        {patient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
-                      </div>
-                    </div>
-
-                    {/* ✅ Actions Container - Column 3 (Priority + Status + Eye Icon) */}
-                    <div className="queue-actions-bottom">
-                      {/* Priority Badge */}
-                      <div className={`priority-status ${getPriorityColor(patient.priority)}`}>
-                        {getPriorityIcon(patient.priority)}
-                        <span>{patient.priority}</span>
-                      </div>
-                      
-                      {/* Status Badge */}
-                      <div className={`queue-status status-${patient.status}`}>
-                        {patient.status}
-                      </div>
-                      
-                      {/* Eye Icon Button */}
-                      <button
-                        className="action-btn view-btn"
-                        onClick={() => {
-                          setSelectedAppointment(patient);
-                          setShowDetailsModal(true);
-                        }}
-                        title="View patient details"
-                        aria-label={`View ${patient.name}'s details`}
-                      >
-                        <Eye size={16} />
-                      </button>
-                    </div>
+                    <User size={24} />
                   </div>
-                 ))}
+                )}
+                <div className="patient-details">
+                  <span className="queue-number">Queue #{currentPatient.queueNumber}</span>
+                  <span className="patient-name">Name: {currentPatient.name}</span>
+                  {currentPatient.age && (
+                    <span className="patient-age">Age: {currentPatient.age}</span>
+                  )}
+                  <span className="patient-condition">Condition: {currentPatient.type}</span>
+                  <span className="patient-date">Date: {formatDate(currentPatient.date)}</span>
+                  <span className="patient-time">Time: {currentPatient.time}</span>
+                  <div className={`booking-indicator booking-${currentPatient.bookedBy}`}>
+                    {currentPatient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
+                  </div>
                 </div>
-              ) : (
-                <div className="empty-queue">
-                  <p>No patients in queue for today</p>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="no-patient">
+                <span>No patient currently being consulted</span>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
 
-            {previewPhoto && (
-              <div className="photo-preview-overlay" onClick={() => setPreviewPhoto(null)}>
-                <div className="photo-preview" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    className="close-preview"
-                    onClick={() => setPreviewPhoto(null)}
-                    aria-label="Close preview"
+      {(() => {
+        const nextPatient = queue.find(q => q.status === 'pending');
+        return nextPatient ? (
+          <div className="next-patient-card">
+            <div className="patient-status">
+              <span className="status-label">Next Patient</span>
+              <div className="patient-info">
+                {nextPatient.photo ? (
+                  <img 
+                    src={nextPatient.photo} 
+                    alt={nextPatient.name}
+                    className="patient-avatar clickable"
+                    onClick={() => setPreviewPhoto(nextPatient.photo ?? null)}
+                  />
+                ) : (
+                  <div 
+                    className="patient-avatar patient-avatar-placeholder clickable"
+                    onClick={() => setPreviewPhoto(nextPatient.photo ?? null)}
                   >
-                    <X size={20} />
-                  </button>
-                  <img src={previewPhoto} alt="Patient Preview" />
+                    <User size={20} />
+                  </div>
+                )}
+                <div className="patient-details">
+                  <span className="queue-number">Queue #{nextPatient.queueNumber}</span>
+                  <span className="patient-name">Name: {nextPatient.name}</span>
+                  {nextPatient.age && (
+                    <span className="patient-age">Age: {nextPatient.age}</span>
+                  )}
+                  <span className="patient-condition">Condition: {nextPatient.type}</span>
+                  <span className="patient-date">Date: {formatDate(nextPatient.date)}</span>
+                  <span className="patient-time">Time: {nextPatient.time}</span>
+                  <div className={`booking-indicator booking-${nextPatient.bookedBy}`}>
+                    {nextPatient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
+                  </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        ) : null;
+      })()}
+    </div>
+
+    <div className="queue-list">
+      <div className="queue-header">
+        <span>Today's Queue ({queue.length} patients)</span>
+      </div>
+
+      {queue.length > 0 ? (
+        <div className="todays-queue-list">
+        {queue.map((patient) => (
+          <div
+            key={patient.id}
+            className={`todays-queue-item ${getPriorityColor(patient.priority)}`}
+          >
+            {/* ✅ Avatar - Column 1 */}
+            {patient.photo ? (
+              <img 
+                src={patient.photo} 
+                alt={patient.name}
+                className="queue-patient-avatar clickable"
+                onClick={() => setPreviewPhoto(patient.photo ?? null)}
+              />
+            ) : (
+              <div 
+                className="queue-patient-avatar queue-patient-avatar-placeholder clickable"
+                onClick={() => setPreviewPhoto(patient.photo ?? null)}
+              >
+                <User size={16} />
               </div>
             )}
-          </section>
-        )}
+
+            {/* ✅ Patient Details - Column 2 */}
+            <div className="patient-details">
+              <span className="queue-number">Queue #{patient.queueNumber}</span>
+              <span className="patient-name">Name: {patient.name}</span>
+              {patient.age && <span className="patient-age">Age: {patient.age}</span>}
+              <span className="patient-condition">Condition: {patient.type}</span>
+              <span className="patient-date">Date: {formatDate(patient.date)}</span>
+              <span className="patient-time">Time: {patient.time}</span>
+              <div className={`booking-indicator booking-${patient.bookedBy}`}>
+                {patient.bookedBy === "patient" ? "Patient Booking" : "Staff Booking"}
+              </div>
+            </div>
+
+            {/* ✅ Actions Container - Column 3 (Priority + Status + Eye Icon) */}
+            <div className="queue-actions-bottom">
+              {/* Priority Badge */}
+              <div className={`priority-status ${getPriorityColor(patient.priority)}`}>
+                {getPriorityIcon(patient.priority)}
+                <span>{patient.priority}</span>
+              </div>
+              
+              {/* Status Badge */}
+              <div className={`queue-status status-${patient.status}`}>
+                {patient.status}
+              </div>
+              
+              {/* Eye Icon Button */}
+              <button
+                className="action-btn view-btn"
+                onClick={() => {
+                  setSelectedAppointment(patient);
+                  setShowDetailsModal(true);
+                }}
+                title="View patient details"
+                aria-label={`View ${patient.name}'s details`}
+              >
+                <Eye size={16} />
+              </button>
+            </div>
+          </div>
+         ))}
+        </div>
+      ) : (
+        <div className="empty-queue">
+          <p>No patients in queue for today</p>
+        </div>
+      )}
+    </div>
+
+    {previewPhoto && (
+      <div className="photo-preview-overlay" onClick={() => setPreviewPhoto(null)}>
+        <div className="photo-preview" onClick={(e) => e.stopPropagation()}>
+          <button
+            className="close-preview"
+            onClick={() => setPreviewPhoto(null)}
+            aria-label="Close preview"
+          >
+            <X size={20} />
+          </button>
+          <img src={previewPhoto} alt="Patient Preview" />
+        </div>
+      </div>
+    )}
+  </section>
+)}
 {/* MY APPOINTMENTS VIEW */}
 {currentView === 'appointments' && (
   <section className="appointments-section">
@@ -931,13 +946,17 @@ const formatDate = (dateString: string) => {
           <div key={appointment.id} className="appointment-card">
             <div className="patient-avatar-section">
               <div className="queue-badge">#{appointment.queueNumber}</div>
-              <div className="appointment-avatar">
-                {appointment.photo ? (
-                  <img src={appointment.photo} alt={appointment.name} className="avatar-image" />
-                ) : (
+              {appointment.photo ? (
+                <img 
+                  src={appointment.photo} 
+                  alt={appointment.name} 
+                  className="appointment-avatar"
+                />
+              ) : (
+                <div className="appointment-avatar appointment-avatar-placeholder">
                   <User size={32} />
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="appointment-details">
